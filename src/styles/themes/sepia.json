@@ -1,0 +1,11 @@
+{
+  "name": "Sepia",
+  "colors": {
+    "bg": "#f4ebd9",
+    "surface": "#fbf0d9",
+    "primary": "#b45309",
+    "textMain": "#432818",
+    "textMuted": "#7f5539",
+    "border": "#ddb892"
+  }
+}

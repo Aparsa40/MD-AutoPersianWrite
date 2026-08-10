@@ -1,0 +1,65 @@
+@import 'prismjs/themes/prism-tomorrow.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg: #f8fafc;
+    --color-surface: #ffffff;
+    --color-primary: #3b82f6;
+    --color-text-main: #0f172a;
+    --color-text-muted: #64748b;
+    --color-border: #e2e8f0;
+  }
+
+  .dark {
+    --color-bg: #0f172a;
+    --color-surface: #1e293b;
+    --color-primary: #3b82f6;
+    --color-text-main: #f8fafc;
+    --color-text-muted: #94a3b8;
+    --color-border: #334155;
+  }
+
+  .sepia {
+    --color-bg: #f4ebd9;
+    --color-surface: #fbf0d9;
+    --color-primary: #b45309;
+    --color-text-main: #432818;
+    --color-text-muted: #7f5539;
+    --color-border: #ddb892;
+  }
+
+  body {
+    @apply bg-bg text-text-main font-vazir transition-colors duration-200;
+    direction: rtl;
+  }
+}
+
+/* استایل کدهای هایلایت شده */
+pre code {
+  font-family: 'JetBrains Mono', monospace !important;
+  direction: ltr !important;
+  text-align: left !important;
+}
+
+/* استایل سفارشی اسکرول‌بار زیبا برای هر دو پنل */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: var(--color-bg);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: var(--color-border);
+  border-radius: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-muted);
+}
