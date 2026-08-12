@@ -1,48 +1,64 @@
-import { useRef, useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
-/**
- * هوک همگام‌سازی اسکرول بین پنل ویرایشگر و پیش‌نمایش زنده
- */
+const scrollRatio = (element: HTMLElement): number =>
+  element.scrollTop / Math.max(element.scrollHeight - element.clientHeight, 1);
+
 export function useScrollSync() {
   const editorRef = useRef<HTMLTextAreaElement | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    const editorEl = editorRef.current;
-    const previewEl = previewRef.current;
+    const editor = editorRef.current;
+    const preview = previewRef.current;
+    if (!editor || !preview) return;
 
-    if (!editorEl || !previewEl) return;
+    let source: 'editor' | 'preview' | null = null;
+    let resetTimer: number | undefined;
 
-    let isSyncingEditor = false;
-    let isSyncingPreview = false;
-
-    const handleEditorScroll = () => {
-      if (isSyncingEditor) {
-        isSyncingEditor = false;
-        return;
-      }
-      isSyncingPreview = true;
-      const percentage = editorEl.scrollTop / (editorEl.scrollHeight - editorEl.clientHeight || 1);
-      previewEl.scrollTop = percentage * (previewEl.scrollHeight - previewEl.clientHeight);
+    const releaseSource = () => {
+      window.clearTimeout(resetTimer);
+      resetTimer = window.setTimeout(() => {
+        source = null;
+      }, 80);
     };
 
-    const handlePreviewScroll = () => {
-      if (isSyncingPreview) {
-        isSyncingPreview = false;
-        return;
-      }
-      isSyncingEditor = true;
-      const percentage =
-        previewEl.scrollTop / (previewEl.scrollHeight - previewEl.clientHeight || 1);
-      editorEl.scrollTop = percentage * (editorEl.scrollHeight - editorEl.clientHeight);
+    const syncEditorToPreview = () => {
+      if (source === 'preview') return;
+      source = 'editor';
+      const ratio = scrollRatio(editor);
+      preview.scrollTop = ratio * Math.max(preview.scrollHeight - preview.clientHeight, 0);
+      releaseSource();
     };
 
-    editorEl.addEventListener('scroll', handleEditorScroll);
-    previewEl.addEventListener('scroll', handlePreviewScroll);
+    const syncPreviewToEditor = () => {
+      if (source === 'editor') return;
+      source = 'preview';
+      const ratio = scrollRatio(preview);
+      editor.scrollTop = ratio * Math.max(editor.scrollHeight - editor.clientHeight, 0);
+      releaseSource();
+    };
+
+    const syncCursorToPreview = () => {
+      const beforeCursor = editor.value.slice(0, editor.selectionStart);
+      const currentLine = beforeCursor.split('\n').length - 1;
+      const totalLines = Math.max(editor.value.split('\n').length - 1, 1);
+      const ratio = currentLine / totalLines;
+      preview.scrollTop = ratio * Math.max(preview.scrollHeight - preview.clientHeight, 0);
+    };
+
+    editor.addEventListener('scroll', syncEditorToPreview, { passive: true });
+    preview.addEventListener('scroll', syncPreviewToEditor, { passive: true });
+    editor.addEventListener('click', syncCursorToPreview);
+    editor.addEventListener('keyup', syncCursorToPreview);
+    editor.addEventListener('select', syncCursorToPreview);
 
     return () => {
-      editorEl.removeEventListener('scroll', handleEditorScroll);
-      previewEl.removeEventListener('scroll', handlePreviewScroll);
+      editor.removeEventListener('scroll', syncEditorToPreview);
+      preview.removeEventListener('scroll', syncPreviewToEditor);
+      editor.removeEventListener('click', syncCursorToPreview);
+      editor.removeEventListener('keyup', syncCursorToPreview);
+      editor.removeEventListener('select', syncCursorToPreview);
+      window.clearTimeout(resetTimer);
     };
   }, []);
 

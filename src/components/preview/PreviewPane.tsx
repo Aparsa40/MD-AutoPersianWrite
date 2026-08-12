@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
@@ -18,120 +18,87 @@ interface PreviewPaneProps {
   previewRef?: React.RefObject<HTMLDivElement>;
 }
 
+const getHeadingId = (text: string, index: number): string => {
+  const slug = text
+    .toLowerCase()
+    .trim()
+    .replace(/[^\p{L}\p{N}\s-]/gu, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-');
+  return `heading-${slug || 'section'}-${index}`;
+};
+
 export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
   const markdown = useEditorStore((state) => state.markdown);
   const debouncedMarkdown = useDebounce(markdown, 150);
   const { fontSize, fontFamily } = useThemeStore();
+  const headingIndex = useRef(0);
 
   const customRemarkPlugins = PluginManager.getRemarkPlugins();
   const customRehypePlugins = PluginManager.getRehypePlugins();
+  const remarkPlugins = useMemo(() => [remarkGfm, remarkMath, ...customRemarkPlugins], [customRemarkPlugins]);
+  const rehypePlugins = useMemo(() => [rehypeKatex, rehypePrism, ...customRehypePlugins], [customRehypePlugins]);
 
-  const remarkPlugins = useMemo(
-    () => [remarkGfm, remarkMath, ...customRemarkPlugins],
-    [customRemarkPlugins],
-  );
-  const rehypePlugins = useMemo(
-    () => [rehypeKatex, rehypePrism, ...customRehypePlugins],
-    [customRehypePlugins],
-  );
+  headingIndex.current = 0;
 
   return (
     <div
       ref={previewRef}
-      className="w-1/2 h-full bg-bg p-6 overflow-y-auto custom-scrollbar prose dark:prose-invert max-w-none"
-      style={{
-        fontSize: `${fontSize}px`,
-        fontFamily: fontFamily,
-      }}
+      className="h-full w-full overflow-y-auto bg-bg p-6 custom-scrollbar prose dark:prose-invert max-w-none"
+      style={{ fontSize: `${fontSize}px`, fontFamily }}
     >
       <ReactMarkdown
         remarkPlugins={remarkPlugins as PluggableList}
         rehypePlugins={rehypePlugins as PluggableList}
         components={{
-          // تنظیم جهت اتوماتیک برای پاراگراف‌ها
           p({ children }) {
-            return (
-              <p dir="auto" className="my-2 leading-relaxed" style={{ unicodeBidi: 'plaintext' }}>
-                {children}
-              </p>
-            );
+            return <p dir="auto" className="my-2 leading-relaxed" style={{ unicodeBidi: 'plaintext' }}>{children}</p>;
           },
-          // تنظیم جهت اتوماتیک برای تیترها
           h1({ children }) {
-            return (
-              <h1 dir="auto" className="text-2xl font-bold my-4">
-                {children}
-              </h1>
-            );
+            const index = headingIndex.current++;
+            const text = React.Children.toArray(children).join('');
+            return <h1 id={getHeadingId(text, index)} dir="auto" className="my-4 text-2xl font-bold">{children}</h1>;
           },
           h2({ children }) {
-            return (
-              <h2 dir="auto" className="text-xl font-bold my-3">
-                {children}
-              </h2>
-            );
+            const index = headingIndex.current++;
+            const text = React.Children.toArray(children).join('');
+            return <h2 id={getHeadingId(text, index)} dir="auto" className="my-3 text-xl font-bold">{children}</h2>;
           },
           h3({ children }) {
-            return (
-              <h3 dir="auto" className="text-lg font-bold my-2">
-                {children}
-              </h3>
-            );
+            const index = headingIndex.current++;
+            const text = React.Children.toArray(children).join('');
+            return <h3 id={getHeadingId(text, index)} dir="auto" className="my-2 text-lg font-bold">{children}</h3>;
           },
           h4({ children }) {
-            return (
-              <h4 dir="auto" className="font-bold my-2">
-                {children}
-              </h4>
-            );
+            const index = headingIndex.current++;
+            const text = React.Children.toArray(children).join('');
+            return <h4 id={getHeadingId(text, index)} dir="auto" className="my-2 font-bold">{children}</h4>;
           },
-          // آیتم‌های لیست
+          h5({ children }) {
+            const index = headingIndex.current++;
+            const text = React.Children.toArray(children).join('');
+            return <h5 id={getHeadingId(text, index)} dir="auto" className="my-2 font-bold">{children}</h5>;
+          },
+          h6({ children }) {
+            const index = headingIndex.current++;
+            const text = React.Children.toArray(children).join('');
+            return <h6 id={getHeadingId(text, index)} dir="auto" className="my-2 font-bold">{children}</h6>;
+          },
           li({ children }) {
-            return (
-              <li dir="auto" className="my-1">
-                {children}
-              </li>
-            );
+            return <li dir="auto" className="my-1">{children}</li>;
           },
           blockquote({ children }) {
-            return (
-              <blockquote dir="auto" className="border-r-4 border-primary pr-4 my-2 italic">
-                {children}
-              </blockquote>
-            );
+            return <blockquote dir="auto" className="my-2 border-r-4 border-primary pr-4 italic">{children}</blockquote>;
           },
-          // اجبار بلوک‌های کد به چپ‌چین ماندن (LTR)
-          code({
-            inline,
-            className,
-            children,
-            ...props
-          }: ComponentPropsWithoutRef<'code'> & { inline?: boolean }) {
+          code({ inline, className, children, ...props }: ComponentPropsWithoutRef<'code'> & { inline?: boolean }) {
             const match = /language-(\w+)/.exec(className || '');
-            if (!inline && match && match[1] === 'mermaid') {
+            if (!inline && match?.[1] === 'mermaid') {
               return <MermaidBlock chart={String(children).replace(/\n$/, '')} />;
             }
             if (inline) {
-              return (
-                <code
-                  className="bg-surface px-1.5 py-0.5 rounded text-xs font-mono dir-ltr inline-block"
-                  dir="ltr"
-                  {...props}
-                >
-                  {children}
-                </code>
-              );
+              return <code className="dir-ltr inline-block rounded bg-surface px-1.5 py-0.5 font-mono text-xs" dir="ltr" {...props}>{children}</code>;
             }
-            return (
-              <pre
-                className="bg-surface p-4 rounded border border-border overflow-x-auto dir-ltr text-left font-mono text-sm"
-                dir="ltr"
-              >
-                <code className={className} dir="ltr" {...props}>
-                  {children}
-                </code>
-              </pre>
-            );
+            return <pre className="dir-ltr overflow-x-auto rounded border border-border bg-surface p-4 text-left font-mono text-sm" dir="ltr"><code className={className} dir="ltr" {...props}>{children}</code></pre>;
           },
         }}
       >

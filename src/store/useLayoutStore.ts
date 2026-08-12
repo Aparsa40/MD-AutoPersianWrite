@@ -6,7 +6,7 @@ export type Orientation = 'horizontal' | 'vertical';
 interface LayoutState {
   viewMode: ViewMode;
   orientation: Orientation;
-  splitRatio: number; // درصد پهنای پنل ویرایشگر (مثلا 50)
+  splitRatio: number;
   isTocOpen: boolean;
   setViewMode: (mode: ViewMode) => void;
   setOrientation: (orientation: Orientation) => void;
