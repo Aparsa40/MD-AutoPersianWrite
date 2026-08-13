@@ -1,18 +1,15 @@
 import React from 'react';
-import { TopToolbar } from './components/toolbar/TopToolbar';
-import { EditorPane } from './components/editor/EditorPane';
-import { PreviewPane } from './components/preview/PreviewPane';
+import { MainLayout } from './components/layout/MainLayout';
 
+/**
+ * تغییر: App به MainLayout متصل شد.
+ *
+ * دلیل:
+ * تمام قابلیت‌های جدید Layout، ScrollSync، Resize، TOC و حالت‌های
+ * نمایش باید از یک نقطه مرکزی مدیریت شوند.
+ */
 const App: React.FC = () => {
-  return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden">
-      <TopToolbar />
-      <main className="flex flex-1 overflow-hidden">
-        <EditorPane />
-        <PreviewPane />
-      </main>
-    </div>
-  );
+  return <MainLayout />;
 };
 
 export default App;
