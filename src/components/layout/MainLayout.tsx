@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { TopToolbar } from '../toolbar/TopToolbar';
 import { EditorPane } from '../editor/EditorPane';
 import { PreviewPane } from '../preview/PreviewPane';
@@ -8,118 +8,73 @@ import { useLayoutStore } from '../../store/useLayoutStore';
 
 export const MainLayout: React.FC = () => {
   const { editorRef, previewRef } = useScrollSync();
+  const { viewMode, orientation, splitRatio, setSplitRatio } = useLayoutStore();
+  const [isResizing, setIsResizing] = useState(false);
 
-  const { viewMode, orientation, splitRatio, isTocOpen, setSplitRatio } = useLayoutStore();
-
-  const isDragging = useRef(false);
-
-  /**
-   * تغییر: امکان تغییر اندازه پنل‌ها با Drag کردن جداکننده.
-   *
-   * دلیل:
-   * کاربر باید بتواند نسبت Editor و Preview را متناسب با نوع کار خود
-   * تنظیم کند.
-   */
-  const handlePointerMove = (event: PointerEvent) => {
-    if (!isDragging.current || viewMode !== 'split') {
-      return;
-    }
-
-    const main = document.getElementById('editor-main-layout');
-
-    if (!main) {
-      return;
-    }
-
-    const rect = main.getBoundingClientRect();
-
-    if (orientation === 'horizontal') {
-      const ratio = ((event.clientX - rect.left) / rect.width) * 100;
-
+  const handleMouseMove = useCallback(
+    (event: MouseEvent) => {
+      if (!isResizing) return;
+      const ratio = orientation === 'horizontal'
+        ? (event.clientX / window.innerWidth) * 100
+        : (event.clientY / window.innerHeight) * 100;
       setSplitRatio(ratio);
-    } else {
-      const ratio = ((event.clientY - rect.top) / rect.height) * 100;
+    },
+    [isResizing, orientation, setSplitRatio],
+  );
 
-      setSplitRatio(ratio);
-    }
-  };
-
-  const stopDragging = () => {
-    isDragging.current = false;
-    document.body.style.cursor = '';
-    document.body.style.userSelect = '';
-  };
+  const handleMouseUp = useCallback(() => setIsResizing(false), []);
 
   useEffect(() => {
-    window.addEventListener('pointermove', handlePointerMove);
-    window.addEventListener('pointerup', stopDragging);
-
-    return () => {
-      window.removeEventListener('pointermove', handlePointerMove);
-      window.removeEventListener('pointerup', stopDragging);
-    };
-  });
-
-  const startDragging = () => {
-    /**
-     * تغییر: هنگام Drag کردن Splitter انتخاب متن غیرفعال می‌شود
-     * تا تجربه تغییر اندازه پنل‌ها روان باشد.
-     */
-    isDragging.current = true;
-    document.body.style.cursor = orientation === 'horizontal' ? 'col-resize' : 'row-resize';
+    if (!isResizing) return;
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
     document.body.style.userSelect = 'none';
-  };
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+      document.body.style.userSelect = '';
+    };
+  }, [isResizing, handleMouseMove, handleMouseUp]);
 
-  const editorStyle: React.CSSProperties =
-    viewMode === 'split'
-      ? orientation === 'horizontal'
-        ? { width: `${splitRatio}%` }
-        : { height: `${splitRatio}%` }
-      : { flex: 1 };
-
-  const previewStyle: React.CSSProperties =
-    viewMode === 'split'
-      ? orientation === 'horizontal'
-        ? { width: `${100 - splitRatio}%` }
-        : { height: `${100 - splitRatio}%` }
-      : { flex: 1 };
+  const horizontal = orientation === 'horizontal';
+  const editorVisible = viewMode === 'split' || viewMode === 'editor-only';
+  const previewVisible = viewMode === 'split' || viewMode === 'preview-only';
 
   return (
-    <div className="flex flex-col h-screen w-screen overflow-hidden bg-bg text-text-main">
+    <div className="flex h-screen w-screen flex-col overflow-hidden bg-bg text-text-main">
       <TopToolbar />
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <TableOfContents />
+        <main className={`flex min-h-0 min-w-0 flex-1 overflow-hidden ${horizontal ? 'flex-row' : 'flex-col'}`}>
+          {editorVisible && (
+            <section className="min-h-0 min-w-0 overflow-hidden" style={{
+              width: horizontal && viewMode === 'split' ? `${splitRatio}%` : horizontal ? '100%' : undefined,
+              height: !horizontal && viewMode === 'split' ? `${splitRatio}%` : !horizontal ? '100%' : undefined,
+            }}>
+              <EditorPane editorRef={editorRef} />
+            </section>
+          )}
 
-      <main
-        id="editor-main-layout"
-        className={`flex flex-1 min-h-0 min-w-0 overflow-hidden ${
-          orientation === 'horizontal' ? 'flex-row' : 'flex-col'
-        }`}
-      >
-        {isTocOpen && <TableOfContents />}
+          {viewMode === 'split' && (
+            <div
+              role="separator"
+              aria-orientation={horizontal ? 'vertical' : 'horizontal'}
+              aria-label="تغییر اندازه پنل‌ها"
+              onMouseDown={() => setIsResizing(true)}
+              className={`z-20 shrink-0 bg-border transition-colors hover:bg-primary/50 ${horizontal ? 'w-1.5 cursor-col-resize' : 'h-1.5 cursor-row-resize'}`}
+            />
+          )}
 
-        {viewMode !== 'preview-only' && (
-          <section style={editorStyle} className="min-w-0 min-h-0 overflow-hidden bg-bg">
-            <EditorPane editorRef={editorRef} />
-          </section>
-        )}
-
-        {viewMode === 'split' && (
-          <div
-            role="separator"
-            aria-label="تغییر اندازه پنل‌های ویرایشگر و پیش‌نمایش"
-            aria-orientation={orientation === 'horizontal' ? 'vertical' : 'horizontal'}
-            onPointerDown={startDragging}
-            className={`shrink-0 bg-border hover:bg-primary transition-colors ${
-              orientation === 'horizontal' ? 'w-1 cursor-col-resize' : 'h-1 cursor-row-resize'
-            }`}
-          />
-        )}
-
-        {viewMode !== 'editor-only' && (
-          <section style={previewStyle} className="min-w-0 min-h-0 overflow-hidden">
-            <PreviewPane previewRef={previewRef} />
-          </section>
-        )}
-      </main>
+          {previewVisible && (
+            <section className="min-h-0 min-w-0 overflow-hidden" style={{
+              width: horizontal && viewMode === 'split' ? `${100 - splitRatio}%` : horizontal ? '100%' : undefined,
+              height: !horizontal && viewMode === 'split' ? `${100 - splitRatio}%` : !horizontal ? '100%' : undefined,
+            }}>
+              <PreviewPane previewRef={previewRef} />
+            </section>
+          )}
+        </main>
+      </div>
     </div>
   );
 };
