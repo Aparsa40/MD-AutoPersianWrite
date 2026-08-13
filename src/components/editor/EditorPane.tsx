@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { useEditorStore } from '../../store/useEditorStore';
 import { useThemeStore } from '../../store/useThemeStore';
-import { htmlToMarkdown } from '../../lib/markdown/htmlToMarkdown';
+import { convertHtmlToMarkdown } from '../../lib/markdown/htmlToMarkdown';
 
 interface EditorPaneProps {
   editorRef?: React.RefObject<HTMLTextAreaElement>;
@@ -22,7 +22,7 @@ export const EditorPane: React.FC<EditorPaneProps> = ({ editorRef }) => {
     const html = event.clipboardData.getData('text/html');
     if (!html?.trim()) return;
 
-    const convertedMarkdown = htmlToMarkdown(html);
+    const markdown = convertHtmlToMarkdown(html);
     if (!convertedMarkdown.trim()) return;
 
     event.preventDefault();
