@@ -22,7 +22,7 @@ export const EditorPane: React.FC<EditorPaneProps> = ({ editorRef }) => {
     const html = event.clipboardData.getData('text/html');
     if (!html?.trim()) return;
 
-    const markdown = convertHtmlToMarkdown(html);
+    const convertedMarkdown = convertHtmlToMarkdown(html);
     if (!convertedMarkdown.trim()) return;
 
     event.preventDefault();
