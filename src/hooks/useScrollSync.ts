@@ -1,7 +1,12 @@
 import { useEffect, useRef } from 'react';
 
-const scrollRatio = (element: HTMLElement): number =>
+type ScrollElement = Pick<HTMLElement, 'scrollTop' | 'scrollHeight' | 'clientHeight'>;
+
+export const getScrollRatio = (element: ScrollElement): number =>
   element.scrollTop / Math.max(element.scrollHeight - element.clientHeight, 1);
+
+export const getScrollTopForRatio = (element: ScrollElement, ratio: number): number =>
+  ratio * Math.max(element.scrollHeight - element.clientHeight, 0);
 
 export function useScrollSync() {
   const editorRef = useRef<HTMLTextAreaElement | null>(null);
@@ -25,16 +30,16 @@ export function useScrollSync() {
     const syncEditorToPreview = () => {
       if (source === 'preview') return;
       source = 'editor';
-      const ratio = scrollRatio(editor);
-      preview.scrollTop = ratio * Math.max(preview.scrollHeight - preview.clientHeight, 0);
+      const ratio = getScrollRatio(editor);
+      preview.scrollTop = getScrollTopForRatio(preview, ratio);
       releaseSource();
     };
 
     const syncPreviewToEditor = () => {
       if (source === 'editor') return;
       source = 'preview';
-      const ratio = scrollRatio(preview);
-      editor.scrollTop = ratio * Math.max(editor.scrollHeight - editor.clientHeight, 0);
+      const ratio = getScrollRatio(preview);
+      editor.scrollTop = getScrollTopForRatio(editor, ratio);
       releaseSource();
     };
 
@@ -43,7 +48,7 @@ export function useScrollSync() {
       const currentLine = beforeCursor.split('\n').length - 1;
       const totalLines = Math.max(editor.value.split('\n').length - 1, 1);
       const ratio = currentLine / totalLines;
-      preview.scrollTop = ratio * Math.max(preview.scrollHeight - preview.clientHeight, 0);
+      preview.scrollTop = getScrollTopForRatio(preview, ratio);
     };
 
     editor.addEventListener('scroll', syncEditorToPreview, { passive: true });
