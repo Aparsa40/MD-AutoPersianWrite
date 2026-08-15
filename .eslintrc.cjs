@@ -15,10 +15,6 @@ module.exports = {
     ecmaFeatures: {
       jsx: true,
     },
-    // The current lockfile uses TypeScript 5.9.x while this repository
-    // still uses typescript-eslint v7. The warning is intentionally ignored
-    // until the dependency tree is upgraded together in a dedicated update.
-    onUnsupportedTypeScriptVersion: "ignore",
   },
 
   plugins: [
