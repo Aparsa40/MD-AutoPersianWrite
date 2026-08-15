@@ -146,8 +146,10 @@ docker-compose up -d --build
 **راهنمای مشارکت در پروژه در فایل CONTRIBUTING.md قرار دارد**.
 **پیش از ارسال Pull Request، اجرای حداقل دستورات زیر توصیه می‌شود**:
 ```bash
-npm run lint
 npm run format
+npm run lint
+npm run typecheck
+npm run test
 npm run build
 ```
 ---

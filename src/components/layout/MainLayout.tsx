@@ -14,9 +14,10 @@ export const MainLayout: React.FC = () => {
   const handleMouseMove = useCallback(
     (event: MouseEvent) => {
       if (!isResizing) return;
-      const ratio = orientation === 'horizontal'
-        ? (event.clientX / window.innerWidth) * 100
-        : (event.clientY / window.innerHeight) * 100;
+      const ratio =
+        orientation === 'horizontal'
+          ? (event.clientX / window.innerWidth) * 100
+          : (event.clientY / window.innerHeight) * 100;
       setSplitRatio(ratio);
     },
     [isResizing, orientation, setSplitRatio],
@@ -45,12 +46,27 @@ export const MainLayout: React.FC = () => {
       <TopToolbar />
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <TableOfContents />
-        <main className={`flex min-h-0 min-w-0 flex-1 overflow-hidden ${horizontal ? 'flex-row' : 'flex-col'}`}>
+        <main
+          className={`flex min-h-0 min-w-0 flex-1 overflow-hidden ${horizontal ? 'flex-row' : 'flex-col'}`}
+        >
           {editorVisible && (
-            <section className="min-h-0 min-w-0 overflow-hidden" style={{
-              width: horizontal && viewMode === 'split' ? `${splitRatio}%` : horizontal ? '100%' : undefined,
-              height: !horizontal && viewMode === 'split' ? `${splitRatio}%` : !horizontal ? '100%' : undefined,
-            }}>
+            <section
+              className="min-h-0 min-w-0 overflow-hidden"
+              style={{
+                width:
+                  horizontal && viewMode === 'split'
+                    ? `${splitRatio}%`
+                    : horizontal
+                      ? '100%'
+                      : undefined,
+                height:
+                  !horizontal && viewMode === 'split'
+                    ? `${splitRatio}%`
+                    : !horizontal
+                      ? '100%'
+                      : undefined,
+              }}
+            >
               <EditorPane editorRef={editorRef} />
             </section>
           )}
@@ -66,10 +82,23 @@ export const MainLayout: React.FC = () => {
           )}
 
           {previewVisible && (
-            <section className="min-h-0 min-w-0 overflow-hidden" style={{
-              width: horizontal && viewMode === 'split' ? `${100 - splitRatio}%` : horizontal ? '100%' : undefined,
-              height: !horizontal && viewMode === 'split' ? `${100 - splitRatio}%` : !horizontal ? '100%' : undefined,
-            }}>
+            <section
+              className="min-h-0 min-w-0 overflow-hidden"
+              style={{
+                width:
+                  horizontal && viewMode === 'split'
+                    ? `${100 - splitRatio}%`
+                    : horizontal
+                      ? '100%'
+                      : undefined,
+                height:
+                  !horizontal && viewMode === 'split'
+                    ? `${100 - splitRatio}%`
+                    : !horizontal
+                      ? '100%'
+                      : undefined,
+              }}
+            >
               <PreviewPane previewRef={previewRef} />
             </section>
           )}

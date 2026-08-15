@@ -16,6 +16,73 @@
 
 ---
 
+## [2.2.0] - 2026-08-15
+
+### Added
+
+#### Progressive Web App (PWA)
+
+- اضافه شدن پشتیبانی کامل از نصب برنامه به عنوان Progressive Web App.
+- اضافه شدن `manifest.json` شامل نام، نام کوتاه، توضیحات، رنگ پوسته و تنظیمات نمایش برنامه.
+- اضافه شدن پشتیبانی از حالت `standalone` برای اجرای برنامه مشابه یک نرم‌افزار مستقل.
+- اضافه شدن تنظیمات `RTL` و زبان فارسی در PWA Manifest.
+- اضافه شدن آیکون‌های PWA در اندازه‌های `192x192` و `512x512`.
+- اضافه شدن `maskable` icon support برای سازگاری بهتر آیکون برنامه با سیستم‌عامل‌ها و Launcherهای مختلف.
+- اضافه شدن Service Worker برای مدیریت Cache و lifecycle برنامه.
+- اضافه شدن ثبت خودکار Service Worker هنگام بارگذاری برنامه.
+- اضافه شدن مدیریت نسخه Cache با شناسه نسخه برنامه.
+- اضافه شدن حذف Cacheهای قدیمی هنگام فعال شدن نسخه جدید Service Worker.
+- اضافه شدن `skipWaiting()` و `clients.claim()` برای فعال‌سازی سریع‌تر نسخه جدید Service Worker.
+- اضافه شدن fallback اولیه از Cache برای منابع استاتیک PWA.
+
+### Improved
+
+#### Application Installation
+
+- بهبود قابلیت نصب برنامه روی سیستم‌عامل‌ها و مرورگرهای سازگار با PWA.
+- بهبود اطلاعات نمایش داده‌شده هنگام نصب برنامه از طریق Manifest.
+- هماهنگ‌سازی `theme-color` بین HTML و PWA Manifest.
+- بهبود تجربه اجرای برنامه در حالت standalone.
+
+#### Dependency Security
+
+- به‌روزرسانی `postcss` به نسخه `8.5.26`.
+- به‌روزرسانی dependency غیرمستقیم `nanoid` به نسخه `3.3.18`.
+- رفع آسیب‌پذیری امنیتی گزارش‌شده برای نسخه‌های قدیمی `nanoid`.
+- وضعیت `npm audit` به `0 vulnerabilities` رسید.
+
+### Fixed
+
+- رفع آسیب‌پذیری High Severity مربوط به `nanoid` که از طریق dependency chain مربوط به `postcss` در پروژه وجود داشت.
+- حذف dependency vulnerability باقی‌مانده پس از نصب و بررسی dependencyهای پروژه.
+
+### Documentation
+
+- به‌روزرسانی مستندات پروژه برای قابلیت PWA.
+- ثبت تغییرات نسخه `2.2.0` در `CHANGELOG.md`.
+
+### Validation
+
+نسخه `2.2.0` با بررسی‌های زیر اعتبارسنجی شده است:
+
+- `npm run format`
+- `npm run lint`
+- `npm run typecheck`
+- `npm run test`
+- `npm run build`
+- `npm audit`
+
+نتایج فعلی:
+
+- TypeScript typecheck: موفق
+- Tests: `11 passed`
+- Production build: موفق
+- Security audit: `0 vulnerabilities`
+- ESLint: موفق، با یک warning مربوط به ناسازگاری نسخه TypeScript با `@typescript-eslint`
+- Vite build: موفق، با warning مربوط به بزرگ بودن برخی JavaScript chunks
+
+---
+
 ## [2.1.0] - 2026-08-13
 
 ### Added
@@ -97,4 +164,4 @@
 - پشتیبانی از تم‌های Light، Dark و Sepia.
 - سیستم Plugin Manager پایه برای قابلیت توسعه در نسخه‌های آتی.
 - مستندات Docker و CI/CD.
-- پشتیبانی از اجرای پروژه به صورت PWA.
+- پشتیبانی اولیه از اجرای پروژه به صورت PWA.
