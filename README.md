@@ -67,7 +67,7 @@
 - حفظ Markdown به عنوان فرمت اصلی داده در Editor.
 
 ## 🛠️ تکنولوژی‌ها
-t
+
 - **Core:** React + TypeScript + Vite
 - **Styling:** TailwindCSS + CSS Variables
 - **State Management:** Zustand
