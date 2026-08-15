@@ -11,23 +11,33 @@ export function convertHtmlToMarkdown(html: string): string {
     const children = Array.from(element.childNodes).map(walk).join('');
 
     switch (tag) {
-      case 'h1': return `\n# ${children.trim()}\n\n`;
-      case 'h2': return `\n## ${children.trim()}\n\n`;
-      case 'h3': return `\n### ${children.trim()}\n\n`;
-      case 'h4': return `\n#### ${children.trim()}\n\n`;
-      case 'h5': return `\n##### ${children.trim()}\n\n`;
-      case 'h6': return `\n###### ${children.trim()}\n\n`;
+      case 'h1':
+        return `\n# ${children.trim()}\n\n`;
+      case 'h2':
+        return `\n## ${children.trim()}\n\n`;
+      case 'h3':
+        return `\n### ${children.trim()}\n\n`;
+      case 'h4':
+        return `\n#### ${children.trim()}\n\n`;
+      case 'h5':
+        return `\n##### ${children.trim()}\n\n`;
+      case 'h6':
+        return `\n###### ${children.trim()}\n\n`;
       case 'strong':
-      case 'b': return `**${children.trim()}**`;
+      case 'b':
+        return `**${children.trim()}**`;
       case 'em':
-      case 'i': return `*${children.trim()}*`;
+      case 'i':
+        return `*${children.trim()}*`;
       case 'del':
-      case 's': return `~~${children.trim()}~~`;
+      case 's':
+        return `~~${children.trim()}~~`;
       case 'code':
         return element.parentElement?.tagName.toLowerCase() === 'pre'
           ? children
           : `\`${children}\``;
-      case 'pre': return `\n\`\`\`\n${children.trim()}\n\`\`\`\n\n`;
+      case 'pre':
+        return `\n\`\`\`\n${children.trim()}\n\`\`\`\n\n`;
       case 'a': {
         const href = element.getAttribute('href');
         return href ? `[${children.trim()}](${href})` : children;
@@ -37,14 +47,21 @@ export function convertHtmlToMarkdown(html: string): string {
         const alt = element.getAttribute('alt') ?? '';
         return src ? `![${alt}](${src})` : '';
       }
-      case 'br': return '\n';
-      case 'li': return `- ${children.trim()}\n`;
+      case 'br':
+        return '\n';
+      case 'li':
+        return `- ${children.trim()}\n`;
       case 'ul':
-      case 'ol': return `\n${children}\n`;
-      case 'blockquote': return `\n> ${children.trim().replace(/\n/g, '\n> ')}\n\n`;
-      case 'hr': return '\n---\n\n';
-      case 'p': return `\n${children.trim()}\n\n`;
-      default: return children;
+      case 'ol':
+        return `\n${children}\n`;
+      case 'blockquote':
+        return `\n> ${children.trim().replace(/\n/g, '\n> ')}\n\n`;
+      case 'hr':
+        return '\n---\n\n';
+      case 'p':
+        return `\n${children.trim()}\n\n`;
+      default:
+        return children;
     }
   };
 

@@ -36,8 +36,14 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
 
   const customRemarkPlugins = PluginManager.getRemarkPlugins();
   const customRehypePlugins = PluginManager.getRehypePlugins();
-  const remarkPlugins = useMemo(() => [remarkGfm, remarkMath, ...customRemarkPlugins], [customRemarkPlugins]);
-  const rehypePlugins = useMemo(() => [rehypeKatex, rehypePrism, ...customRehypePlugins], [customRehypePlugins]);
+  const remarkPlugins = useMemo(
+    () => [remarkGfm, remarkMath, ...customRemarkPlugins],
+    [customRemarkPlugins],
+  );
+  const rehypePlugins = useMemo(
+    () => [rehypeKatex, rehypePrism, ...customRehypePlugins],
+    [customRehypePlugins],
+  );
 
   headingIndex.current = 0;
 
@@ -52,53 +58,111 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
         rehypePlugins={rehypePlugins as PluggableList}
         components={{
           p({ children }) {
-            return <p dir="auto" className="my-2 leading-relaxed" style={{ unicodeBidi: 'plaintext' }}>{children}</p>;
+            return (
+              <p dir="auto" className="my-2 leading-relaxed" style={{ unicodeBidi: 'plaintext' }}>
+                {children}
+              </p>
+            );
           },
           h1({ children }) {
             const index = headingIndex.current++;
             const text = React.Children.toArray(children).join('');
-            return <h1 id={getHeadingId(text, index)} dir="auto" className="my-4 text-2xl font-bold">{children}</h1>;
+            return (
+              <h1 id={getHeadingId(text, index)} dir="auto" className="my-4 text-2xl font-bold">
+                {children}
+              </h1>
+            );
           },
           h2({ children }) {
             const index = headingIndex.current++;
             const text = React.Children.toArray(children).join('');
-            return <h2 id={getHeadingId(text, index)} dir="auto" className="my-3 text-xl font-bold">{children}</h2>;
+            return (
+              <h2 id={getHeadingId(text, index)} dir="auto" className="my-3 text-xl font-bold">
+                {children}
+              </h2>
+            );
           },
           h3({ children }) {
             const index = headingIndex.current++;
             const text = React.Children.toArray(children).join('');
-            return <h3 id={getHeadingId(text, index)} dir="auto" className="my-2 text-lg font-bold">{children}</h3>;
+            return (
+              <h3 id={getHeadingId(text, index)} dir="auto" className="my-2 text-lg font-bold">
+                {children}
+              </h3>
+            );
           },
           h4({ children }) {
             const index = headingIndex.current++;
             const text = React.Children.toArray(children).join('');
-            return <h4 id={getHeadingId(text, index)} dir="auto" className="my-2 font-bold">{children}</h4>;
+            return (
+              <h4 id={getHeadingId(text, index)} dir="auto" className="my-2 font-bold">
+                {children}
+              </h4>
+            );
           },
           h5({ children }) {
             const index = headingIndex.current++;
             const text = React.Children.toArray(children).join('');
-            return <h5 id={getHeadingId(text, index)} dir="auto" className="my-2 font-bold">{children}</h5>;
+            return (
+              <h5 id={getHeadingId(text, index)} dir="auto" className="my-2 font-bold">
+                {children}
+              </h5>
+            );
           },
           h6({ children }) {
             const index = headingIndex.current++;
             const text = React.Children.toArray(children).join('');
-            return <h6 id={getHeadingId(text, index)} dir="auto" className="my-2 font-bold">{children}</h6>;
+            return (
+              <h6 id={getHeadingId(text, index)} dir="auto" className="my-2 font-bold">
+                {children}
+              </h6>
+            );
           },
           li({ children }) {
-            return <li dir="auto" className="my-1">{children}</li>;
+            return (
+              <li dir="auto" className="my-1">
+                {children}
+              </li>
+            );
           },
           blockquote({ children }) {
-            return <blockquote dir="auto" className="my-2 border-r-4 border-primary pr-4 italic">{children}</blockquote>;
+            return (
+              <blockquote dir="auto" className="my-2 border-r-4 border-primary pr-4 italic">
+                {children}
+              </blockquote>
+            );
           },
-          code({ inline, className, children, ...props }: ComponentPropsWithoutRef<'code'> & { inline?: boolean }) {
+          code({
+            inline,
+            className,
+            children,
+            ...props
+          }: ComponentPropsWithoutRef<'code'> & { inline?: boolean }) {
             const match = /language-(\w+)/.exec(className || '');
             if (!inline && match?.[1] === 'mermaid') {
               return <MermaidBlock chart={String(children).replace(/\n$/, '')} />;
             }
             if (inline) {
-              return <code className="dir-ltr inline-block rounded bg-surface px-1.5 py-0.5 font-mono text-xs" dir="ltr" {...props}>{children}</code>;
+              return (
+                <code
+                  className="dir-ltr inline-block rounded bg-surface px-1.5 py-0.5 font-mono text-xs"
+                  dir="ltr"
+                  {...props}
+                >
+                  {children}
+                </code>
+              );
             }
-            return <pre className="dir-ltr overflow-x-auto rounded border border-border bg-surface p-4 text-left font-mono text-sm" dir="ltr"><code className={className} dir="ltr" {...props}>{children}</code></pre>;
+            return (
+              <pre
+                className="dir-ltr overflow-x-auto rounded border border-border bg-surface p-4 text-left font-mono text-sm"
+                dir="ltr"
+              >
+                <code className={className} dir="ltr" {...props}>
+                  {children}
+                </code>
+              </pre>
+            );
           },
         }}
       >

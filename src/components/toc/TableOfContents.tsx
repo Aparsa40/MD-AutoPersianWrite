@@ -35,7 +35,9 @@ export const TableOfContents: React.FC = () => {
   });
 
   const jumpToHeading = (heading: Heading, index: number) => {
-    const textarea = document.querySelector<HTMLTextAreaElement>('textarea[data-editor="markdown"]');
+    const textarea = document.querySelector<HTMLTextAreaElement>(
+      'textarea[data-editor="markdown"]',
+    );
     if (!textarea) return;
 
     const targetPosition = lines.slice(0, heading.lineIndex).join('\n').length;
