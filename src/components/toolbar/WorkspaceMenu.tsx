@@ -4,9 +4,10 @@ import { listLocalWorkspaces } from '../../lib/workspace/workspaceRegistry';
 import { useWorkspaceStore } from '../../store/useWorkspaceStore';
 import type { WorkspaceInfo } from '../../types/workspace';
 
+type FileSystemPermissionDescriptor = { mode?: 'read' | 'readwrite' };
 type PermissionCapableDirectoryHandle = FileSystemDirectoryHandle & {
-  queryPermission: (descriptor?: FileSystemHandlePermissionDescriptor) => Promise<PermissionState>;
-  requestPermission: (descriptor?: FileSystemHandlePermissionDescriptor) => Promise<PermissionState>;
+  queryPermission: (descriptor?: FileSystemPermissionDescriptor) => Promise<PermissionState>;
+  requestPermission: (descriptor?: FileSystemPermissionDescriptor) => Promise<PermissionState>;
 };
 
 const asPermissionCapableHandle = (handle: FileSystemDirectoryHandle): PermissionCapableDirectoryHandle =>
