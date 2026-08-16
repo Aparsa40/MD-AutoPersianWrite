@@ -4,6 +4,14 @@ import { listLocalWorkspaces } from '../../lib/workspace/workspaceRegistry';
 import { useWorkspaceStore } from '../../store/useWorkspaceStore';
 import type { WorkspaceInfo } from '../../types/workspace';
 
+type PermissionCapableDirectoryHandle = FileSystemDirectoryHandle & {
+  queryPermission: (descriptor?: FileSystemHandlePermissionDescriptor) => Promise<PermissionState>;
+  requestPermission: (descriptor?: FileSystemHandlePermissionDescriptor) => Promise<PermissionState>;
+};
+
+const asPermissionCapableHandle = (handle: FileSystemDirectoryHandle): PermissionCapableDirectoryHandle =>
+  handle as PermissionCapableDirectoryHandle;
+
 export const WorkspaceMenu: React.FC = () => {
   const { activeWorkspace, setActiveWorkspace } = useWorkspaceStore();
   const [isOpen, setIsOpen] = useState(false);
@@ -47,8 +55,9 @@ export const WorkspaceMenu: React.FC = () => {
   const handleSelectRegisteredWorkspace = async (workspace: WorkspaceInfo) => {
     if (!workspace.handle) return;
     try {
-      const permission = await workspace.handle.queryPermission({ mode: 'readwrite' });
-      if (permission !== 'granted' && await workspace.handle.requestPermission({ mode: 'readwrite' }) !== 'granted') {
+      const handle = asPermissionCapableHandle(workspace.handle);
+      const permission = await handle.queryPermission({ mode: 'readwrite' });
+      if (permission !== 'granted' && await handle.requestPermission({ mode: 'readwrite' }) !== 'granted') {
         throw new Error('دسترسی Workspace تأیید نشد.');
       }
       setActiveWorkspace(workspace);
