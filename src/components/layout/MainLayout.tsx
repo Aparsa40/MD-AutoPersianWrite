@@ -3,6 +3,7 @@ import { TopToolbar } from '../toolbar/TopToolbar';
 import { EditorPane } from '../editor/EditorPane';
 import { PreviewPane } from '../preview/PreviewPane';
 import { TableOfContents } from '../toc/TableOfContents';
+import { WorkspaceExplorer } from '../workspace/WorkspaceExplorer';
 import { useScrollSync } from '../../hooks/useScrollSync';
 import { useLayoutStore } from '../../store/useLayoutStore';
 
@@ -45,6 +46,7 @@ export const MainLayout: React.FC = () => {
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-bg text-text-main">
       <TopToolbar />
       <div className="flex min-h-0 flex-1 overflow-hidden">
+        <WorkspaceExplorer />
         <TableOfContents />
         <main
           className={`flex min-h-0 min-w-0 flex-1 overflow-hidden ${horizontal ? 'flex-row' : 'flex-col'}`}
