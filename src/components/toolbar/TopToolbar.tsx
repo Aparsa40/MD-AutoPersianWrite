@@ -304,7 +304,7 @@ export const TopToolbar: React.FC = () => {
                   }}
                   className="w-full px-4 py-2 text-right text-sm hover:bg-bg"
                 >
-                  درباره ما
+                  راهنمای برنامه
                 </button>
               </div>
             )}

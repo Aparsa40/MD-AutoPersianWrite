@@ -8,7 +8,7 @@ export default defineConfig({
     // optional feature. Keep the normal application chunks on the default
     // 500 kB budget while allowing the isolated Mermaid async chunk.
     chunkSizeWarningLimit: 1500,
-    rolldownOptions: {
+   /* rolldownOptions: {
       output: {
         codeSplitting: {
           groups: [
@@ -32,6 +32,6 @@ export default defineConfig({
           ],
         },
       },
-    },
+    },*/
   },
 });

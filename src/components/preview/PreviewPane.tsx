@@ -118,9 +118,33 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
               </h6>
             );
           },
-          li({ children }) {
+          ul({ children, className, ...props }) {
+            const isTaskList = className?.split(/\s+/).includes('contains-task-list');
             return (
-              <li dir="auto" className="my-1">
+              <ul
+                dir="auto"
+                className={`${isTaskList ? 'list-none' : 'list-disc'} my-2 space-y-1 pr-6 pl-0`}
+                {...props}
+              >
+                {children}
+              </ul>
+            );
+          },
+          ol({ children, ...props }) {
+            return (
+              <ol dir="auto" className="my-2 list-decimal space-y-1 pr-6 pl-0" {...props}>
+                {children}
+              </ol>
+            );
+          },
+          li({ children, className, ...props }) {
+            const isTaskItem = className?.split(/\s+/).includes('task-list-item');
+            return (
+              <li
+                dir="auto"
+                className={`${isTaskItem ? 'list-none' : ''} my-1`}
+                {...props}
+              >
                 {children}
               </li>
             );
