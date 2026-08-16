@@ -1,4 +1,4 @@
-const CACHE_NAME = "md-autopersianwrite-v2.2.2";
+const CACHE_NAME = "md-autopersianwrite-v2.3.0";
 
 const APP_SHELL = [
   "/",
@@ -105,3 +105,5 @@ self.addEventListener("fetch", (event) => {
       .catch(() => caches.match(request))
   );
 });
+
+

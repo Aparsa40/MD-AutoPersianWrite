@@ -140,11 +140,7 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
           li({ children, className, ...props }) {
             const isTaskItem = className?.split(/\s+/).includes('task-list-item');
             return (
-              <li
-                dir="auto"
-                className={`${isTaskItem ? 'list-none' : ''} my-1`}
-                {...props}
-              >
+              <li dir="auto" className={`${isTaskItem ? 'list-none' : ''} my-1`} {...props}>
                 {children}
               </li>
             );

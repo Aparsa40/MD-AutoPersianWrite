@@ -34,4 +34,5 @@ pnpm-debug.log*
 Thumbs.db
 
 # Local workspace files
+prepare-v2.3.0.ps1
 All-Projects-v2.code-workspace
