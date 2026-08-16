@@ -5,6 +5,9 @@ import { useLayoutStore } from '../../store/useLayoutStore';
 import { exportAsMarkdown } from '../../lib/export/fileExport';
 import { FeedbackModal } from '../modals/FeedbackModal';
 import { AboutModal } from '../modals/AboutModal';
+import { WorkspaceMenu } from './WorkspaceMenu';
+import { DocumentStyleMenu } from './DocumentStyleMenu';
+import { AgentMenu } from './AgentMenu';
 
 export const TopToolbar: React.FC = () => {
   const { markdown, fileName, setFileName, setMarkdown, resetEditor, insertTextAtCursor } =
@@ -99,6 +102,8 @@ export const TopToolbar: React.FC = () => {
               </div>
             )}
           </div>
+
+          <WorkspaceMenu />
 
           <div className="relative">
             <button
@@ -275,6 +280,9 @@ export const TopToolbar: React.FC = () => {
               </div>
             )}
           </div>
+
+          <DocumentStyleMenu />
+          <AgentMenu />
 
           <div className="relative">
             <button
