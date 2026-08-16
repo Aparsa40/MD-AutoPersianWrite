@@ -1,4 +1,5 @@
 import type { WorkspaceInfo } from '../../types/workspace';
+import { registerLocalWorkspace } from './workspaceRegistry';
 
 interface FileSystemDirectoryPickerWindow extends Window {
   showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle>;
@@ -11,43 +12,31 @@ const getDirectoryPicker = (): (() => Promise<FileSystemDirectoryHandle>) | null
 
 const ensureLocalWorkspaceSupport = (): (() => Promise<FileSystemDirectoryHandle>) => {
   const picker = getDirectoryPicker();
-
-  if (!picker) {
-    throw new Error('مرورگر فعلی از انتخاب پوشه برای Workspace محلی پشتیبانی نمی‌کند.');
-  }
-
+  if (!picker) throw new Error('مرورگر فعلی از Workspace محلی پشتیبانی نمی‌کند.');
   return picker;
 };
 
+const toWorkspaceInfo = (handle: FileSystemDirectoryHandle): WorkspaceInfo => ({
+  id: `local:${handle.name}:${crypto.randomUUID()}`,
+  name: handle.name,
+  type: 'local',
+  location: handle.name,
+  handle,
+});
+
 export const createLocalWorkspace = async (name: string): Promise<WorkspaceInfo> => {
   const workspaceName = name.trim();
+  if (!workspaceName) throw new Error('نام Workspace نمی‌تواند خالی باشد.');
 
-  if (!workspaceName) {
-    throw new Error('نام Workspace نمی‌تواند خالی باشد.');
-  }
-
-  const pickParentDirectory = ensureLocalWorkspaceSupport();
-  const parentHandle = await pickParentDirectory();
+  const parentHandle = await ensureLocalWorkspaceSupport()();
   const workspaceHandle = await parentHandle.getDirectoryHandle(workspaceName, { create: true });
-
-  return {
-    id: `local:${workspaceName}:${Date.now()}`,
-    name: workspaceName,
-    type: 'local',
-    location: workspaceName,
-    handle: workspaceHandle,
-  };
+  const workspace = toWorkspaceInfo(workspaceHandle);
+  await registerLocalWorkspace(workspace);
+  return workspace;
 };
 
 export const openLocalWorkspace = async (): Promise<WorkspaceInfo> => {
-  const pickDirectory = ensureLocalWorkspaceSupport();
-  const workspaceHandle = await pickDirectory();
-
-  return {
-    id: `local:${workspaceHandle.name}:${Date.now()}`,
-    name: workspaceHandle.name,
-    type: 'local',
-    location: workspaceHandle.name,
-    handle: workspaceHandle,
-  };
+  const workspace = toWorkspaceInfo(await ensureLocalWorkspaceSupport()());
+  await registerLocalWorkspace(workspace);
+  return workspace;
 };
