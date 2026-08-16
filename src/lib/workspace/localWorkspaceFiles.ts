@@ -11,9 +11,18 @@ export type WorkspaceClipboard = {
   sourceParent: FileSystemDirectoryHandle;
 };
 
+type DirectoryEntriesHandle = FileSystemDirectoryHandle & {
+  entries: () => AsyncIterableIterator<[string, FileSystemFileHandle | FileSystemDirectoryHandle]>;
+};
+
+const asDirectoryEntriesHandle = (directory: FileSystemDirectoryHandle): DirectoryEntriesHandle =>
+  directory as DirectoryEntriesHandle;
+
+const getDirectoryEntries = (directory: FileSystemDirectoryHandle) => asDirectoryEntriesHandle(directory).entries();
+
 export const listDirectory = async (directory: FileSystemDirectoryHandle): Promise<WorkspaceEntry[]> => {
   const entries: WorkspaceEntry[] = [];
-  for await (const [name, handle] of directory.entries()) entries.push({ name, kind: handle.kind, handle });
+  for await (const [name, handle] of getDirectoryEntries(directory)) entries.push({ name, kind: handle.kind, handle });
   return entries.sort((a, b) => Number(b.kind === 'directory') - Number(a.kind === 'directory') || a.name.localeCompare(b.name));
 };
 
@@ -50,7 +59,7 @@ export const copyEntry = async (
     return;
   }
   const target = await targetParent.getDirectoryHandle(targetName, { create: true });
-  for await (const [name, child] of source.entries()) await copyEntry(child, target, name);
+  for await (const [name, child] of getDirectoryEntries(source)) await copyEntry(child, target, name);
 };
 
 export const renameEntry = async (parent: FileSystemDirectoryHandle, oldName: string, newName: string): Promise<void> => {
