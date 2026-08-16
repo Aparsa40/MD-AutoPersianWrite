@@ -1,4 +1,4 @@
-const CACHE_NAME = "md-autopersianwrite-v2.2.0";
+const CACHE_NAME = "md-autopersianwrite-v2.2.2";
 
 const APP_SHELL = [
   "/",
@@ -43,11 +43,6 @@ self.addEventListener("fetch", (event) => {
 
   const requestUrl = new URL(request.url);
 
-  /*
-   * Navigation requests:
-   * Try the network first so users receive the latest application.
-   * If offline, fall back to the cached application shell.
-   */
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
@@ -68,10 +63,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  /*
-   * Same-origin static assets:
-   * Cache-first strategy for JavaScript, CSS, images, fonts, etc.
-   */
   if (requestUrl.origin === self.location.origin) {
     event.respondWith(
       caches.match(request).then((cachedResponse) => {
@@ -98,10 +89,6 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  /*
-   * External resources such as the Vazirmatn CDN:
-   * Network first, then use a previously cached response when offline.
-   */
   event.respondWith(
     fetch(request)
       .then((response) => {

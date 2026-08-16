@@ -16,6 +16,49 @@
 
 ---
 
+## [2.2.2] - 2026-08-16
+
+### Added
+
+#### Markdown Starter Document
+
+- جایگزینی محتوای اولیه Editor با یک سند جامع Markdown برای معرفی و آزمایش قابلیت‌های اصلی برنامه.
+- اضافه شدن نمونه‌های Heading، قالب‌بندی متن، لیست‌های نامرتب و مرتب، Task List، لینک، تصویر، جدول، Code Block، Math، Mermaid و Footnote به سند پیش‌فرض.
+
+#### Application Guide
+
+- تبدیل بخش «درباره برنامه» به «راهنمای برنامه».
+- اضافه شدن راهنمای کاربردی قابلیت‌های Editor و Preview.
+- اضافه شدن نمونه‌های قابل مشاهده برای لیست‌ها، جدول، کد، Markdown و قابلیت‌های مرتبط.
+
+### Improved
+
+- بهبود متن و گزینه‌های منوی Help برای دسترسی مستقیم به راهنمای برنامه.
+- بهبود تجربه اولیه کاربر با نمایش یک سند نمونه کامل هنگام اجرای برنامه.
+- اصلاح رندر Live Preview برای نمایش صحیح لیست‌های unordered و ordered.
+- پشتیبانی بهتر از Task List در Preview با حفظ ساختار ویژه آن.
+
+### Fixed
+
+- رفع مشکل ناپدید شدن markerهای لیست Markdown در Preview.
+- علت اصلی: Tailwind CSS Preflight استایل پیش‌فرض `ul` و `ol` را reset می‌کند و پروژه نیز از `@tailwindcss/typography` استفاده نمی‌کند؛ بنابراین markerهای لیست در DOM وجود داشتند اما قابل مشاهده نبودند.
+- برای جلوگیری از وابستگی به رفتار CSS خارجی، `ul` و `ol` در `PreviewPane` با استایل‌های صریح Markdown render می‌شوند.
+
+### Documentation
+
+- ثبت تغییرات نسخه `2.2.2` در `CHANGELOG.md`.
+
+### Validation
+
+- GitHub Actions CI با Node.js 20 و 22: موفق.
+- `npm run lint`: موفق.
+- `npm run typecheck`: موفق.
+- `npm run test`: موفق.
+- `npm run build`: موفق.
+- CodeQL برای commit نهایی release در زمان merge در حال اجرا بود و باید نتیجه نهایی آن نیز بررسی شود.
+
+---
+
 ## [2.2.0] - 2026-08-15
 
 ### Added
