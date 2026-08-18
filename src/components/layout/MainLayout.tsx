@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { TopToolbar } from '../toolbar/TopToolbar';
 import { EditorPane } from '../editor/EditorPane';
 import { PreviewPane } from '../preview/PreviewPane';
@@ -14,16 +14,36 @@ export const MainLayout: React.FC = () => {
   const { editorRef, previewRef } = useScrollSync();
   const { viewMode, orientation, splitRatio, setSplitRatio } = useLayoutStore();
   const activeSessionId = useDocumentSessionStore((state) => state.activeSessionId);
+  const sessions = useDocumentSessionStore((state) => state.sessions);
+  const createSession = useDocumentSessionStore((state) => state.createSession);
   const updateActiveDraft = useDocumentSessionStore((state) => state.updateActiveDraft);
   const markdown = useEditorStore((state) => state.markdown);
   const fileName = useEditorStore((state) => state.fileName);
   const isDirty = useEditorStore((state) => state.isDirty);
   const [isResizing, setIsResizing] = useState(false);
+  const handledResetRef = useRef<string | null>(null);
 
   useEffect(() => {
     if (!activeSessionId) return;
     updateActiveDraft({ markdown, fileName, isDirty });
   }, [activeSessionId, fileName, isDirty, markdown, updateActiveDraft]);
+
+  useEffect(() => {
+    const resetSignature = `${fileName}\u0000${markdown}\u0000${isDirty}`;
+    if (fileName !== 'untitled.md' || markdown !== '' || isDirty || handledResetRef.current === resetSignature) return;
+    handledResetRef.current = resetSignature;
+    const active = sessions.find((session) => session.id === activeSessionId);
+    if (active && active.fileName === 'untitled.md' && active.markdown === '' && !active.isWorkspaceFile) return;
+    createSession({
+      fileName: 'untitled.md',
+      markdown: '',
+      isDirty: false,
+      fileHandle: null,
+      workspaceDirectory: null,
+      isWorkspaceFile: false,
+      isNewWorkspaceFile: false,
+    });
+  }, [activeSessionId, createSession, fileName, isDirty, markdown, sessions]);
 
   const handleMouseMove = useCallback(
     (event: MouseEvent) => {
