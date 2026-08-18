@@ -2,7 +2,6 @@ import React, { useEffect, useRef } from 'react';
 import { useEditorStore } from '../../store/useEditorStore';
 import { useThemeStore } from '../../store/useThemeStore';
 import { convertHtmlToMarkdown } from '../../lib/markdown/htmlToMarkdown';
-import { DocumentCloseButton } from '../document/DocumentCloseButton';
 
 interface EditorPaneProps {
   editorRef?: React.RefObject<HTMLTextAreaElement>;
@@ -42,7 +41,6 @@ export const EditorPane: React.FC<EditorPaneProps> = ({ editorRef }) => {
 
   return (
     <div className="relative h-full w-full overflow-hidden">
-      <DocumentCloseButton />
       <textarea
         ref={textareaRef}
         data-editor="markdown"
@@ -51,7 +49,7 @@ export const EditorPane: React.FC<EditorPaneProps> = ({ editorRef }) => {
         onPaste={handlePaste}
         dir="auto"
         placeholder="متن مارک‌داون خود را اینجا بنویسید..."
-        className="h-full w-full resize-none overflow-y-auto bg-transparent p-6 pr-12 leading-relaxed outline-none custom-scrollbar"
+        className="h-full w-full resize-none overflow-y-auto bg-transparent p-6 leading-relaxed outline-none custom-scrollbar"
         style={{
           fontSize: `${fontSize}px`,
           fontFamily,
