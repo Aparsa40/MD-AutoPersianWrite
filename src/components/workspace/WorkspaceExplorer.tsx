@@ -17,21 +17,25 @@ import {
 type TreeNode = WorkspaceEntry & { path: string };
 
 type FileSystemSavePickerWindow = Window & {
-  showSaveFilePicker?: (options?: {
-    suggestedName?: string;
-    startIn?: FileSystemDirectoryHandle;
-  }) => Promise<FileSystemFileHandle>;
+  showSaveFilePicker?: (options?: { suggestedName?: string; startIn?: FileSystemDirectoryHandle }) => Promise<FileSystemFileHandle>;
 };
 
-const getSaveFilePicker = (): ((options?: { suggestedName?: string; startIn?: FileSystemDirectoryHandle }) => Promise<FileSystemFileHandle>) | null => {
+const getSaveFilePicker = () => {
   const picker = (window as FileSystemSavePickerWindow).showSaveFilePicker;
   return typeof picker === 'function' ? picker.bind(window) : null;
 };
 
 export const WorkspaceExplorer: React.FC = () => {
   const { activeWorkspace } = useWorkspaceStore();
-  const { markdown, fileName, setMarkdown, setFileName } = useEditorStore();
-  const { fileHandle, isWorkspaceFile, isNewWorkspaceFile, setWorkspaceFile, markPersisted } = useDocumentSessionStore();
+  const sessions = useDocumentSessionStore((state) => state.sessions);
+  const activeSessionId = useDocumentSessionStore((state) => state.activeSessionId);
+  const createSession = useDocumentSessionStore((state) => state.createSession);
+  const activateSession = useDocumentSessionStore((state) => state.activateSession);
+  const markPersisted = useDocumentSessionStore((state) => state.markPersisted);
+  const setWorkspaceFile = useDocumentSessionStore((state) => state.setWorkspaceFile);
+  const markdown = useEditorStore((state) => state.markdown);
+  const fileName = useEditorStore((state) => state.fileName);
+  const isDirty = useEditorStore((state) => state.isDirty);
   const [entries, setEntries] = useState<TreeNode[]>([]);
   const [currentPath, setCurrentPath] = useState<string[]>([]);
   const [clipboard, setClipboard] = useState<{ entry: WorkspaceEntry; parent: FileSystemDirectoryHandle; cut: boolean } | null>(null);
@@ -76,21 +80,26 @@ export const WorkspaceExplorer: React.FC = () => {
     if (!directory || !name) return;
 
     const handle = await createFile(directory, name);
-    setMarkdown('');
-    setFileName(handle.name);
-    useEditorStore.setState({ isDirty: true });
-    setWorkspaceFile(handle, directory, true);
+    createSession({
+      fileName: handle.name,
+      markdown: '',
+      isDirty: true,
+      fileHandle: handle,
+      workspaceDirectory: directory,
+      isWorkspaceFile: true,
+      isNewWorkspaceFile: true,
+    });
     await refresh();
   };
 
   const handleSaveFile = async () => {
     const directory = await currentDirectory();
-    if (!directory) return;
+    if (!directory || activeSessionId === null) return;
 
-    if (isWorkspaceFile && fileHandle) {
-      await writeTextFile(fileHandle, markdown);
-      markPersisted(fileHandle);
-      useEditorStore.setState({ isDirty: false });
+    const activeSession = sessions.find((session) => session.id === activeSessionId);
+    if (activeSession?.isWorkspaceFile && activeSession.fileHandle) {
+      await writeTextFile(activeSession.fileHandle, markdown);
+      markPersisted(activeSession.fileHandle);
       await refresh();
       return;
     }
@@ -107,9 +116,8 @@ export const WorkspaceExplorer: React.FC = () => {
         startIn: directory,
       });
       await writeTextFile(handle, markdown);
-      setFileName(handle.name);
-      useEditorStore.setState({ isDirty: false });
       setWorkspaceFile(handle, directory, false);
+      useEditorStore.setState({ fileName: handle.name, isDirty: false });
       await refresh();
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
@@ -122,17 +130,31 @@ export const WorkspaceExplorer: React.FC = () => {
       setCurrentPath((path) => [...path, entry.name]);
       return;
     }
+
     const extension = entry.name.split('.').pop()?.toLowerCase();
     if (!['md', 'markdown', 'txt'].includes(extension ?? '')) {
       window.alert('فعلاً فقط فایل‌های متنی Markdown/TXT در Editor باز می‌شوند.');
       return;
     }
+
     const directory = await currentDirectory();
     if (!directory) return;
-    setMarkdown(await readTextFile(entry.handle as FileSystemFileHandle));
-    setFileName(entry.name);
-    useEditorStore.setState({ isDirty: false });
-    setWorkspaceFile(entry.handle as FileSystemFileHandle, directory, false);
+
+    const existing = sessions.find((session) => session.fileHandle === entry.handle);
+    if (existing) {
+      activateSession(existing.id);
+      return;
+    }
+
+    createSession({
+      fileName: entry.name,
+      markdown: await readTextFile(entry.handle as FileSystemFileHandle),
+      isDirty: false,
+      fileHandle: entry.handle as FileSystemFileHandle,
+      workspaceDirectory: directory,
+      isWorkspaceFile: true,
+      isNewWorkspaceFile: false,
+    });
   };
 
   const handleCopy = async (entry: WorkspaceEntry, cut: boolean) => {
@@ -186,7 +208,9 @@ export const WorkspaceExplorer: React.FC = () => {
           {currentPath.map((part) => <span key={part}>/ {part}</span>)}
         </div>
         {entries.map((entry) => {
-          const isNewCurrentFile = entry.kind === 'file' && isNewWorkspaceFile && isWorkspaceFile && fileHandle?.name === entry.name && fileName === entry.name;
+          const isNewCurrentFile = entry.kind === 'file' && sessions.some(
+            (session) => session.id === activeSessionId && session.fileHandle === entry.handle && session.isNewWorkspaceFile,
+          );
           return (
             <div key={entry.path} className="group flex items-center gap-1 rounded px-2 py-1 hover:bg-bg">
               <button className="min-w-0 flex-1 truncate text-right" onDoubleClick={() => void handleOpen(entry)}>{entry.kind === 'directory' ? '📁' : '📄'} {entry.name}</button>
