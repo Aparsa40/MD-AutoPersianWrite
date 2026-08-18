@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
+import { useEditorStore } from '../../store/useEditorStore';
 import { useDocumentSessionStore, type DocumentSession } from '../../store/useDocumentSessionStore';
 import { writeTextFile } from '../../lib/workspace/localWorkspaceFiles';
 
 type FileSystemSavePickerWindow = Window & {
-  showSaveFilePicker?: (options?: {
-    suggestedName?: string;
-    startIn?: FileSystemDirectoryHandle;
-  }) => Promise<FileSystemFileHandle>;
+  showSaveFilePicker?: (options?: { suggestedName?: string; startIn?: FileSystemDirectoryHandle }) => Promise<FileSystemFileHandle>;
 };
 
 const getSaveFilePicker = () => {
@@ -18,20 +16,19 @@ const saveSession = async (session: DocumentSession) => {
   const picker = getSaveFilePicker();
   if (!picker) {
     window.alert('مرورگر فعلی از پنجره ذخیره فایل پشتیبانی نمی‌کند.');
-    return false;
+    return null;
   }
-
   try {
     const handle = await picker({
       suggestedName: session.fileName?.trim() || 'document.md',
       startIn: session.workspaceDirectory ?? undefined,
     });
     await writeTextFile(handle, session.markdown);
-    return { handle };
+    return handle;
   } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') return false;
+    if (error instanceof DOMException && error.name === 'AbortError') return null;
     window.alert(error instanceof Error ? error.message : 'ذخیره فایل انجام نشد.');
-    return false;
+    return null;
   }
 };
 
@@ -40,46 +37,30 @@ export const DocumentSessionTabs: React.FC = () => {
   const activeSessionId = useDocumentSessionStore((state) => state.activeSessionId);
   const activateSession = useDocumentSessionStore((state) => state.activateSession);
   const closeSession = useDocumentSessionStore((state) => state.closeSession);
-  const updateActiveDraft = useDocumentSessionStore((state) => state.updateActiveDraft);
+  const updateSession = useDocumentSessionStore((state) => state.updateSession);
+  const markdown = useEditorStore((state) => state.markdown);
+  const fileName = useEditorStore((state) => state.fileName);
+  const isDirty = useEditorStore((state) => state.isDirty);
   const [closingId, setClosingId] = useState<string | null>(null);
-
-  const markdown = useDocumentSessionStore(() => '');
-  void markdown;
-
-  useEffect(() => {
-    // The active editor is mirrored into the active session by MainLayout's effect.
-    return undefined;
-  }, [activeSessionId]);
 
   if (!sessions.length) return null;
 
   const handleClose = async (session: DocumentSession) => {
     if (closingId) return;
     setClosingId(session.id);
-
     try {
-      let current = session;
-      if (session.id === activeSessionId) {
-        const editor = await import('../../store/useEditorStore');
-        const state = editor.useEditorStore.getState();
-        current = { ...session, markdown: state.markdown, fileName: state.fileName, isDirty: state.isDirty };
-      }
-
+      const current = session.id === activeSessionId ? { ...session, markdown, fileName, isDirty } : session;
       if (current.isNewWorkspaceFile || current.isDirty) {
-        const saved = await saveSession(current);
-        if (!saved) return;
-        updateActiveDraft({ markdown: current.markdown, fileName: saved.handle.name, isDirty: false });
-        if (current.id === activeSessionId) {
-          useDocumentSessionStore.setState((state) => ({
-            sessions: state.sessions.map((item) =>
-              item.id === current.id
-                ? { ...item, fileHandle: saved.handle, fileName: saved.handle.name, isDirty: false, isNewWorkspaceFile: false, isWorkspaceFile: true }
-                : item,
-            ),
-          }));
-        }
+        const handle = await saveSession(current);
+        if (!handle) return;
+        updateSession(current.id, {
+          fileHandle: handle,
+          fileName: handle.name,
+          isDirty: false,
+          isNewWorkspaceFile: false,
+          isWorkspaceFile: true,
+        });
       }
-
       closeSession(session.id);
     } finally {
       setClosingId(null);
