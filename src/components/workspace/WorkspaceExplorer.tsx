@@ -35,7 +35,6 @@ export const WorkspaceExplorer: React.FC = () => {
   const setWorkspaceFile = useDocumentSessionStore((state) => state.setWorkspaceFile);
   const markdown = useEditorStore((state) => state.markdown);
   const fileName = useEditorStore((state) => state.fileName);
-  const isDirty = useEditorStore((state) => state.isDirty);
   const [entries, setEntries] = useState<TreeNode[]>([]);
   const [currentPath, setCurrentPath] = useState<string[]>([]);
   const [clipboard, setClipboard] = useState<{ entry: WorkspaceEntry; parent: FileSystemDirectoryHandle; cut: boolean } | null>(null);
