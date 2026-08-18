@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { createLocalWorkspace, openLocalWorkspace } from '../../lib/workspace/localWorkspace';
+import { openLocalWorkspace } from '../../lib/workspace/localWorkspace';
 import { listLocalWorkspaces } from '../../lib/workspace/workspaceRegistry';
 import { useWorkspaceStore } from '../../store/useWorkspaceStore';
 import type { WorkspaceInfo } from '../../types/workspace';
@@ -16,29 +16,24 @@ const asPermissionCapableHandle = (handle: FileSystemDirectoryHandle): Permissio
 export const WorkspaceMenu: React.FC = () => {
   const { activeWorkspace, setActiveWorkspace } = useWorkspaceStore();
   const [isOpen, setIsOpen] = useState(false);
-  const [activeSubmenu, setActiveSubmenu] = useState<'create' | 'open' | null>(null);
+  const [activeSubmenu, setActiveSubmenu] = useState<'open' | null>(null);
   const [localWorkspaces, setLocalWorkspaces] = useState<WorkspaceInfo[]>([]);
 
   const refreshWorkspaces = async () => {
-    try { setLocalWorkspaces(await listLocalWorkspaces()); } catch { setLocalWorkspaces([]); }
+    try {
+      setLocalWorkspaces(await listLocalWorkspaces());
+    } catch {
+      setLocalWorkspaces([]);
+    }
   };
 
-  useEffect(() => { void refreshWorkspaces(); }, []);
+  useEffect(() => {
+    void refreshWorkspaces();
+  }, []);
 
-  const closeMenu = () => { setIsOpen(false); setActiveSubmenu(null); };
-
-  const handleCreateLocalWorkspace = async () => {
-    const name = window.prompt('نام محیط کاری را وارد کنید:');
-    if (!name?.trim()) return;
-    try {
-      const workspace = await createLocalWorkspace(name);
-      setActiveWorkspace(workspace);
-      await refreshWorkspaces();
-      closeMenu();
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') return;
-      window.alert(error instanceof Error ? error.message : 'ساخت Workspace انجام نشد.');
-    }
+  const closeMenu = () => {
+    setIsOpen(false);
+    setActiveSubmenu(null);
   };
 
   const handleOpenLocalWorkspace = async () => {
@@ -68,7 +63,7 @@ export const WorkspaceMenu: React.FC = () => {
     }
   };
 
-  const toggleSubmenu = (submenu: 'create' | 'open') => setActiveSubmenu(activeSubmenu === submenu ? null : submenu);
+  const toggleOpenSubmenu = () => setActiveSubmenu(activeSubmenu === 'open' ? null : 'open');
 
   return (
     <div className="relative">
@@ -76,25 +71,15 @@ export const WorkspaceMenu: React.FC = () => {
       {isOpen && (
         <div className="absolute right-0 mt-2 w-72 rounded border border-border bg-surface py-1 shadow-lg">
           <div className="relative">
-            <button type="button" onClick={() => toggleSubmenu('create')} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">ساخت محیط کاری (Create Workspace)</button>
-            {activeSubmenu === 'create' && (
-              <div className="absolute right-full top-0 mr-1 w-52 rounded border border-border bg-surface py-1 shadow-lg">
-                <button type="button" onClick={handleCreateLocalWorkspace} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">سیستم محلی (Local)</button>
-                <button type="button" onClick={() => window.alert('وقتی به Cloud Workspace رسیدیم، ابتدا API لازم Google Drive را تنظیم می‌کنیم.')} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">فضای ابری (Cloud)</button>
-              </div>
-            )}
-          </div>
-
-          <div className="relative">
-            <button type="button" onClick={() => toggleSubmenu('open')} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">باز کردن محیط کاری (Open Workspace)</button>
+            <button type="button" onClick={toggleOpenSubmenu} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">باز کردن محیط کاری (Open Workspace)</button>
             {activeSubmenu === 'open' && (
               <div className="absolute right-full top-0 mr-1 w-64 rounded border border-border bg-surface py-1 shadow-lg">
                 {localWorkspaces.map((workspace) => (
                   <button key={workspace.id} type="button" onClick={() => void handleSelectRegisteredWorkspace(workspace)} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">📁 {workspace.name}</button>
                 ))}
                 {localWorkspaces.length > 0 && <div className="my-1 border-t border-border" />}
-                <button type="button" onClick={handleOpenLocalWorkspace} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">انتخاب Workspace دیگر (Local)</button>
-                <button type="button" onClick={() => window.alert('باز کردن Workspace ابری را بعد از اتصال Google Drive پیاده‌سازی می‌کنیم.')} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">فضای ابری (Cloud)</button>
+                <button type="button" onClick={handleOpenLocalWorkspace} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">سیستم محلی (Local)</button>
+                <button type="button" onClick={() => window.alert('Workspace ابری را بعد از اتصال Google Drive پیاده‌سازی می‌کنیم.')} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">فضای ابری (Cloud)</button>
               </div>
             )}
           </div>
