@@ -60,6 +60,9 @@ export const DocumentSessionTabs: React.FC = () => {
           isNewWorkspaceFile: false,
           isWorkspaceFile: true,
         });
+        if (current.id === activeSessionId) {
+          useEditorStore.setState({ fileName: handle.name, isDirty: false });
+        }
       }
       closeSession(session.id);
     } finally {
