@@ -71,7 +71,7 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
               const index = headingIndex.current++;
               const text = React.Children.toArray(children).join('');
               return (
-                <h1 id={getHeadingId(text, index)} dir="auto" className="my-4 text-2xl font-bold">
+                <h1 id={getHeadingId(text, index)} data-preview-heading="true" dir="auto" className="my-4 text-2xl font-bold">
                   {children}
                 </h1>
               );
@@ -80,7 +80,7 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
               const index = headingIndex.current++;
               const text = React.Children.toArray(children).join('');
               return (
-                <h2 id={getHeadingId(text, index)} dir="auto" className="my-3 text-xl font-bold">
+                <h2 id={getHeadingId(text, index)} data-preview-heading="true" dir="auto" className="my-3 text-xl font-bold">
                   {children}
                 </h2>
               );
@@ -89,7 +89,7 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
               const index = headingIndex.current++;
               const text = React.Children.toArray(children).join('');
               return (
-                <h3 id={getHeadingId(text, index)} dir="auto" className="my-2 text-lg font-bold">
+                <h3 id={getHeadingId(text, index)} data-preview-heading="true" dir="auto" className="my-2 text-lg font-bold">
                   {children}
                 </h3>
               );
@@ -98,7 +98,7 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
               const index = headingIndex.current++;
               const text = React.Children.toArray(children).join('');
               return (
-                <h4 id={getHeadingId(text, index)} dir="auto" className="my-2 font-bold">
+                <h4 id={getHeadingId(text, index)} data-preview-heading="true" dir="auto" className="my-2 font-bold">
                   {children}
                 </h4>
               );
@@ -107,7 +107,7 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
               const index = headingIndex.current++;
               const text = React.Children.toArray(children).join('');
               return (
-                <h5 id={getHeadingId(text, index)} dir="auto" className="my-2 font-bold">
+                <h5 id={getHeadingId(text, index)} data-preview-heading="true" dir="auto" className="my-2 font-bold">
                   {children}
                 </h5>
               );
@@ -116,7 +116,7 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
               const index = headingIndex.current++;
               const text = React.Children.toArray(children).join('');
               return (
-                <h6 id={getHeadingId(text, index)} dir="auto" className="my-2 font-bold">
+                <h6 id={getHeadingId(text, index)} data-preview-heading="true" dir="auto" className="my-2 font-bold">
                   {children}
                 </h6>
               );
@@ -155,12 +155,7 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
                 </blockquote>
               );
             },
-            code({
-              inline,
-              className,
-              children,
-              ...props
-            }: ComponentPropsWithoutRef<'code'> & { inline?: boolean }) {
+            code({ inline, className, children, ...props }: ComponentPropsWithoutRef<'code'> & { inline?: boolean }) {
               const match = /language-(\w+)/.exec(className || '');
               if (!inline && match?.[1] === 'mermaid') {
                 return <MermaidBlock chart={String(children).replace(/\n$/, '')} />;
