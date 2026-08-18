@@ -53,9 +53,21 @@ const applySessionToEditor = (session: DocumentSession | undefined) => {
   });
 };
 
+const initialEditor = useEditorStore.getState();
+const initialSession: DocumentSession = {
+  id: createId(),
+  fileName: initialEditor.fileName,
+  markdown: initialEditor.markdown,
+  isDirty: initialEditor.isDirty,
+  fileHandle: null,
+  workspaceDirectory: null,
+  isWorkspaceFile: false,
+  isNewWorkspaceFile: false,
+};
+
 export const useDocumentSessionStore = create<DocumentSessionState>((set) => ({
-  sessions: [],
-  activeSessionId: null,
+  sessions: [initialSession],
+  activeSessionId: initialSession.id,
 
   createSession: (session) => {
     const id = createId();
