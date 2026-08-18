@@ -15,6 +15,18 @@ import {
 
 type TreeNode = WorkspaceEntry & { path: string };
 
+type FileSystemSavePickerWindow = Window & {
+  showSaveFilePicker?: (options?: {
+    suggestedName?: string;
+    startIn?: FileSystemDirectoryHandle;
+  }) => Promise<FileSystemFileHandle>;
+};
+
+const getSaveFilePicker = (): ((options?: { suggestedName?: string; startIn?: FileSystemDirectoryHandle }) => Promise<FileSystemFileHandle>) | null => {
+  const picker = (window as FileSystemSavePickerWindow).showSaveFilePicker;
+  return typeof picker === 'function' ? picker.bind(window) : null;
+};
+
 export const WorkspaceExplorer: React.FC = () => {
   const { activeWorkspace } = useWorkspaceStore();
   const { markdown, fileName, setMarkdown, setFileName } = useEditorStore();
@@ -64,6 +76,30 @@ export const WorkspaceExplorer: React.FC = () => {
     await refresh();
   };
 
+  const handleSaveFile = async () => {
+    const directory = await currentDirectory();
+    if (!directory) return;
+
+    const picker = getSaveFilePicker();
+    if (!picker) {
+      window.alert('مرورگر فعلی از ذخیره‌سازی فایل با پنجره انتخاب فایل پشتیبانی نمی‌کند.');
+      return;
+    }
+
+    try {
+      const handle = await picker({
+        suggestedName: fileName?.trim() || 'document.md',
+        startIn: directory,
+      });
+      await writeTextFile(handle, markdown);
+      setFileName(handle.name);
+      await refresh();
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      window.alert(error instanceof Error ? error.message : 'ذخیره فایل انجام نشد.');
+    }
+  };
+
   const handleOpen = async (entry: WorkspaceEntry) => {
     if (entry.kind === 'directory') {
       setCurrentPath((path) => [...path, entry.name]);
@@ -76,13 +112,6 @@ export const WorkspaceExplorer: React.FC = () => {
     }
     setMarkdown(await readTextFile(entry.handle as FileSystemFileHandle));
     setFileName(entry.name);
-  };
-
-  const handleSave = async () => {
-    const directory = await currentDirectory();
-    if (!directory) return;
-    const handle = await directory.getFileHandle(fileName, { create: true });
-    await writeTextFile(handle, markdown);
   };
 
   const handleCopy = async (entry: WorkspaceEntry, cut: boolean) => {
@@ -123,10 +152,10 @@ export const WorkspaceExplorer: React.FC = () => {
       <div className="border-b border-border p-3">
         <div className="text-sm font-semibold">{activeWorkspace.name}</div>
         <div className="mt-2 flex flex-wrap gap-1">
-          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={handleCreateFolder}>پوشه جدید</button>
-          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={handleCreateFile}>فایل جدید</button>
-          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={handlePaste} disabled={!clipboard}>Paste</button>
-          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={handleSave}>Save</button>
+          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handleSaveFile} title="Save File">S · Save File</button>
+          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handleCreateFile()} title="Create File">Create File</button>
+          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handleCreateFolder()} title="Create Folder">Create Folder</button>
+          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handlePaste()} disabled={!clipboard}>Paste</button>
         </div>
       </div>
       <div className="flex-1 overflow-auto p-2 text-sm">
