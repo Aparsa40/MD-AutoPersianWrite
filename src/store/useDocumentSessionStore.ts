@@ -18,20 +18,15 @@ interface DocumentSessionState {
   createSession: (session: Omit<DocumentSession, 'id'>) => string;
   activateSession: (id: string) => void;
   closeSession: (id: string) => void;
+  updateSession: (id: string, draft: Partial<DocumentSession>) => void;
   updateActiveDraft: (draft: Partial<Pick<DocumentSession, 'markdown' | 'fileName' | 'isDirty'>>) => void;
-  setWorkspaceFile: (
-    fileHandle: FileSystemFileHandle,
-    workspaceDirectory: FileSystemDirectoryHandle,
-    isNew?: boolean,
-  ) => void;
+  setWorkspaceFile: (fileHandle: FileSystemFileHandle, workspaceDirectory: FileSystemDirectoryHandle, isNew?: boolean) => void;
   clearSession: () => void;
   markPersisted: (fileHandle?: FileSystemFileHandle) => void;
 }
 
 const createId = () => {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
-    return crypto.randomUUID();
-  }
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
   return `session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 };
 
@@ -73,21 +68,18 @@ export const useDocumentSessionStore = create<DocumentSessionState>((set) => ({
     return id;
   },
 
-  activateSession: (id) => {
+  activateSession: (id) =>
     set((state) => {
       const sessions = snapshotEditor(state.sessions, state.activeSessionId);
       const target = sessions.find((session) => session.id === id);
       if (!target) return state;
       applySessionToEditor(target);
       return { sessions, activeSessionId: id };
-    });
-  },
+    }),
 
-  closeSession: (id) => {
+  closeSession: (id) =>
     set((state) => {
-      const sessions = snapshotEditor(state.sessions, state.activeSessionId).filter(
-        (session) => session.id !== id,
-      );
+      const sessions = snapshotEditor(state.sessions, state.activeSessionId).filter((session) => session.id !== id);
       if (!sessions.length) {
         applySessionToEditor(undefined);
         return { sessions: [], activeSessionId: null };
@@ -98,14 +90,14 @@ export const useDocumentSessionStore = create<DocumentSessionState>((set) => ({
       const next = sessions[nextIndex];
       applySessionToEditor(next);
       return { sessions, activeSessionId: next.id };
-    });
-  },
+    }),
+
+  updateSession: (id, draft) =>
+    set((state) => ({ sessions: state.sessions.map((session) => (session.id === id ? { ...session, ...draft } : session)) })),
 
   updateActiveDraft: (draft) =>
     set((state) => ({
-      sessions: state.sessions.map((session) =>
-        session.id === state.activeSessionId ? { ...session, ...draft } : session,
-      ),
+      sessions: state.sessions.map((session) => (session.id === state.activeSessionId ? { ...session, ...draft } : session)),
     })),
 
   setWorkspaceFile: (fileHandle, workspaceDirectory, isNew = false) =>
