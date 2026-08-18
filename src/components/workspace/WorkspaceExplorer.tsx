@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { useEditorStore } from '../../store/useEditorStore';
+import { useDocumentSessionStore } from '../../store/useDocumentSessionStore';
 import { useWorkspaceStore } from '../../store/useWorkspaceStore';
 import {
   copyEntry,
@@ -16,20 +17,25 @@ import {
 type TreeNode = WorkspaceEntry & { path: string };
 
 type FileSystemSavePickerWindow = Window & {
-  showSaveFilePicker?: (options?: {
-    suggestedName?: string;
-    startIn?: FileSystemDirectoryHandle;
-  }) => Promise<FileSystemFileHandle>;
+  showSaveFilePicker?: (options?: { suggestedName?: string; startIn?: FileSystemDirectoryHandle }) => Promise<FileSystemFileHandle>;
 };
 
-const getSaveFilePicker = (): ((options?: { suggestedName?: string; startIn?: FileSystemDirectoryHandle }) => Promise<FileSystemFileHandle>) | null => {
+const getSaveFilePicker = () => {
   const picker = (window as FileSystemSavePickerWindow).showSaveFilePicker;
   return typeof picker === 'function' ? picker.bind(window) : null;
 };
 
 export const WorkspaceExplorer: React.FC = () => {
   const { activeWorkspace } = useWorkspaceStore();
-  const { markdown, fileName, setMarkdown, setFileName } = useEditorStore();
+  const sessions = useDocumentSessionStore((state) => state.sessions);
+  const activeSessionId = useDocumentSessionStore((state) => state.activeSessionId);
+  const createSession = useDocumentSessionStore((state) => state.createSession);
+  const activateSession = useDocumentSessionStore((state) => state.activateSession);
+  const markPersisted = useDocumentSessionStore((state) => state.markPersisted);
+  const setWorkspaceFile = useDocumentSessionStore((state) => state.setWorkspaceFile);
+  const markdown = useEditorStore((state) => state.markdown);
+  const fileName = useEditorStore((state) => state.fileName);
+  const isDirty = useEditorStore((state) => state.isDirty);
   const [entries, setEntries] = useState<TreeNode[]>([]);
   const [currentPath, setCurrentPath] = useState<string[]>([]);
   const [clipboard, setClipboard] = useState<{ entry: WorkspaceEntry; parent: FileSystemDirectoryHandle; cut: boolean } | null>(null);
@@ -72,13 +78,31 @@ export const WorkspaceExplorer: React.FC = () => {
     const directory = await currentDirectory();
     const name = promptName('نام فایل:', 'document.md');
     if (!directory || !name) return;
-    await createFile(directory, name);
+
+    const handle = await createFile(directory, name);
+    createSession({
+      fileName: handle.name,
+      markdown: '',
+      isDirty: true,
+      fileHandle: handle,
+      workspaceDirectory: directory,
+      isWorkspaceFile: true,
+      isNewWorkspaceFile: true,
+    });
     await refresh();
   };
 
   const handleSaveFile = async () => {
     const directory = await currentDirectory();
-    if (!directory) return;
+    if (!directory || activeSessionId === null) return;
+
+    const activeSession = sessions.find((session) => session.id === activeSessionId);
+    if (activeSession?.isWorkspaceFile && activeSession.fileHandle) {
+      await writeTextFile(activeSession.fileHandle, markdown);
+      markPersisted(activeSession.fileHandle);
+      await refresh();
+      return;
+    }
 
     const picker = getSaveFilePicker();
     if (!picker) {
@@ -92,7 +116,8 @@ export const WorkspaceExplorer: React.FC = () => {
         startIn: directory,
       });
       await writeTextFile(handle, markdown);
-      setFileName(handle.name);
+      setWorkspaceFile(handle, directory, false);
+      useEditorStore.setState({ fileName: handle.name, isDirty: false });
       await refresh();
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
@@ -105,13 +130,31 @@ export const WorkspaceExplorer: React.FC = () => {
       setCurrentPath((path) => [...path, entry.name]);
       return;
     }
+
     const extension = entry.name.split('.').pop()?.toLowerCase();
     if (!['md', 'markdown', 'txt'].includes(extension ?? '')) {
       window.alert('فعلاً فقط فایل‌های متنی Markdown/TXT در Editor باز می‌شوند.');
       return;
     }
-    setMarkdown(await readTextFile(entry.handle as FileSystemFileHandle));
-    setFileName(entry.name);
+
+    const directory = await currentDirectory();
+    if (!directory) return;
+
+    const existing = sessions.find((session) => session.fileHandle === entry.handle);
+    if (existing) {
+      activateSession(existing.id);
+      return;
+    }
+
+    createSession({
+      fileName: entry.name,
+      markdown: await readTextFile(entry.handle as FileSystemFileHandle),
+      isDirty: false,
+      fileHandle: entry.handle as FileSystemFileHandle,
+      workspaceDirectory: directory,
+      isWorkspaceFile: true,
+      isNewWorkspaceFile: false,
+    });
   };
 
   const handleCopy = async (entry: WorkspaceEntry, cut: boolean) => {
@@ -152,9 +195,9 @@ export const WorkspaceExplorer: React.FC = () => {
       <div className="border-b border-border p-3">
         <div className="text-sm font-semibold">{activeWorkspace.name}</div>
         <div className="mt-2 flex flex-wrap gap-1">
-          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handleSaveFile()} title="Save File">S · Save File</button>
-          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handleCreateFile()} title="Create File">Create File</button>
-          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handleCreateFolder()} title="Create Folder">Create Folder</button>
+          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handleSaveFile()} title="Save">Save</button>
+          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handleCreateFile()} title="New File">New File</button>
+          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handleCreateFolder()} title="New Folder">New Folder</button>
           <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handlePaste()} disabled={!clipboard}>Paste</button>
         </div>
       </div>
@@ -164,15 +207,21 @@ export const WorkspaceExplorer: React.FC = () => {
           <button className="hover:text-primary" onClick={() => setCurrentPath([])}>{activeWorkspace.name}</button>
           {currentPath.map((part) => <span key={part}>/ {part}</span>)}
         </div>
-        {entries.map((entry) => (
-          <div key={entry.path} className="group flex items-center gap-1 rounded px-2 py-1 hover:bg-bg">
-            <button className="min-w-0 flex-1 truncate text-right" onDoubleClick={() => void handleOpen(entry)}>{entry.kind === 'directory' ? '📁' : '📄'} {entry.name}</button>
-            <button title="Copy" className="hidden text-xs group-hover:inline" onClick={() => void handleCopy(entry, false)}>C</button>
-            <button title="Cut" className="hidden text-xs group-hover:inline" onClick={() => void handleCopy(entry, true)}>X</button>
-            <button title="Rename" className="hidden text-xs group-hover:inline" onClick={() => void handleRename(entry)}>R</button>
-            <button title="Delete" className="hidden text-xs group-hover:inline" onClick={() => void handleDelete(entry)}>D</button>
-          </div>
-        ))}
+        {entries.map((entry) => {
+          const isNewCurrentFile = entry.kind === 'file' && sessions.some(
+            (session) => session.id === activeSessionId && session.fileHandle === entry.handle && session.isNewWorkspaceFile,
+          );
+          return (
+            <div key={entry.path} className="group flex items-center gap-1 rounded px-2 py-1 hover:bg-bg">
+              <button className="min-w-0 flex-1 truncate text-right" onDoubleClick={() => void handleOpen(entry)}>{entry.kind === 'directory' ? '📁' : '📄'} {entry.name}</button>
+              <button title="Copy" className="hidden text-xs group-hover:inline" onClick={() => void handleCopy(entry, false)}>C</button>
+              <button title="Cut" className="hidden text-xs group-hover:inline" onClick={() => void handleCopy(entry, true)}>X</button>
+              <button title="Rename" className="hidden text-xs group-hover:inline" onClick={() => void handleRename(entry)}>R</button>
+              <button title="Delete" className="hidden text-xs group-hover:inline" onClick={() => void handleDelete(entry)}>D</button>
+              {isNewCurrentFile && <button title="Save" className="hidden text-xs group-hover:inline" onClick={() => void handleSaveFile()}>S</button>}
+            </div>
+          );
+        })}
       </div>
     </aside>
   );
