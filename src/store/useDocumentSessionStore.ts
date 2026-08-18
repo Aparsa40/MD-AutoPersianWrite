@@ -26,8 +26,15 @@ interface DocumentSessionState {
 }
 
 const createId = () => {
-  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') return crypto.randomUUID();
-  return `session-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+  if (typeof crypto === 'undefined') {
+    throw new Error('Secure randomness is unavailable in this environment.');
+  }
+
+  if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
+
+  const values = new Uint32Array(4);
+  crypto.getRandomValues(values);
+  return `session-${Array.from(values, (value) => value.toString(16).padStart(8, '0')).join('-')}`;
 };
 
 const snapshotEditor = (sessions: DocumentSession[], activeSessionId: string | null) => {
