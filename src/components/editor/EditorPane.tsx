@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { useEditorStore } from '../../store/useEditorStore';
 import { useThemeStore } from '../../store/useThemeStore';
 import { convertHtmlToMarkdown } from '../../lib/markdown/htmlToMarkdown';
+import { DocumentCloseButton } from '../document/DocumentCloseButton';
 
 interface EditorPaneProps {
   editorRef?: React.RefObject<HTMLTextAreaElement>;
@@ -40,21 +41,25 @@ export const EditorPane: React.FC<EditorPaneProps> = ({ editorRef }) => {
   };
 
   return (
-    <textarea
-      ref={textareaRef}
-      data-editor="markdown"
-      value={markdown}
-      onChange={(event) => setMarkdown(event.target.value)}
-      onPaste={handlePaste}
-      dir="auto"
-      placeholder="متن مارک‌داون خود را اینجا بنویسید..."
-      className="w-full h-full p-6 bg-transparent text-text-main resize-none outline-none leading-relaxed overflow-y-auto custom-scrollbar"
-      style={{
-        fontSize: `${fontSize}px`,
-        fontFamily,
-        unicodeBidi: 'plaintext',
-        textAlign: 'initial',
-      }}
-    />
+    <div className="relative h-full w-full overflow-hidden">
+      <DocumentCloseButton />
+      <textarea
+        ref={textareaRef}
+        data-editor="markdown"
+        value={markdown}
+        onChange={(event) => setMarkdown(event.target.value)}
+        onPaste={handlePaste}
+        dir="auto"
+        placeholder="متن مارک‌داون خود را اینجا بنویسید..."
+        className="h-full w-full resize-none overflow-y-auto bg-transparent p-6 pr-12 leading-relaxed outline-none custom-scrollbar"
+        style={{
+          fontSize: `${fontSize}px`,
+          fontFamily,
+          color: 'inherit',
+          unicodeBidi: 'plaintext',
+          textAlign: 'initial',
+        }}
+      />
+    </div>
   );
 };
