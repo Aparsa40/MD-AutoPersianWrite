@@ -152,7 +152,7 @@ export const WorkspaceExplorer: React.FC = () => {
       <div className="border-b border-border p-3">
         <div className="text-sm font-semibold">{activeWorkspace.name}</div>
         <div className="mt-2 flex flex-wrap gap-1">
-          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handleSaveFile} title="Save File">S · Save File</button>
+          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handleSaveFile()} title="Save File">S · Save File</button>
           <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handleCreateFile()} title="Create File">Create File</button>
           <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handleCreateFolder()} title="Create Folder">Create Folder</button>
           <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handlePaste()} disabled={!clipboard}>Paste</button>
