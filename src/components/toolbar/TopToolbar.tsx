@@ -3,10 +3,12 @@ import { useEditorStore } from '../../store/useEditorStore';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useLayoutStore } from '../../store/useLayoutStore';
 import { useDocumentSessionStore } from '../../store/useDocumentSessionStore';
+import { buildTableOfContents } from '../../lib/markdown/toc';
 import { exportAsMarkdown } from '../../lib/export/fileExport';
 import { deleteEntry, writeTextFile } from '../../lib/workspace/localWorkspaceFiles';
 import { FeedbackModal } from '../modals/FeedbackModal';
 import { AboutModal } from '../modals/AboutModal';
+import { HyperlinkModal } from '../modals/HyperlinkModal';
 import { WorkspaceMenu } from './WorkspaceMenu';
 import { DocumentStyleMenu } from './DocumentStyleMenu';
 import { AgentMenu } from './AgentMenu';
@@ -32,6 +34,7 @@ export const TopToolbar: React.FC = () => {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
+  const [isHyperlinkOpen, setIsHyperlinkOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const closeMenu = () => setActiveMenu(null);
@@ -97,6 +100,16 @@ export const TopToolbar: React.FC = () => {
     }
   };
 
+  const handleInsertTableOfContents = () => {
+    const toc = buildTableOfContents(markdown);
+    if (!toc) {
+      window.alert('برای ساخت فهرست مطالب، ابتدا حداقل یک عنوان Markdown مانند # عنوان در سند قرار دهید.');
+      return;
+    }
+    insertTextAtCursor('', '', toc);
+    closeMenu();
+  };
+
   return (
     <>
       <input ref={fileInputRef} type="file" accept=".md,.markdown,.txt,.text" className="hidden" onChange={handleOpenFile} />
@@ -116,9 +129,12 @@ export const TopToolbar: React.FC = () => {
           <WorkspaceMenu />
           <div className="relative">
             <button type="button" onClick={() => setActiveMenu(activeMenu === 'edit' ? null : 'edit')} className="rounded px-3 py-1.5 text-sm font-medium hover:bg-bg">ویرایش</button>
-            {activeMenu === 'edit' && <div className="absolute right-0 mt-2 w-56 space-y-2 rounded border border-border bg-surface p-2 shadow-lg">
+            {activeMenu === 'edit' && <div className="absolute right-0 mt-2 w-60 space-y-2 rounded border border-border bg-surface p-2 shadow-lg">
               <label className="block text-xs text-text-muted">اندازه فونت:<select value={fontSize} onChange={(e) => setFontSize(Number(e.target.value))} className="mt-1 w-full rounded border border-border bg-bg p-1 text-xs">{[12, 14, 16, 18, 20].map((size) => <option key={size} value={size}>{size}px{size === 16 ? ' (پیش‌فرض)' : ''}</option>)}</select></label>
               <label className="block text-xs text-text-muted">فونت:<select value={fontFamily} onChange={(e) => setFontFamily(e.target.value)} className="mt-1 w-full rounded border border-border bg-bg p-1 text-xs"><option value="Vazirmatn">وزیرمتن (Vazirmatn)</option><option value="Sahel">ساحل (Sahel)</option><option value="Shabnam">شبنم (Shabnam)</option></select></label>
+              <button type="button" onClick={() => { setIsHyperlinkOpen(true); closeMenu(); }} className="w-full rounded px-2 py-1.5 text-right text-sm font-medium hover:bg-bg">🔗 هایپرلینک</button>
+              <button type="button" onClick={handleInsertTableOfContents} className="w-full rounded px-2 py-1.5 text-right text-sm font-medium hover:bg-bg">📑 درج فهرست مطالب</button>
+              <div className="my-1 border-t border-border" />
               <button type="button" onClick={() => { insertTextAtCursor('**', '**', 'متن برجسته'); closeMenu(); }} className="w-full px-2 py-1 text-right text-sm font-bold hover:bg-bg">Bold</button>
               <button type="button" onClick={() => { insertTextAtCursor('*', '*', 'متن مورب'); closeMenu(); }} className="w-full px-2 py-1 text-right text-sm italic hover:bg-bg">Italic</button>
               <button type="button" onClick={() => { setTextColor('#ff0000'); closeMenu(); }} className="w-full px-2 py-1 text-right text-sm hover:bg-bg">رنگ متن: قرمز</button>
@@ -138,7 +154,9 @@ export const TopToolbar: React.FC = () => {
           <button type="button" onClick={toggleToc} className={`rounded px-3 py-1.5 text-sm font-medium ${isTocOpen ? 'bg-primary text-white' : 'hover:bg-bg'}`}>فهرست مطالب</button>
           <div className="relative">
             <button type="button" onClick={() => setActiveMenu(activeMenu === 'themes' ? null : 'themes')} className="rounded px-3 py-1.5 text-sm font-medium hover:bg-bg">تم‌ها</button>
-            {activeMenu === 'themes' && <div className="absolute right-0 mt-2 w-48 rounded border border-border bg-surface py-1 shadow-lg">{(['light', 'dark', 'sepia'] as const).map((name) => <button type="button" key={name} onClick={() => { setTheme(name); closeMenu(); }} className={`w-full px-4 py-2 text-right text-sm hover:bg-bg ${theme === name ? 'font-bold text-primary' : ''}`}>{name === 'light' ? 'روشن (Light)' : name === 'dark' ? 'تاریک (Dark)' : 'سپیا (Sepia)'}</button>)}</div>}
+            {activeMenu === 'themes' && <div className="absolute right-0 mt-2 w-56 rounded border border-border bg-surface py-1 shadow-lg">
+              {(['light', 'dark', 'sepia', 'black-white', 'navy-white'] as const).map((name) => <button type="button" key={name} onClick={() => { setTheme(name); closeMenu(); }} className={`w-full px-4 py-2 text-right text-sm hover:bg-bg ${theme === name ? 'font-bold text-primary' : ''}`}>{name === 'light' ? 'روشن (Light)' : name === 'dark' ? 'تاریک (Dark)' : name === 'sepia' ? 'سپیا (Sepia)' : name === 'black-white' ? 'سیاه و سفید (Black & White)' : 'سرمه‌ای و سفید (Navy & White)'}</button>)}
+            </div>}
           </div>
           <DocumentStyleMenu />
           <AgentMenu />
@@ -151,6 +169,7 @@ export const TopToolbar: React.FC = () => {
       </header>
       <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
       <AboutModal isOpen={isAboutOpen} onClose={() => setIsAboutOpen(false)} />
+      <HyperlinkModal isOpen={isHyperlinkOpen} onClose={() => setIsHyperlinkOpen(false)} />
     </>
   );
 };
