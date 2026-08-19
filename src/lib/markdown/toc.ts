@@ -4,24 +4,41 @@ export interface MarkdownHeading {
   slug: string;
 }
 
+const removeMarkdownLinks = (text: string): string => {
+  let result = text;
+  let start = result.indexOf('[');
+
+  while (start >= 0) {
+    const endLabel = result.indexOf(']', start + 1);
+    const openUrl = endLabel >= 0 ? result.indexOf('(', endLabel + 1) : -1;
+    const endUrl = openUrl >= 0 ? result.indexOf(')', openUrl + 1) : -1;
+
+    if (endLabel < 0 || openUrl !== endLabel + 1 || endUrl < 0) break;
+
+    const label = result.slice(start + 1, endLabel);
+    result = result.slice(0, start) + label + result.slice(endUrl + 1);
+    start = result.indexOf('[', start + label.length);
+  }
+
+  return result;
+};
+
+const removeHtmlTags = (text: string): string => {
+  let result = text;
+  let start = result.indexOf('<');
+
+  while (start >= 0) {
+    const end = result.indexOf('>', start + 1);
+    result = end >= 0 ? result.slice(0, start) + result.slice(end + 1) : result.slice(0, start);
+    start = result.indexOf('<', start);
+  }
+
+  return result;
+};
+
 export const stripMarkdownForSlug = (text: string): string =>
-  text
-    .replace(/!
-
-\[([^\]
-
-]*)\]
-
-\([^)]*\)/g, '$1')
-    .replace(/
-
-\[([^\]
-
-]+)\]
-
-\([^)]*\)/g, '$1')
+  removeHtmlTags(removeMarkdownLinks(text))
     .replace(/[`*_~]/g, '')
-    .replace(/<[^>]*>/g, '')
     .replace(/\\(.)/g, '$1')
     .trim();
 
