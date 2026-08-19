@@ -37,6 +37,8 @@ export const extractMarkdownHeadings = (markdown: string): MarkdownHeading[] => 
 
     const level = match[1].length;
     const text = match[2].trim();
+    if (text === 'فهرست مطالب') continue;
+
     const baseSlug = slugifyHeading(text) || `section-${headings.length + 1}`;
     const count = usedSlugs.get(baseSlug) ?? 0;
     usedSlugs.set(baseSlug, count + 1);
