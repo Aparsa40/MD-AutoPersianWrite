@@ -35,9 +35,7 @@ const getPreviewLineElements = (preview: HTMLDivElement): Array<{ line: number; 
 const getPreviewTopForLine = (preview: HTMLDivElement, line: number): number => {
   const elements = getPreviewLineElements(preview);
   if (elements.length === 0) {
-    const totalLines = Math.max(line, 1);
-    const ratio = Math.min((line - 1) / totalLines, 1);
-    return getScrollTopForRatio(preview, ratio);
+    return getScrollTopForRatio(preview, Math.min(Math.max((line - 1) / Math.max(line, 1), 0), 1));
   }
 
   let candidate = elements[0];
@@ -54,52 +52,55 @@ const getEditorTopForLine = (editor: HTMLTextAreaElement, line: number): number 
   return Math.max((line - 1) * lineHeight - editor.clientHeight * 0.18, 0);
 };
 
-export function useScrollSync() {
+export function useScrollSync(activeSessionId: string | null) {
   const editorRef = useRef<HTMLTextAreaElement | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const editor = editorRef.current;
     const preview = previewRef.current;
-    if (!editor || !preview) return;
+    if (!editor || !preview || activeSessionId === null) return;
 
     let source: 'editor' | 'preview' | null = null;
     let resetTimer: number | undefined;
+    let rafId: number | undefined;
 
     const releaseSource = () => {
       window.clearTimeout(resetTimer);
       resetTimer = window.setTimeout(() => {
         source = null;
-      }, 100);
+      }, 80);
     };
 
     const syncEditorToPreview = () => {
       if (source === 'preview') return;
-      source = 'editor';
-      const line = getEditorLine(editor);
-      preview.scrollTop = getPreviewTopForLine(preview, line);
-      releaseSource();
+      window.cancelAnimationFrame(rafId ?? 0);
+      rafId = window.requestAnimationFrame(() => {
+        source = 'editor';
+        preview.scrollTop = getPreviewTopForLine(preview, getEditorLine(editor));
+        releaseSource();
+      });
     };
 
     const syncPreviewToEditor = () => {
       if (source === 'editor') return;
-      source = 'preview';
-
-      const elements = getPreviewLineElements(preview);
-      if (elements.length > 0) {
-        const targetTop = preview.scrollTop + preview.clientHeight * 0.2;
-        let candidate = elements[0];
-        for (const element of elements) {
-          if (element.top > targetTop) break;
-          candidate = element;
+      window.cancelAnimationFrame(rafId ?? 0);
+      rafId = window.requestAnimationFrame(() => {
+        source = 'preview';
+        const elements = getPreviewLineElements(preview);
+        if (elements.length > 0) {
+          const targetTop = preview.scrollTop + preview.clientHeight * 0.2;
+          let candidate = elements[0];
+          for (const element of elements) {
+            if (element.top > targetTop) break;
+            candidate = element;
+          }
+          editor.scrollTop = getEditorTopForLine(editor, candidate.line);
+        } else {
+          editor.scrollTop = getScrollTopForRatio(editor, getScrollRatio(preview));
         }
-        editor.scrollTop = getEditorTopForLine(editor, candidate.line);
-      } else {
-        const ratio = getScrollRatio(preview);
-        editor.scrollTop = getScrollTopForRatio(editor, ratio);
-      }
-
-      releaseSource();
+        releaseSource();
+      });
     };
 
     const syncCursorToPreview = () => {
@@ -114,6 +115,13 @@ export function useScrollSync() {
     editor.addEventListener('click', syncCursorToPreview);
     editor.addEventListener('keyup', syncCursorToPreview);
     editor.addEventListener('select', syncCursorToPreview);
+    editor.addEventListener('mouseup', syncCursorToPreview);
+
+    const resizeObserver = new ResizeObserver(() => {
+      if (source === null) syncCursorToPreview();
+    });
+    resizeObserver.observe(editor);
+    resizeObserver.observe(preview);
 
     return () => {
       editor.removeEventListener('scroll', syncEditorToPreview);
@@ -121,9 +129,12 @@ export function useScrollSync() {
       editor.removeEventListener('click', syncCursorToPreview);
       editor.removeEventListener('keyup', syncCursorToPreview);
       editor.removeEventListener('select', syncCursorToPreview);
+      editor.removeEventListener('mouseup', syncCursorToPreview);
+      resizeObserver.disconnect();
       window.clearTimeout(resetTimer);
+      window.cancelAnimationFrame(rafId ?? 0);
     };
-  }, []);
+  }, [activeSessionId]);
 
   return { editorRef, previewRef };
 }
