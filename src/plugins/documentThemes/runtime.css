@@ -7,6 +7,7 @@ html[data-document-theme='classic'] .preview-markdown {
   --doc-code-text: #f5f5f5;
   --doc-accent: #315f9c;
   --doc-heading: #202020;
+  --doc-radius: 0.35rem;
 }
 
 html[data-document-theme='github'] .preview-markdown {
@@ -18,17 +19,19 @@ html[data-document-theme='github'] .preview-markdown {
   --doc-code-text: #e6edf3;
   --doc-accent: #0969da;
   --doc-heading: #1f2328;
+  --doc-radius: 0.2rem;
 }
 
 html[data-document-theme='academic'] .preview-markdown {
-  --doc-text: #262626;
-  --doc-muted: #666;
-  --doc-border: #aaa;
-  --doc-surface: #f8f6f1;
-  --doc-code-bg: #252525;
-  --doc-code-text: #f4f4f4;
-  --doc-accent: #6b3f2a;
-  --doc-heading: #352219;
+  --doc-text: #30261f;
+  --doc-muted: #6f6258;
+  --doc-border: #c8b8a8;
+  --doc-surface: #f8f3ea;
+  --doc-code-bg: #2d2925;
+  --doc-code-text: #f8f3ea;
+  --doc-accent: #7a4e2d;
+  --doc-heading: #4b3020;
+  --doc-radius: 0;
 }
 
 html[data-document-theme='modern'] .preview-markdown {
@@ -40,6 +43,7 @@ html[data-document-theme='modern'] .preview-markdown {
   --doc-code-text: #f8fafc;
   --doc-accent: #7c3aed;
   --doc-heading: #111827;
+  --doc-radius: 0.9rem;
 }
 
 html[data-document-theme] .preview-markdown {
@@ -52,17 +56,38 @@ html[data-document-theme] .preview-markdown h3,
 html[data-document-theme] .preview-markdown h4,
 html[data-document-theme] .preview-markdown h5,
 html[data-document-theme] .preview-markdown h6 {
-  color: var(--doc-heading);
-  line-height: 1.2;
-  letter-spacing: -0.015em;
+  color: var(--doc-heading) !important;
+  line-height: 1.25;
 }
 
-html[data-document-theme] .preview-markdown h1 { font-size: 2.25rem; font-weight: 800; }
-html[data-document-theme] .preview-markdown h2 { font-size: 1.75rem; font-weight: 750; }
-html[data-document-theme] .preview-markdown h3 { font-size: 1.4rem; font-weight: 700; }
-html[data-document-theme] .preview-markdown h4 { font-size: 1.2rem; font-weight: 700; }
-html[data-document-theme] .preview-markdown h5 { font-size: 1.05rem; font-weight: 650; }
-html[data-document-theme] .preview-markdown h6 { font-size: 0.95rem; font-weight: 650; text-transform: uppercase; }
+html[data-document-theme='classic'] .preview-markdown h1 {
+  font-size: 2.25rem;
+  font-weight: 800;
+}
+
+html[data-document-theme='github'] .preview-markdown h1,
+html[data-document-theme='github'] .preview-markdown h2 {
+  border-bottom: 1px solid var(--doc-border);
+  padding-bottom: 0.3em;
+}
+
+html[data-document-theme='academic'] .preview-markdown {
+  font-family: Georgia, 'Times New Roman', serif !important;
+}
+
+html[data-document-theme='academic'] .preview-markdown h1,
+html[data-document-theme='academic'] .preview-markdown h2,
+html[data-document-theme='academic'] .preview-markdown h3 {
+  letter-spacing: 0;
+  border-bottom: 1px solid var(--doc-border);
+  padding-bottom: 0.25em;
+}
+
+html[data-document-theme='modern'] .preview-markdown h1,
+html[data-document-theme='modern'] .preview-markdown h2,
+html[data-document-theme='modern'] .preview-markdown h3 {
+  letter-spacing: -0.02em;
+}
 
 html[data-document-theme] .preview-markdown p,
 html[data-document-theme] .preview-markdown li {
@@ -79,7 +104,7 @@ html[data-document-theme] .preview-markdown code:not(pre code) {
   background: var(--doc-code-bg) !important;
   color: var(--doc-code-text) !important;
   border: 1px solid var(--doc-border);
-  border-radius: 0.35rem;
+  border-radius: var(--doc-radius);
   padding: 0.12rem 0.4rem;
   font-size: 0.86em;
 }
@@ -88,7 +113,7 @@ html[data-document-theme] .preview-markdown pre {
   background: var(--doc-code-bg) !important;
   color: var(--doc-code-text) !important;
   border: 1px solid var(--doc-border) !important;
-  border-radius: 0.7rem;
+  border-radius: var(--doc-radius);
   box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
   padding: 1rem 1.15rem !important;
 }
@@ -102,6 +127,7 @@ html[data-document-theme] .preview-markdown pre code {
 
 html[data-document-theme] .preview-markdown table {
   border: 2px solid var(--doc-border) !important;
+  border-radius: var(--doc-radius);
   box-shadow: 0 4px 14px rgb(0 0 0 / 10%);
 }
 
@@ -116,14 +142,88 @@ html[data-document-theme] .preview-markdown td {
   border: 1px solid var(--doc-border) !important;
 }
 
-html[data-document-theme='github'] .preview-markdown h1,
-html[data-document-theme='github'] .preview-markdown h2 {
-  border-bottom: 1px solid var(--doc-border);
-  padding-bottom: 0.3em;
-}
-
 html[data-document-theme='modern'] .preview-markdown blockquote {
   border-right-width: 5px;
   background: var(--doc-surface) !important;
+  border-radius: var(--doc-radius);
   box-shadow: 0 4px 14px rgb(0 0 0 / 8%);
 }
+
+html[data-document-theme='academic'] .preview-markdown blockquote {
+  border-right: 2px solid var(--doc-accent);
+  background: transparent !important;
+  box-shadow: none;
+}
+
+html.dark[data-document-theme] .preview-markdown,
+html.black-white[data-document-theme] .preview-markdown,
+html.navy-white[data-document-theme] .preview-markdown {
+  --doc-text: #f8fafc;
+  --doc-muted: #cbd5e1;
+  --doc-border: #64748b;
+  --doc-surface: color-mix(in srgb, var(--color-surface) 88%, white 12%);
+  --doc-code-bg: #0b1220;
+  --doc-code-text: #f8fafc;
+  --doc-heading: #ffffff;
+}
+
+html.black-white[data-document-theme] .preview-markdown {
+  --doc-text: #ffffff;
+  --doc-muted: #e5e5e5;
+  --doc-border: #ffffff;
+  --doc-surface: #111111;
+  --doc-code-bg: #000000;
+  --doc-code-text: #ffffff;
+  --doc-heading: #ffffff;
+}
+
+html.navy-white[data-document-theme] .preview-markdown {
+  --doc-text: #ffffff;
+  --doc-muted: #dbeafe;
+  --doc-border: #6b8db8;
+  --doc-surface: #15365e;
+  --doc-code-bg: #07172c;
+  --doc-code-text: #ffffff;
+  --doc-heading: #ffffff;
+}
+
+html.dark[data-document-theme] .preview-markdown a,
+html.black-white[data-document-theme] .preview-markdown a,
+html.navy-white[data-document-theme] .preview-markdown a {
+  color: #93c5fd !important;
+  text-decoration: underline;
+}
+
+html.black-white[data-document-theme] .preview-markdown a,
+html.navy-white[data-document-theme] .preview-markdown a {
+  color: #ffffff !important;
+}
+
+html[data-document-theme] .preview-markdown .markdown-callout {
+  position: relative;
+  border-right: 5px solid var(--doc-accent) !important;
+  background: var(--doc-surface) !important;
+  color: var(--doc-text) !important;
+  border-radius: var(--doc-radius);
+  padding: 2.75rem 1rem 0.75rem 1rem;
+  font-style: normal;
+  box-shadow: 0 4px 14px rgb(0 0 0 / 8%);
+}
+
+html[data-document-theme] .preview-markdown .markdown-callout::before {
+  content: attr(data-callout-type);
+  position: absolute;
+  top: 0.55rem;
+  right: 1rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--doc-accent);
+}
+
+html[data-document-theme] .preview-markdown .markdown-callout-note { --doc-accent: #2563eb; }
+html[data-document-theme] .preview-markdown .markdown-callout-tip { --doc-accent: #16a34a; }
+html[data-document-theme] .preview-markdown .markdown-callout-important { --doc-accent: #7c3aed; }
+html[data-document-theme] .preview-markdown .markdown-callout-warning { --doc-accent: #d97706; }
+html[data-document-theme] .preview-markdown .markdown-callout-caution { --doc-accent: #dc2626; }
