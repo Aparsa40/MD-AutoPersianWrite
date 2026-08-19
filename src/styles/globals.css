@@ -17,10 +17,10 @@
   .dark {
     --color-bg: #0f172a;
     --color-surface: #1e293b;
-    --color-primary: #3b82f6;
+    --color-primary: #60a5fa;
     --color-text-main: #f8fafc;
-    --color-text-muted: #94a3b8;
-    --color-border: #334155;
+    --color-text-muted: #cbd5e1;
+    --color-border: #475569;
   }
 
   .sepia {
@@ -30,6 +30,24 @@
     --color-text-main: #432818;
     --color-text-muted: #7f5539;
     --color-border: #ddb892;
+  }
+
+  .black-white {
+    --color-bg: #000000;
+    --color-surface: #000000;
+    --color-primary: #ffffff;
+    --color-text-main: #ffffff;
+    --color-text-muted: #e5e5e5;
+    --color-border: #ffffff;
+  }
+
+  .navy-white {
+    --color-bg: #0b1f3a;
+    --color-surface: #102a4c;
+    --color-primary: #ffffff;
+    --color-text-main: #ffffff;
+    --color-text-muted: #dbeafe;
+    --color-border: #52739c;
   }
 
   body {
@@ -56,8 +74,10 @@ pre code {
   box-shadow: 0 5px 14px rgb(15 23 42 / 12%);
 }
 
-.dark .preview-markdown pre {
-  box-shadow: 0 5px 16px rgb(0 0 0 / 28%);
+.dark .preview-markdown pre,
+.black-white .preview-markdown pre,
+.navy-white .preview-markdown pre {
+  box-shadow: 0 5px 16px rgb(0 0 0 / 35%);
 }
 
 .preview-markdown hr {
@@ -92,6 +112,24 @@ pre code {
 .preview-markdown h5,
 .preview-markdown h6 {
   color: var(--color-text-main);
+}
+
+.dark .preview-markdown,
+.black-white .preview-markdown,
+.navy-white .preview-markdown {
+  color: var(--color-text-main);
+}
+
+.dark .preview-markdown a,
+.black-white .preview-markdown a,
+.navy-white .preview-markdown a {
+  color: #93c5fd;
+}
+
+.black-white .preview-markdown a,
+.navy-white .preview-markdown a {
+  color: #ffffff;
+  text-decoration: underline;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
