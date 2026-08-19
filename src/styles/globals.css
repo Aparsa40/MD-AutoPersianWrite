@@ -38,14 +38,62 @@
   }
 }
 
-/* استایل کدهای هایلایت شده */
 pre code {
   font-family: 'JetBrains Mono', monospace !important;
   direction: ltr !important;
   text-align: left !important;
 }
 
-/* استایل سفارشی اسکرول‌بار زیبا برای هر دو پنل */
+.preview-markdown {
+  --preview-code-bg: color-mix(in srgb, var(--color-surface) 88%, var(--color-primary));
+}
+
+.preview-markdown pre {
+  border-width: 1px;
+  border-style: solid;
+  border-color: var(--color-border);
+  background: var(--preview-code-bg);
+  box-shadow: 0 5px 14px rgb(15 23 42 / 12%);
+}
+
+.dark .preview-markdown pre {
+  box-shadow: 0 5px 16px rgb(0 0 0 / 28%);
+}
+
+.preview-markdown hr {
+  border-top-width: 2px !important;
+  border-top-style: solid !important;
+  opacity: 0.9;
+}
+
+.preview-markdown table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.preview-markdown th,
+.preview-markdown td {
+  border: 1px solid var(--color-border);
+}
+
+.preview-markdown th {
+  background: var(--color-surface);
+  font-weight: 700;
+}
+
+.preview-markdown tbody tr:nth-child(even) {
+  background: color-mix(in srgb, var(--color-surface) 72%, var(--color-bg));
+}
+
+.preview-markdown h1,
+.preview-markdown h2,
+.preview-markdown h3,
+.preview-markdown h4,
+.preview-markdown h5,
+.preview-markdown h6 {
+  color: var(--color-text-main);
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;
   height: 8px;

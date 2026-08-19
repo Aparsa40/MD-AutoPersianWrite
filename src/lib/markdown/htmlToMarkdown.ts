@@ -8,36 +8,40 @@ export function convertHtmlToMarkdown(html: string): string {
 
     const element = node as HTMLElement;
     const tag = element.tagName.toLowerCase();
+
+    if (tag === 'table') {
+      const rows = Array.from(element.querySelectorAll('tr'));
+      if (!rows.length) return '';
+      const matrix = rows.map((row) =>
+        Array.from(row.children).map((cell) =>
+          (cell.textContent ?? '').replace(/\|/g, '\\|').replace(/\r?\n|\r/g, ' ').trim(),
+        ),
+      );
+      const width = Math.max(...matrix.map((row) => row.length), 1);
+      const normalized = matrix.map((row) => [...row, ...Array(Math.max(width - row.length, 0)).fill('')]);
+      const header = normalized[0];
+      const separator = Array(width).fill('---');
+      const body = normalized.slice(1);
+      return `\n| ${header.join(' | ')} |\n| ${separator.join(' | ')} |\n${body.map((row) => `| ${row.join(' | ')} |`).join('\n')}\n\n`;
+    }
+
     const children = Array.from(element.childNodes).map(walk).join('');
 
     switch (tag) {
-      case 'h1':
-        return `\n# ${children.trim()}\n\n`;
-      case 'h2':
-        return `\n## ${children.trim()}\n\n`;
-      case 'h3':
-        return `\n### ${children.trim()}\n\n`;
-      case 'h4':
-        return `\n#### ${children.trim()}\n\n`;
-      case 'h5':
-        return `\n##### ${children.trim()}\n\n`;
-      case 'h6':
-        return `\n###### ${children.trim()}\n\n`;
+      case 'h1': return `\n# ${children.trim()}\n\n`;
+      case 'h2': return `\n## ${children.trim()}\n\n`;
+      case 'h3': return `\n### ${children.trim()}\n\n`;
+      case 'h4': return `\n#### ${children.trim()}\n\n`;
+      case 'h5': return `\n##### ${children.trim()}\n\n`;
+      case 'h6': return `\n###### ${children.trim()}\n\n`;
       case 'strong':
-      case 'b':
-        return `**${children.trim()}**`;
+      case 'b': return `**${children.trim()}**`;
       case 'em':
-      case 'i':
-        return `*${children.trim()}*`;
+      case 'i': return `*${children.trim()}*`;
       case 'del':
-      case 's':
-        return `~~${children.trim()}~~`;
-      case 'code':
-        return element.parentElement?.tagName.toLowerCase() === 'pre'
-          ? children
-          : `\`${children}\``;
-      case 'pre':
-        return `\n\`\`\`\n${children.trim()}\n\`\`\`\n\n`;
+      case 's': return `~~${children.trim()}~~`;
+      case 'code': return element.parentElement?.tagName.toLowerCase() === 'pre' ? children : `\`${children}\``;
+      case 'pre': return `\n\`\`\`\n${children.trim()}\n\`\`\`\n\n`;
       case 'a': {
         const href = element.getAttribute('href');
         return href ? `[${children.trim()}](${href})` : children;
@@ -47,21 +51,14 @@ export function convertHtmlToMarkdown(html: string): string {
         const alt = element.getAttribute('alt') ?? '';
         return src ? `![${alt}](${src})` : '';
       }
-      case 'br':
-        return '\n';
-      case 'li':
-        return `- ${children.trim()}\n`;
+      case 'br': return '\n';
+      case 'li': return `- ${children.trim()}\n`;
       case 'ul':
-      case 'ol':
-        return `\n${children}\n`;
-      case 'blockquote':
-        return `\n> ${children.trim().replace(/\n/g, '\n> ')}\n\n`;
-      case 'hr':
-        return '\n---\n\n';
-      case 'p':
-        return `\n${children.trim()}\n\n`;
-      default:
-        return children;
+      case 'ol': return `\n${children}\n`;
+      case 'blockquote': return `\n> ${children.trim().replace(/\n/g, '\n> ')}\n\n`;
+      case 'hr': return '\n---\n\n';
+      case 'p': return `\n${children.trim()}\n\n`;
+      default: return children;
     }
   };
 

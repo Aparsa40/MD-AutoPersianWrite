@@ -26,12 +26,8 @@ interface DocumentSessionState {
 }
 
 const createId = () => {
-  if (typeof crypto === 'undefined') {
-    throw new Error('Secure randomness is unavailable in this environment.');
-  }
-
+  if (typeof crypto === 'undefined') throw new Error('Secure randomness is unavailable in this environment.');
   if (typeof crypto.randomUUID === 'function') return crypto.randomUUID();
-
   const values = new Uint32Array(4);
   crypto.getRandomValues(values);
   return `session-${Array.from(values, (value) => value.toString(16).padStart(8, '0')).join('-')}`;
@@ -138,11 +134,25 @@ export const useDocumentSessionStore = create<DocumentSessionState>((set) => ({
     })),
 
   markPersisted: (fileHandle) =>
-    set((state) => ({
-      sessions: state.sessions.map((session) =>
+    set((state) => {
+      const active = state.sessions.find((session) => session.id === state.activeSessionId);
+      if (!active) return state;
+
+      const nextSessions = state.sessions.map((session) =>
         session.id === state.activeSessionId
-          ? { ...session, fileHandle: fileHandle ?? session.fileHandle, isWorkspaceFile: true, isNewWorkspaceFile: false, isDirty: false }
+          ? {
+              ...session,
+              markdown: useEditorStore.getState().markdown,
+              fileName: useEditorStore.getState().fileName,
+              fileHandle: fileHandle ?? session.fileHandle,
+              isWorkspaceFile: true,
+              isNewWorkspaceFile: false,
+              isDirty: false,
+            }
           : session,
-      ),
-    })),
+      );
+
+      useEditorStore.setState({ isDirty: false });
+      return { sessions: nextSessions };
+    }),
 }));
