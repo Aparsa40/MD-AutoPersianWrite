@@ -11,9 +11,9 @@ import { useEditorStore } from '../../store/useEditorStore';
 import { useDocumentSessionStore } from '../../store/useDocumentSessionStore';
 
 export const MainLayout: React.FC = () => {
-  const { editorRef, previewRef } = useScrollSync();
-  const { viewMode, orientation, splitRatio, setSplitRatio } = useLayoutStore();
   const activeSessionId = useDocumentSessionStore((state) => state.activeSessionId);
+  const { editorRef, previewRef } = useScrollSync(activeSessionId);
+  const { viewMode, orientation, splitRatio, setSplitRatio } = useLayoutStore();
   const sessions = useDocumentSessionStore((state) => state.sessions);
   const createSession = useDocumentSessionStore((state) => state.createSession);
   const updateActiveDraft = useDocumentSessionStore((state) => state.updateActiveDraft);
@@ -44,6 +44,18 @@ export const MainLayout: React.FC = () => {
       isNewWorkspaceFile: false,
     });
   }, [activeSessionId, createSession, fileName, isDirty, markdown, sessions]);
+
+  useEffect(() => {
+    const hasDirtySession = useDocumentSessionStore.getState().sessions.some((session) => session.isDirty);
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      if (!hasDirtySession) return;
+      event.preventDefault();
+      event.returnValue = '';
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [activeSessionId, markdown, isDirty, sessions]);
 
   const handleMouseMove = useCallback(
     (event: MouseEvent) => {
@@ -86,6 +98,7 @@ export const MainLayout: React.FC = () => {
           <div className={`flex min-h-0 min-w-0 flex-1 overflow-hidden ${horizontal ? 'flex-row' : 'flex-col'}`}>
             {editorVisible && (
               <section
+                key={`editor-${activeSessionId}`}
                 className="min-h-0 min-w-0 overflow-hidden"
                 style={{
                   width:
@@ -118,6 +131,7 @@ export const MainLayout: React.FC = () => {
 
             {previewVisible && (
               <section
+                key={`preview-${activeSessionId}`}
                 className="min-h-0 min-w-0 overflow-hidden"
                 style={{
                   width:
