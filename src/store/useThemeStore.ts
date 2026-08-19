@@ -1,10 +1,10 @@
 import { create } from 'zustand';
 
-export type ThemeMode = 'light' | 'dark' | 'sepia';
+export type ThemeMode = 'light' | 'dark' | 'sepia' | 'black-white' | 'navy-white';
 
 interface ThemeState {
   theme: ThemeMode;
-  fontSize: number; // اندازه فونت بر حسب پیکسل
+  fontSize: number;
   fontFamily: string;
   textColor: string;
   setTheme: (theme: ThemeMode) => void;
@@ -13,9 +13,14 @@ interface ThemeState {
   setTextColor: (color: string) => void;
 }
 
+const THEME_CLASSES: ThemeMode[] = ['light', 'dark', 'sepia', 'black-white', 'navy-white'];
+
 export const useThemeStore = create<ThemeState>((set) => {
-  // دریافت تم ذخیره شده از localStorage یا پیش‌فرض light
-  const initialTheme = (localStorage.getItem('md_app_theme') as ThemeMode) || 'light';
+  const storedTheme = localStorage.getItem('md_app_theme') as ThemeMode | null;
+  const initialTheme: ThemeMode = storedTheme && THEME_CLASSES.includes(storedTheme) ? storedTheme : 'light';
+
+  document.documentElement.classList.remove(...THEME_CLASSES);
+  document.documentElement.classList.add(initialTheme);
 
   return {
     theme: initialTheme,
@@ -25,7 +30,7 @@ export const useThemeStore = create<ThemeState>((set) => {
 
     setTheme: (theme: ThemeMode) => {
       localStorage.setItem('md_app_theme', theme);
-      document.documentElement.classList.remove('light', 'dark', 'sepia');
+      document.documentElement.classList.remove(...THEME_CLASSES);
       document.documentElement.classList.add(theme);
       set({ theme });
     },
