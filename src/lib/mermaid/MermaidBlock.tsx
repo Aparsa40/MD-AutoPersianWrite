@@ -3,9 +3,10 @@ import { useThemeStore } from '../../store/useThemeStore';
 
 interface MermaidBlockProps {
   chart: string;
+  sourceLine?: number;
 }
 
-export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart }) => {
+export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, sourceLine }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState(false);
   const theme = useThemeStore((state) => state.theme);
@@ -21,12 +22,11 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart }) => {
 
       try {
         setError(false);
+        container.replaceChildren();
 
         const { default: mermaid } = await import('mermaid');
 
-        if (cancelled) {
-          return;
-        }
+        if (cancelled) return;
 
         mermaid.initialize({
           startOnLoad: false,
@@ -36,21 +36,14 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart }) => {
         });
 
         await mermaid.parse(chart);
+        if (cancelled) return;
 
-        if (cancelled) {
-          return;
-        }
-
-        const id = `mermaid-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-
+        const id = `mermaid-${crypto.randomUUID()}`;
         const { svg, bindFunctions } = await mermaid.render(id, chart);
 
-        if (cancelled || !container) {
-          return;
-        }
+        if (cancelled || !container) return;
 
         container.innerHTML = svg;
-
         bindFunctions?.(container);
       } catch {
         if (!cancelled) {
@@ -70,13 +63,22 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart }) => {
   if (error) {
     return (
       <div
+        data-source-line={sourceLine}
         className="my-4 rounded border border-border bg-surface px-4 py-3 text-sm text-text-muted"
         dir="rtl"
       >
-        در حال ویرایش دایاگرام Mermaid...
+        نمودار Mermaid قابل رندر نیست. نحو نمودار را بررسی کنید.
       </div>
     );
   }
 
-  return <div ref={containerRef} className="my-4 flex justify-center overflow-x-auto" dir="ltr" />;
+  return (
+    <div
+      ref={containerRef}
+      data-source-line={sourceLine}
+      className="my-4 flex justify-center overflow-x-auto"
+      dir="ltr"
+      aria-label="Mermaid diagram"
+    />
+  );
 };
