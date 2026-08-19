@@ -19,6 +19,19 @@ interface PreviewPaneProps {
   previewRef?: React.RefObject<HTMLDivElement>;
 }
 
+type MarkdownNode = {
+  position?: {
+    start?: {
+      line?: number;
+    };
+  };
+};
+
+const getSourceLine = (node?: MarkdownNode): number | undefined => {
+  const line = node?.position?.start?.line;
+  return typeof line === 'number' && line > 0 ? line : undefined;
+};
+
 const getHeadingId = (text: string, index: number): string => {
   const slug = text
     .toLowerCase()
@@ -27,6 +40,24 @@ const getHeadingId = (text: string, index: number): string => {
     .replace(/\s+/g, '-')
     .replace(/-+/g, '-');
   return `heading-${slug || 'section'}-${index}`;
+};
+
+const isMermaidDiagram = (text: string): boolean => {
+  const normalized = text.trim();
+  if (!normalized) return false;
+
+  const firstMeaningfulLine = normalized
+    .split('\n')
+    .map((line) => line.trim())
+    .find((line) => line && !line.startsWith('%%'))
+    ?.replace(/^%%\{.*?\}%%\s*/, '')
+    .trim();
+
+  if (!firstMeaningfulLine) return false;
+
+  return /^(?:graph|flowchart|sequenceDiagram|classDiagram|stateDiagram(?:-v2)?|erDiagram|journey|gantt|pie|mindmap|timeline|gitGraph|quadrantChart|xychart(?:-beta)?|block-beta|sankey(?:-beta)?|packet-beta|architecture-beta)\b/.test(
+    firstMeaningfulLine,
+  );
 };
 
 export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
@@ -60,72 +91,114 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
           remarkPlugins={remarkPlugins as PluggableList}
           rehypePlugins={rehypePlugins as PluggableList}
           components={{
-            p({ children }) {
+            p({ children, node }) {
               return (
-                <p dir="auto" className="my-2 leading-relaxed" style={{ unicodeBidi: 'plaintext' }}>
+                <p
+                  dir="auto"
+                  data-source-line={getSourceLine(node as MarkdownNode)}
+                  className="my-2 leading-relaxed"
+                  style={{ unicodeBidi: 'plaintext' }}
+                >
                   {children}
                 </p>
               );
             },
-            h1({ children }) {
+            h1({ children, node }) {
               const index = headingIndex.current++;
               const text = React.Children.toArray(children).join('');
               return (
-                <h1 id={getHeadingId(text, index)} data-preview-heading="true" dir="auto" className="my-4 text-2xl font-bold">
+                <h1
+                  id={getHeadingId(text, index)}
+                  data-preview-heading="true"
+                  data-source-line={getSourceLine(node as MarkdownNode)}
+                  dir="auto"
+                  className="my-4 text-2xl font-bold"
+                >
                   {children}
                 </h1>
               );
             },
-            h2({ children }) {
+            h2({ children, node }) {
               const index = headingIndex.current++;
               const text = React.Children.toArray(children).join('');
               return (
-                <h2 id={getHeadingId(text, index)} data-preview-heading="true" dir="auto" className="my-3 text-xl font-bold">
+                <h2
+                  id={getHeadingId(text, index)}
+                  data-preview-heading="true"
+                  data-source-line={getSourceLine(node as MarkdownNode)}
+                  dir="auto"
+                  className="my-3 text-xl font-bold"
+                >
                   {children}
                 </h2>
               );
             },
-            h3({ children }) {
+            h3({ children, node }) {
               const index = headingIndex.current++;
               const text = React.Children.toArray(children).join('');
               return (
-                <h3 id={getHeadingId(text, index)} data-preview-heading="true" dir="auto" className="my-2 text-lg font-bold">
+                <h3
+                  id={getHeadingId(text, index)}
+                  data-preview-heading="true"
+                  data-source-line={getSourceLine(node as MarkdownNode)}
+                  dir="auto"
+                  className="my-2 text-lg font-bold"
+                >
                   {children}
                 </h3>
               );
             },
-            h4({ children }) {
+            h4({ children, node }) {
               const index = headingIndex.current++;
               const text = React.Children.toArray(children).join('');
               return (
-                <h4 id={getHeadingId(text, index)} data-preview-heading="true" dir="auto" className="my-2 font-bold">
+                <h4
+                  id={getHeadingId(text, index)}
+                  data-preview-heading="true"
+                  data-source-line={getSourceLine(node as MarkdownNode)}
+                  dir="auto"
+                  className="my-2 font-bold"
+                >
                   {children}
                 </h4>
               );
             },
-            h5({ children }) {
+            h5({ children, node }) {
               const index = headingIndex.current++;
               const text = React.Children.toArray(children).join('');
               return (
-                <h5 id={getHeadingId(text, index)} data-preview-heading="true" dir="auto" className="my-2 font-bold">
+                <h5
+                  id={getHeadingId(text, index)}
+                  data-preview-heading="true"
+                  data-source-line={getSourceLine(node as MarkdownNode)}
+                  dir="auto"
+                  className="my-2 font-bold"
+                >
                   {children}
                 </h5>
               );
             },
-            h6({ children }) {
+            h6({ children, node }) {
               const index = headingIndex.current++;
               const text = React.Children.toArray(children).join('');
               return (
-                <h6 id={getHeadingId(text, index)} data-preview-heading="true" dir="auto" className="my-2 font-bold">
+                <h6
+                  id={getHeadingId(text, index)}
+                  data-preview-heading="true"
+                  data-source-line={getSourceLine(node as MarkdownNode)}
+                  dir="auto"
+                  className="my-2 font-bold"
+                >
                   {children}
                 </h6>
               );
             },
-            ul({ children, className, ...props }) {
+            ul({ children, className, node, ...props }) {
               const isTaskList = className?.split(/\s+/).includes('contains-task-list');
               return (
                 <ul
                   dir="auto"
+                  data-source-line={getSourceLine(node as MarkdownNode)}
                   className={`${isTaskList ? 'list-none' : 'list-disc'} my-2 space-y-1 pr-6 pl-0`}
                   {...props}
                 >
@@ -133,33 +206,51 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
                 </ul>
               );
             },
-            ol({ children, ...props }) {
+            ol({ children, node, ...props }) {
               return (
-                <ol dir="auto" className="my-2 list-decimal space-y-1 pr-6 pl-0" {...props}>
+                <ol
+                  dir="auto"
+                  data-source-line={getSourceLine(node as MarkdownNode)}
+                  className="my-2 list-decimal space-y-1 pr-6 pl-0"
+                  {...props}
+                >
                   {children}
                 </ol>
               );
             },
-            li({ children, className, ...props }) {
+            li({ children, className, node, ...props }) {
               const isTaskItem = className?.split(/\s+/).includes('task-list-item');
               return (
-                <li dir="auto" className={`${isTaskItem ? 'list-none' : ''} my-1`} {...props}>
+                <li
+                  dir="auto"
+                  data-source-line={getSourceLine(node as MarkdownNode)}
+                  className={`${isTaskItem ? 'list-none' : ''} my-1`}
+                  {...props}
+                >
                   {children}
                 </li>
               );
             },
-            blockquote({ children }) {
+            blockquote({ children, node }) {
               return (
-                <blockquote dir="auto" className="my-2 border-r-4 border-primary pr-4 italic">
+                <blockquote
+                  dir="auto"
+                  data-source-line={getSourceLine(node as MarkdownNode)}
+                  className="my-2 border-r-4 border-primary pr-4 italic"
+                >
                   {children}
                 </blockquote>
               );
             },
-            code({ inline, className, children, ...props }: ComponentPropsWithoutRef<'code'> & { inline?: boolean }) {
-              const match = /language-(\w+)/.exec(className || '');
-              if (!inline && match?.[1] === 'mermaid') {
-                return <MermaidBlock chart={String(children).replace(/\n$/, '')} />;
+            code({ inline, className, children, node, ...props }: ComponentPropsWithoutRef<'code'> & { inline?: boolean; node?: MarkdownNode }) {
+              const match = /language-([\w-]+)/.exec(className || '');
+              const chart = String(children).replace(/\n$/, '');
+              const sourceLine = getSourceLine(node);
+
+              if (!inline && (match?.[1] === 'mermaid' || isMermaidDiagram(chart))) {
+                return <MermaidBlock chart={chart} sourceLine={sourceLine} />;
               }
+
               if (inline) {
                 return (
                   <code
@@ -171,8 +262,10 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
                   </code>
                 );
               }
+
               return (
                 <pre
+                  data-source-line={sourceLine}
                   className="dir-ltr overflow-x-auto rounded border border-border bg-surface p-4 text-left font-mono text-sm"
                   dir="ltr"
                 >
