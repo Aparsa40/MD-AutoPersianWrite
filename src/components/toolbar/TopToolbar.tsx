@@ -21,11 +21,12 @@ const getSaveFilePicker = () => {
 };
 
 export const TopToolbar: React.FC = () => {
-  const { markdown, fileName, setFileName, setMarkdown, resetEditor, insertTextAtCursor } = useEditorStore();
+  const { markdown, fileName, setMarkdown, resetEditor, insertTextAtCursor } = useEditorStore();
   const { theme, setTheme, fontSize, setFontSize, fontFamily, setFontFamily, setTextColor } = useThemeStore();
   const { viewMode, setViewMode, orientation, setOrientation, toggleToc, isTocOpen } = useLayoutStore();
   const activeSession = useDocumentSessionStore((state) => state.sessions.find((session) => session.id === state.activeSessionId));
   const markPersisted = useDocumentSessionStore((state) => state.markPersisted);
+  const updateSession = useDocumentSessionStore((state) => state.updateSession);
   const createSession = useDocumentSessionStore((state) => state.createSession);
   const closeSession = useDocumentSessionStore((state) => state.closeSession);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
@@ -74,15 +75,17 @@ export const TopToolbar: React.FC = () => {
       await writeTextFile(handle, markdown);
 
       if (activeSession) {
-        useDocumentSessionStore.getState().setWorkspaceFile(
-          handle,
-          activeSession.workspaceDirectory ?? (await handle.getFile()).handle as never,
-          false,
-        );
+        updateSession(activeSession.id, {
+          fileHandle: handle,
+          fileName: handle.name,
+          isWorkspaceFile: true,
+          isNewWorkspaceFile: false,
+          isDirty: false,
+        });
+        useEditorStore.setState({ fileName: handle.name, isDirty: false });
         markPersisted(handle);
       }
 
-      useEditorStore.setState({ fileName: handle.name, isDirty: false });
       closeMenu();
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') {
@@ -142,7 +145,6 @@ export const TopToolbar: React.FC = () => {
           </div>
 
           <WorkspaceMenu />
-
           <div className="relative">
             <button type="button" onClick={() => setActiveMenu(activeMenu === 'edit' ? null : 'edit')} className="rounded px-3 py-1.5 text-sm font-medium hover:bg-bg">ویرایش</button>
             {activeMenu === 'edit' && (
@@ -171,27 +173,15 @@ export const TopToolbar: React.FC = () => {
           </div>
 
           <button type="button" onClick={toggleToc} className={`rounded px-3 py-1.5 text-sm font-medium ${isTocOpen ? 'bg-primary text-white' : 'hover:bg-bg'}`}>فهرست مطالب</button>
-
           <div className="relative">
             <button type="button" onClick={() => setActiveMenu(activeMenu === 'themes' ? null : 'themes')} className="rounded px-3 py-1.5 text-sm font-medium hover:bg-bg">تم‌ها</button>
-            {activeMenu === 'themes' && (
-              <div className="absolute right-0 mt-2 w-48 rounded border border-border bg-surface py-1 shadow-lg">
-                {(['light', 'dark', 'sepia'] as const).map((name) => <button type="button" key={name} onClick={() => { setTheme(name); closeMenu(); }} className={`w-full px-4 py-2 text-right text-sm hover:bg-bg ${theme === name ? 'font-bold text-primary' : ''}`}>{name === 'light' ? 'روشن (Light)' : name === 'dark' ? 'تاریک (Dark)' : 'سپیا (Sepia)'}</button>)}
-              </div>
-            )}
+            {activeMenu === 'themes' && <div className="absolute right-0 mt-2 w-48 rounded border border-border bg-surface py-1 shadow-lg">{(['light', 'dark', 'sepia'] as const).map((name) => <button type="button" key={name} onClick={() => { setTheme(name); closeMenu(); }} className={`w-full px-4 py-2 text-right text-sm hover:bg-bg ${theme === name ? 'font-bold text-primary' : ''}`}>{name === 'light' ? 'روشن (Light)' : name === 'dark' ? 'تاریک (Dark)' : 'سپیا (Sepia)'}</button>)}</div>}
           </div>
-
           <DocumentStyleMenu />
           <AgentMenu />
-
           <div className="relative">
             <button type="button" onClick={() => setActiveMenu(activeMenu === 'help' ? null : 'help')} className="rounded px-3 py-1.5 text-sm font-medium hover:bg-bg">راهنما / Help</button>
-            {activeMenu === 'help' && (
-              <div className="absolute right-0 mt-2 w-48 rounded border border-border bg-surface py-1 shadow-lg">
-                <button type="button" onClick={() => { setIsFeedbackOpen(true); closeMenu(); }} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">ارسال نظر / باگ</button>
-                <button type="button" onClick={() => { setIsAboutOpen(true); closeMenu(); }} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">راهنمای برنامه</button>
-              </div>
-            )}
+            {activeMenu === 'help' && <div className="absolute right-0 mt-2 w-48 rounded border border-border bg-surface py-1 shadow-lg"><button type="button" onClick={() => { setIsFeedbackOpen(true); closeMenu(); }} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">ارسال نظر / باگ</button><button type="button" onClick={() => { setIsAboutOpen(true); closeMenu(); }} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">راهنمای برنامه</button></div>}
           </div>
         </div>
         <div className="text-xs text-text-muted dir-ltr">{fileName}</div>
