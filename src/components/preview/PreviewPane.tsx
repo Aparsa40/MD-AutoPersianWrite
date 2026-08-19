@@ -9,7 +9,6 @@ import rehypePrism from 'rehype-prism-plus';
 import { useEditorStore } from '../../store/useEditorStore';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useDebounce } from '../../hooks/useDebounce';
-import { convertHtmlToMarkdown } from '../../lib/markdown/htmlToMarkdown';
 import { slugifyHeading } from '../../lib/markdown/toc';
 import { MermaidBlock } from '../../lib/mermaid/MermaidBlock';
 import { PluginManager } from '../../plugins/PluginManager';
