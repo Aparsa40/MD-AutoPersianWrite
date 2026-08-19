@@ -2,7 +2,9 @@ import React, { useRef, useState } from 'react';
 import { useEditorStore } from '../../store/useEditorStore';
 import { useThemeStore } from '../../store/useThemeStore';
 import { useLayoutStore } from '../../store/useLayoutStore';
+import { useDocumentSessionStore } from '../../store/useDocumentSessionStore';
 import { exportAsMarkdown } from '../../lib/export/fileExport';
+import { deleteEntry } from '../../lib/workspace/localWorkspaceFiles';
 import { FeedbackModal } from '../modals/FeedbackModal';
 import { AboutModal } from '../modals/AboutModal';
 import { WorkspaceMenu } from './WorkspaceMenu';
@@ -16,6 +18,10 @@ export const TopToolbar: React.FC = () => {
     useThemeStore();
   const { viewMode, setViewMode, orientation, setOrientation, toggleToc, isTocOpen } =
     useLayoutStore();
+  const activeSession = useDocumentSessionStore((state) =>
+    state.sessions.find((session) => session.id === state.activeSessionId),
+  );
+  const closeSession = useDocumentSessionStore((state) => state.closeSession);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
@@ -37,6 +43,34 @@ export const TopToolbar: React.FC = () => {
     reader.onerror = () => window.alert('خواندن فایل انجام نشد.');
     reader.readAsText(file);
     event.target.value = '';
+  };
+
+  const handleDeleteDocument = async () => {
+    if (!activeSession) {
+      window.alert('سندی برای حذف انتخاب نشده است.');
+      closeMenu();
+      return;
+    }
+
+    const hasPersistedFile = Boolean(activeSession.fileHandle && activeSession.workspaceDirectory);
+    const confirmation = hasPersistedFile
+      ? `آیا از حذف «${activeSession.fileName}» از Workspace و بستن آن مطمئن هستید؟`
+      : `آیا از حذف «${activeSession.fileName}» از برنامه و بستن آن مطمئن هستید؟`;
+
+    if (!window.confirm(confirmation)) {
+      closeMenu();
+      return;
+    }
+
+    try {
+      if (hasPersistedFile && activeSession.workspaceDirectory) {
+        await deleteEntry(activeSession.workspaceDirectory, activeSession.fileName, false);
+      }
+      closeSession(activeSession.id);
+      closeMenu();
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : 'حذف فایل انجام نشد.');
+    }
   };
 
   return (
@@ -98,6 +132,14 @@ export const TopToolbar: React.FC = () => {
                   className="w-full px-4 py-2 text-right text-sm hover:bg-bg"
                 >
                   خروجی Markdown
+                </button>
+                <div className="my-1 border-t border-border" />
+                <button
+                  type="button"
+                  onClick={() => void handleDeleteDocument()}
+                  className="w-full px-4 py-2 text-right text-sm text-red-600 hover:bg-bg"
+                >
+                  حذف / Delete
                 </button>
               </div>
             )}
