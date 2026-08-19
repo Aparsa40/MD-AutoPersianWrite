@@ -14,7 +14,11 @@ export function convertHtmlToMarkdown(html: string): string {
       if (!rows.length) return '';
       const matrix = rows.map((row) =>
         Array.from(row.children).map((cell) =>
-          (cell.textContent ?? '').replace(/\|/g, '\\|').replace(/\r?\n|\r/g, ' ').trim(),
+          (cell.textContent ?? '')
+  .replace(/\\/g, '\\\\')
+  .replace(/\|/g, '\\|')
+  .replace(/\r?\n|\r/g, ' ')
+  .trim(),
         ),
       );
       const width = Math.max(...matrix.map((row) => row.length), 1);
