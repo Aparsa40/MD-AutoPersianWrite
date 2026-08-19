@@ -6,8 +6,20 @@ export interface MarkdownHeading {
 
 export const stripMarkdownForSlug = (text: string): string =>
   text
-    .replace(/!\[([^\]]*)\]\([^)]*\)/g, '$1')
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+    .replace(/!
+
+\[([^\]
+
+]*)\]
+
+\([^)]*\)/g, '$1')
+    .replace(/
+
+\[([^\]
+
+]+)\]
+
+\([^)]*\)/g, '$1')
     .replace(/[`*_~]/g, '')
     .replace(/<[^>]*>/g, '')
     .replace(/\\(.)/g, '$1')
