@@ -1,4 +1,4 @@
-export type DocumentThemeId = 'classic' | 'github' | 'academic' | 'modern';
+export type DocumentThemeId = 'classic' | 'github' | 'academic' | 'modern' | 'black-white' | 'navy-white';
 
 export interface DocumentThemeDefinition {
   id: DocumentThemeId;
