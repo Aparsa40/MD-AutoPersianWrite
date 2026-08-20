@@ -1,31 +1,171 @@
 # راهنمای مشارکت در پروژه MD-AutoPersianWrite
 
-از اینکه قصد مشارکت در این پروژه را دارید، سپاسگزاریم! لطفاً پیش از ارسال تغییرات، موارد زیر را مطالعه کنید:
+از اینکه قصد مشارکت در MD-AutoPersianWrite را دارید، سپاسگزاریم. این سند روند پیشنهادی توسعه، تست، مستندسازی و ارسال Pull Request را توضیح می‌دهد.
 
-## قوانین کلی (Code of Conduct)
-- به سایر مشارکت‌کنندگان احترام بگذارید.
-- کدها باید با استانداردهای **Clean Code** و اصول **SOLID** مطابقت داشته باشند.
-- هیچ مشارکت‌کننده‌ای نباید مستقیماً روی `main` تغییر ایجاد کند یا تغییرات خود را بدون بررسی Maintainer منتشر کند.
+## قوانین کلی
 
-## درخواست مشارکت
-پیش از شروع کار روی یک تغییر مهم، درخواست خود را از طریق راه ارتباطی رسمی پروژه ارسال کنید و موضوع، هدف و دامنه تغییر را توضیح دهید. شروع کار روی تغییرات گسترده بدون هماهنگی قبلی توصیه نمی‌شود.
+- مستقیماً روی `main` توسعه ندهید.
+- برای هر Feature، Fix یا Documentation change یک Branch مستقل بسازید.
+- تغییرات را کوچک، قابل بررسی و با Commitهای هدفمند نگه دارید.
+- کد باید با TypeScript Strict Mode، Clean Code و اصول SOLID سازگار باشد.
+- از `any` فقط در موارد واقعاً ضروری و با توضیح روشن استفاده کنید.
+- فایل‌ها و مسیرهای موجود را پیش از ایجاد مسیر جدید بررسی کنید تا ساختار پروژه بی‌دلیل تکثیر نشود.
 
-## استانداردهای کدنویسی
-1. پروژه مبتنی بر **TypeScript Strict Mode** است. استفاده از `any` فقط در مواقع ضروری و با ارائه توضیحات کامنت‌شده مجاز است.
-2. پیش از Commit، مطمئن شوید که دستور `npm run lint` بدون خطا اجرا می‌شود.
-3. در صورت اضافه کردن قابلیت‌های جدید، ترجیحاً از سیستم `PluginManager` در `src/plugins` استفاده کنید تا هسته (Core) برنامه تغییر نکند.
-4. پیش از Pull Request، حداقل `npm run format`، `npm run lint`، `npm run typecheck`، `npm run test` و `npm run build` را اجرا کنید.
+## ساختار و معماری
 
-## روال ارسال Pull Request
-1. پروژه را Fork کرده و یک Branch مستقل با نام فیچر یا نوع تغییر خود بسازید؛ مثال: `feature/ai-assistant` یا `fix/editor-scroll`.
-2. تغییرات خود را با Commitهای خوانا و هدفمند اعمال کنید.
-3. در صورت تغییر رفتار یا قابلیت‌های کاربر، `CHANGELOG.md` و مستندات مرتبط را به‌روزرسانی کنید.
-4. نتیجه تست‌های محلی را در توضیحات Pull Request اعلام کنید.
-5. Pull Request را به `main` ارسال کنید تا توسط Maintainer بررسی شود.
-6. فقط پس از تأیید و Merge توسط Maintainer، تغییرات وارد `main` خواهند شد.
+پروژه از React + TypeScript + Vite و Zustand استفاده می‌کند و قابلیت‌های Markdown از طریق React-Markdown و Plugin/Processorهای Remark/Rehype توسعه داده می‌شوند.
 
-## بازنشر و نسخه‌های مشتق‌شده
-اگر نسخه‌ای مشتق‌شده یا بازنشرشده از پروژه با مجوز مندرج در `LICENSE` منتشر می‌کنید، شرایط همان فایل باید رعایت شود و لینک مخزن اصلی `MD-AutoPersianWrite` و اعتبار سازندگان همراه نسخه منتشرشده درج شود.
+برای قابلیت‌هایی که ماهیت Plugin یا Markdown Processing دارند، ترجیح داده می‌شود منطق در `src/plugins` یا `src/lib/markdown` قرار بگیرد و هسته Editor فقط در حد اتصال و orchestration تغییر کند.
 
-## نکته مهم درباره License
-فایل `LICENSE` این پروژه یک **لایسنس اختصاصی پروژه** است و نباید به‌عنوان MIT License تلقی شود. برای شرایط دقیق کپی، استفاده، تغییر و بازنشر، متن کامل `LICENSE` ملاک است.
+قابلیت‌های Workspace محلی در مسیرهای مربوط به `src/components/workspace` و `src/lib/workspace` قرار دارند و باید دسترسی به File System API را از UI جدا نگه دارند.
+
+## نام‌گذاری Branch
+
+از نام‌گذاری واضح استفاده کنید، برای مثال:
+
+```text
+feature/hyperlink-editor
+feature/google-drive-workspace
+feature/agent-menu
+fix/unsaved-close-notification
+fix/markdown-toc
+chore/release-v2.5.0
+
+docs/release-v2.5.0-documentation
+```
+
+در Featureهای بزرگ، شماره نسخه هدف را در نام Branch فقط زمانی اضافه کنید که واقعاً بخشی از Release Plan باشد.
+
+## تغییر قابلیت‌های کاربر
+
+هر تغییر رفتاری باید این موارد را بررسی کند:
+
+1. UI و UX موجود بی‌دلیل شکسته نشود.
+2. وضعیت‌های Loading، Empty، Error و Cancel بررسی شوند.
+3. قابلیت‌های Save/Close با سندهای `isDirty` تست شوند.
+4. اگر تغییر به Markdown Rendering مربوط است، هم Editor source و هم Preview output بررسی شوند.
+5. اگر قابلیت جدید منوی خالی یا Placeholder است، آن را در Documentation به‌عنوان **زیرساخت/Placeholder** معرفی کنید، نه قابلیت تکمیل‌شده.
+
+## Markdown و Rendering
+
+برای تغییرات Markdown موارد زیر را بررسی کنید:
+
+- Headingهای `#` تا `######`.
+- لینک خارجی و لینک داخلی Heading.
+- TOC و slugهای فارسی/انگلیسی.
+- Code Block و Syntax Highlighting.
+- Table، Task List و Footnoteهای GFM.
+- Math inline و block با KaTeX.
+- Mermaid.
+- Calloutهای `[!NOTE]`، `[!TIP]`، `[!IMPORTANT]`، `[!WARNING]` و `[!CAUTION]`.
+- HTML کنترل‌شده و ورودی‌های مشکوک مانند tagهای ناقص.
+
+هر sanitizer یا تبدیل متن باید در برابر HTML Injection و XSS احتمالی بررسی شود و CodeQL را جدی بگیرد.
+
+## Workspace و File Management
+
+تغییرات Workspace باید تفاوت بین این موارد را رعایت کنند:
+
+- فایل عادی انتخاب‌شده با File Picker.
+- فایل داخل Local Workspace.
+- Session باز در Editor.
+- Session دارای تغییرات ذخیره‌نشده.
+- Cancel شدن Save.
+- Delete/Rename فایل یا پوشه‌ای که Session فعال دارد.
+
+دسترسی به فایل سیستم فقط از مسیر APIهای مجاز مرورگر و با مدیریت صحیح Permission/Handle انجام شود.
+
+## Unsaved Changes
+
+هشدار ذخیره‌نشده نباید رابط کاربری را با یک Banner سرتاسری مسدود کند.
+
+رفتار مورد انتظار:
+
+- در زمان ویرایش عادی، Editor و Workspace باید کاملاً قابل استفاده باشند.
+- بستن Tab سند دارای تغییرات باید Save flow داشته باشد.
+- Cancel کردن Save نباید سند را ببندد.
+- خروج از صفحه/برنامه در صورت وجود سند Dirty باید از `beforeunload` استفاده کند.
+- متن Native خروج توسط Browser کنترل می‌شود و نباید روی متن سفارشی Browser حساب شود.
+
+## تست و Validation
+
+پیش از Pull Request حداقل دستورات زیر اجرا شوند:
+
+```bash
+npm run format
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+```
+
+در صورت تغییر dependency:
+
+```bash
+npm install
+npm audit
+```
+
+و `package.json` و `package-lock.json` باید با یکدیگر هماهنگ باشند.
+
+در CI پروژه، هر دو Node.js `20.x` و `22.x` باید موفق باشند. CodeQL و Deployment مربوط به Pull Request نیز باید بررسی شوند.
+
+## مستندسازی و Versioning
+
+اگر تغییر رفتار یا قابلیت جدیدی ایجاد می‌کنید:
+
+- `README.md` را در صورت نیاز به‌روزرسانی کنید.
+- `CHANGELOG.md` را برای Release مربوطه به‌روزرسانی کنید.
+- در CHANGELOG بین `Added`، `Improved`، `Fixed`، `Security` و `Documentation` تفکیک قائل شوید.
+- Featureهای ناتمام یا Placeholderها را به‌عنوان قابلیت کامل معرفی نکنید.
+
+پروژه از Semantic Versioning استفاده می‌کند:
+
+```text
+MAJOR.MINOR.PATCH
+```
+
+- `MAJOR`: تغییر ناسازگار.
+- `MINOR`: قابلیت جدید سازگار با نسخه قبلی.
+- `PATCH`: Bug fix یا اصلاح کوچک بدون Feature اصلی.
+
+پیش از Release باید نسخه در فایل‌های پروژه، مخصوصاً `package.json` و `package-lock.json`، یکسان باشد.
+
+## Pull Request
+
+1. Branch مستقل بسازید.
+2. تغییرات را پیاده‌سازی کنید.
+3. تست‌های محلی را اجرا کنید.
+4. مستندات مرتبط را به‌روزرسانی کنید.
+5. تغییرات را Commit کنید.
+6. Pull Request را به `main` ارسال کنید.
+7. صبر کنید تمام Checkهای مربوط به **آخرین commit** سبز شوند.
+8. CodeQL و Vercel را نیز بررسی کنید.
+9. فقط پس از بررسی Maintainer و موفقیت Checkها Merge انجام شود.
+
+### نکته مهم درباره Checkها
+
+سبز بودن Check مربوط به یک commit قدیمی کافی نیست. همیشه باید وضعیت Checkهای آخرین SHA مربوط به Head Branch بررسی شود. اگر Branch بعد از اجرای CI تغییر کرده باشد، باید اجرای جدید همان commit مبنا قرار گیرد.
+
+## Release
+
+پیش از Tag و Release:
+
+```bash
+npm run format
+npm run lint
+npm run typecheck
+npm run test
+npm run build
+npm audit
+```
+
+سپس نسخه، CHANGELOG، Tag و Release باید با یکدیگر هماهنگ باشند.
+
+## امنیت
+
+آسیب‌پذیری‌های امنیتی را در Issue عمومی با جزئیات سوءاستفاده منتشر نکنید. برای گزارش امنیتی از فرآیند تعریف‌شده در `SECURITY.md` استفاده کنید.
+
+## License
+
+فایل `LICENSE` لایسنس معتبر پروژه است. برای شرایط استفاده، تغییر و بازنشر، متن کامل همان فایل ملاک است.
