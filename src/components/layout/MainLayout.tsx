@@ -5,7 +5,6 @@ import { PreviewPane } from '../preview/PreviewPane';
 import { TableOfContents } from '../toc/TableOfContents';
 import { WorkspaceExplorer } from '../workspace/WorkspaceExplorer';
 import { DocumentSessionTabs } from '../document/DocumentSessionTabs';
-import { UnsavedChangesGuard } from '../document/UnsavedChangesGuard';
 import { useScrollSync } from '../../hooks/useScrollSync';
 import { useLayoutStore } from '../../store/useLayoutStore';
 import { useEditorStore } from '../../store/useEditorStore';
@@ -24,26 +23,14 @@ export const MainLayout: React.FC = () => {
   const [isResizing, setIsResizing] = useState(false);
   const handledResetRef = useRef<string | null>(null);
 
-  useEffect(() => {
-    if (!activeSessionId) return;
-    updateActiveDraft({ markdown, fileName, isDirty });
-  }, [activeSessionId, fileName, isDirty, markdown, updateActiveDraft]);
-
+  useEffect(() => { if (activeSessionId) updateActiveDraft({ markdown, fileName, isDirty }); }, [activeSessionId, fileName, isDirty, markdown, updateActiveDraft]);
   useEffect(() => {
     const resetSignature = `${fileName}\u0000${markdown}\u0000${isDirty}`;
     if (fileName !== 'untitled.md' || markdown !== '' || isDirty || handledResetRef.current === resetSignature) return;
     handledResetRef.current = resetSignature;
     const active = sessions.find((session) => session.id === activeSessionId);
     if (active && active.fileName === 'untitled.md' && active.markdown === '' && !active.isWorkspaceFile) return;
-    createSession({
-      fileName: 'untitled.md',
-      markdown: '',
-      isDirty: false,
-      fileHandle: null,
-      workspaceDirectory: null,
-      isWorkspaceFile: false,
-      isNewWorkspaceFile: false,
-    });
+    createSession({ fileName: 'untitled.md', markdown: '', isDirty: false, fileHandle: null, workspaceDirectory: null, isWorkspaceFile: false, isNewWorkspaceFile: false });
   }, [activeSessionId, createSession, fileName, isDirty, markdown, sessions]);
 
   useEffect(() => {
@@ -51,13 +38,9 @@ export const MainLayout: React.FC = () => {
       const state = useDocumentSessionStore.getState();
       const hasDirtySession = state.sessions.some((session) => session.isDirty) || useEditorStore.getState().isDirty;
       if (!hasDirtySession) return;
-
-      // Browserها برای beforeunload فقط پیام استاندارد خودشان را نمایش می‌دهند؛
-      // متن سفارشی مرورگر قابل کنترل نیست. این event جلوی بسته‌شدن بی‌هشدار را می‌گیرد.
       event.preventDefault();
       event.returnValue = '';
     };
-
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
@@ -66,36 +49,21 @@ export const MainLayout: React.FC = () => {
     const hasDirtySession = sessions.some((session) => session.isDirty) || isDirty;
     const baseTitle = 'MD-AutoPersianWrite';
     document.title = hasDirtySession ? `● ${fileName || 'سند'} — ${baseTitle}` : baseTitle;
-
-    return () => {
-      document.title = baseTitle;
-    };
+    return () => { document.title = baseTitle; };
   }, [fileName, isDirty, sessions]);
 
-  const handleMouseMove = useCallback(
-    (event: MouseEvent) => {
-      if (!isResizing) return;
-      const ratio =
-        orientation === 'horizontal'
-          ? (event.clientX / window.innerWidth) * 100
-          : (event.clientY / window.innerHeight) * 100;
-      setSplitRatio(ratio);
-    },
-    [isResizing, orientation, setSplitRatio],
-  );
-
+  const handleMouseMove = useCallback((event: MouseEvent) => {
+    if (!isResizing) return;
+    const ratio = orientation === 'horizontal' ? (event.clientX / window.innerWidth) * 100 : (event.clientY / window.innerHeight) * 100;
+    setSplitRatio(ratio);
+  }, [isResizing, orientation, setSplitRatio]);
   const handleMouseUp = useCallback(() => setIsResizing(false), []);
-
   useEffect(() => {
     if (!isResizing) return;
     window.addEventListener('mousemove', handleMouseMove);
     window.addEventListener('mouseup', handleMouseUp);
     document.body.style.userSelect = 'none';
-    return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
-      document.body.style.userSelect = '';
-    };
+    return () => { window.removeEventListener('mousemove', handleMouseMove); window.removeEventListener('mouseup', handleMouseUp); document.body.style.userSelect = ''; };
   }, [isResizing, handleMouseMove, handleMouseUp]);
 
   const horizontal = orientation === 'horizontal';
@@ -104,7 +72,6 @@ export const MainLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-bg text-text-main">
-      <UnsavedChangesGuard />
       <TopToolbar />
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <WorkspaceExplorer />
@@ -112,61 +79,9 @@ export const MainLayout: React.FC = () => {
         <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <DocumentSessionTabs />
           <div className={`flex min-h-0 min-w-0 flex-1 overflow-hidden ${horizontal ? 'flex-row' : 'flex-col'}`}>
-            {editorVisible && (
-              <section
-                key={`editor-${activeSessionId}`}
-                className="min-h-0 min-w-0 overflow-hidden"
-                style={{
-                  width:
-                    horizontal && viewMode === 'split'
-                      ? `${splitRatio}%`
-                      : horizontal
-                        ? '100%'
-                        : undefined,
-                  height:
-                    !horizontal && viewMode === 'split'
-                      ? `${splitRatio}%`
-                      : !horizontal
-                        ? '100%'
-                        : undefined,
-                }}
-              >
-                <EditorPane editorRef={editorRef} />
-              </section>
-            )}
-
-            {viewMode === 'split' && activeSessionId !== null && (
-              <div
-                role="separator"
-                aria-orientation={horizontal ? 'vertical' : 'horizontal'}
-                aria-label="تغییر اندازه پنل‌ها"
-                onMouseDown={() => setIsResizing(true)}
-                className={`z-20 shrink-0 bg-border transition-colors hover:bg-primary/50 ${horizontal ? 'w-1.5 cursor-col-resize' : 'h-1.5 cursor-row-resize'}`}
-              />
-            )}
-
-            {previewVisible && (
-              <section
-                key={`preview-${activeSessionId}`}
-                className="min-h-0 min-w-0 overflow-hidden"
-                style={{
-                  width:
-                    horizontal && viewMode === 'split'
-                      ? `${100 - splitRatio}%`
-                      : horizontal
-                        ? '100%'
-                        : undefined,
-                  height:
-                    !horizontal && viewMode === 'split'
-                      ? `${100 - splitRatio}%`
-                      : !horizontal
-                        ? '100%'
-                        : undefined,
-                }}
-              >
-                <PreviewPane previewRef={previewRef} />
-              </section>
-            )}
+            {editorVisible && <section key={`editor-${activeSessionId}`} className="min-h-0 min-w-0 overflow-hidden" style={{ width: horizontal && viewMode === 'split' ? `${splitRatio}%` : horizontal ? '100%' : undefined, height: !horizontal && viewMode === 'split' ? `${splitRatio}%` : !horizontal ? '100%' : undefined }}><EditorPane editorRef={editorRef} /></section>}
+            {viewMode === 'split' && activeSessionId !== null && <div role="separator" aria-orientation={horizontal ? 'vertical' : 'horizontal'} aria-label="تغییر اندازه پنل‌ها" onMouseDown={() => setIsResizing(true)} className={`z-20 shrink-0 bg-border transition-colors hover:bg-primary/50 ${horizontal ? 'w-1.5 cursor-col-resize' : 'h-1.5 cursor-row-resize'}`} />}
+            {previewVisible && <section key={`preview-${activeSessionId}`} className="min-h-0 min-w-0 overflow-hidden" style={{ width: horizontal && viewMode === 'split' ? `${100 - splitRatio}%` : horizontal ? '100%' : undefined, height: !horizontal && viewMode === 'split' ? `${100 - splitRatio}%` : !horizontal ? '100%' : undefined }}><PreviewPane previewRef={previewRef} /></section>}
           </div>
         </main>
       </div>
