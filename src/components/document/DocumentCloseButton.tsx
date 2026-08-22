@@ -56,10 +56,9 @@ export const DocumentCloseButton: React.FC = () => {
           useEditorStore.setState({ isDirty: false, fileName: handle.name });
         }
       } catch (error) {
-        // Canceling the Save dialog means the user chose not to save; the
-        // document must still close. Only an actual save error keeps it open.
+        // Canceling the Save dialog means the user chose not to close yet.
+        // Keep the document open so unsaved work cannot disappear accidentally.
         if (error instanceof DOMException && error.name === 'AbortError') {
-          closeSession(activeSessionId);
           return;
         }
 
