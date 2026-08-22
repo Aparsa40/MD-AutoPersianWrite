@@ -1,10 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
+import mermaid from 'mermaid';
 import { useThemeStore } from '../../store/useThemeStore';
 
 interface MermaidBlockProps {
   chart: string;
   sourceLine?: number;
 }
+
+const createMermaidId = (): string => {
+  const random = Math.random().toString(36).slice(2, 10);
+  return `mermaid-${Date.now()}-${random}`;
+};
 
 export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, sourceLine }) => {
   const containerRef = useRef<HTMLDivElement>(null);
@@ -24,10 +30,6 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, sourceLine })
         setError(false);
         container.replaceChildren();
 
-        const { default: mermaid } = await import('mermaid');
-
-        if (cancelled) return;
-
         mermaid.initialize({
           startOnLoad: false,
           theme: theme === 'dark' ? 'dark' : 'default',
@@ -35,11 +37,12 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, sourceLine })
           fontFamily: 'Vazirmatn, sans-serif',
         });
 
-        await mermaid.parse(chart);
         if (cancelled) return;
 
-        const id = `mermaid-${crypto.randomUUID()}`;
-        const { svg, bindFunctions } = await mermaid.render(id, chart);
+        // mermaid.render() performs the parsing and rendering in one operation.
+        // Running parse() first was unnecessary and could leave Mermaid's global
+        // parser/render state out of sync when React re-rendered the block.
+        const { svg, bindFunctions } = await mermaid.render(createMermaidId(), chart);
 
         if (cancelled || !container) return;
 
