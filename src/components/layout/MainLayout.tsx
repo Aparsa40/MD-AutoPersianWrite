@@ -5,7 +5,6 @@ import { PreviewPane } from '../preview/PreviewPane';
 import { TableOfContents } from '../toc/TableOfContents';
 import { WorkspaceExplorer } from '../workspace/WorkspaceExplorer';
 import { DocumentSessionTabs } from '../document/DocumentSessionTabs';
-import { UnsavedChangesGuard } from '../document/UnsavedChangesGuard';
 import { useScrollSync } from '../../hooks/useScrollSync';
 import { useLayoutStore } from '../../store/useLayoutStore';
 import { useEditorStore } from '../../store/useEditorStore';
@@ -45,22 +44,6 @@ export const MainLayout: React.FC = () => {
       isNewWorkspaceFile: false,
     });
   }, [activeSessionId, createSession, fileName, isDirty, markdown, sessions]);
-
-  useEffect(() => {
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      const state = useDocumentSessionStore.getState();
-      const hasDirtySession = state.sessions.some((session) => session.isDirty) || useEditorStore.getState().isDirty;
-      if (!hasDirtySession) return;
-
-      // Browserها برای beforeunload فقط پیام استاندارد خودشان را نمایش می‌دهند؛
-      // متن سفارشی مرورگر قابل کنترل نیست. این event جلوی بسته‌شدن بی‌هشدار را می‌گیرد.
-      event.preventDefault();
-      event.returnValue = '';
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, []);
 
   useEffect(() => {
     const hasDirtySession = sessions.some((session) => session.isDirty) || isDirty;
@@ -104,7 +87,6 @@ export const MainLayout: React.FC = () => {
 
   return (
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-bg text-text-main">
-      <UnsavedChangesGuard />
       <TopToolbar />
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <WorkspaceExplorer />
