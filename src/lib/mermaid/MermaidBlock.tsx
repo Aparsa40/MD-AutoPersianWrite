@@ -62,8 +62,6 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, sourceLine })
           theme: theme === 'dark' ? 'dark' : 'default',
           securityLevel: 'strict',
           fontFamily: 'Vazirmatn, sans-serif',
-          // Prevent rendering issues with rapid theme changes
-          suppressErrorRendering: false,
         });
 
         if (cancelled) return;

@@ -17,7 +17,6 @@ export const initializeMermaid = (): void => {
       startOnLoad: false, // Manual rendering to prevent conflicts
       securityLevel: 'strict', // XSS prevention
       fontFamily: 'Vazirmatn, sans-serif', // Persian support
-      suppressErrorRendering: false, // Show errors
     });
   } catch (error) {
     console.warn('Mermaid initialization warning:', error);
@@ -50,7 +49,9 @@ export const isMermaidDiagram = (text: string): boolean => {
 /**
  * Get theme-appropriate Mermaid configuration.
  */
-export const getMermaidTheme = (appTheme: 'light' | 'dark' | 'sepia'): string => {
+export const getMermaidTheme = (
+  appTheme: 'light' | 'dark' | 'sepia'
+): string => {
   switch (appTheme) {
     case 'dark':
       return 'dark';
