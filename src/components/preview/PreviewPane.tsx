@@ -12,6 +12,7 @@ import { useDebounce } from '../../hooks/useDebounce';
 import { slugifyHeading } from '../../lib/markdown/toc';
 import { MermaidBlock } from '../../lib/mermaid/MermaidBlock';
 import { isMermaidDiagram } from '../../lib/mermaid/mermaid';
+import { rehypeProtectMermaid } from '../../lib/markdown/rehypeMermaid';
 import { PluginManager } from '../../plugins/PluginManager';
 import { remarkCallouts } from '../../plugins/markdown/callouts/remarkCallouts';
 import { rehypeHtml } from '../../plugins/markdown/html/rehypeHtml';
@@ -49,6 +50,7 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
     () => [
       rehypeHtml,
       rehypeKatex,
+      rehypeProtectMermaid,
       [rehypePrism, { ignoreMissing: true }],
       ...customRehypePlugins,
     ],
@@ -346,11 +348,13 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
               node?: MarkdownNode;
             }) {
               const match = /language-([\w-]+)/.exec(className || '');
+              const language = match?.[1]?.toLowerCase();
               const chart = String(children).replace(/\n$/, '');
               const sourceLine = getSourceLine(node);
 
               if (
-                match?.[1]?.toLowerCase() === 'mermaid' ||
+                language === 'mermaid' ||
+                language === 'mermaid-raw' ||
                 isMermaidDiagram(chart)
               ) {
                 return (
