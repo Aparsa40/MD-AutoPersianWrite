@@ -1,6 +1,6 @@
-# MD-AutoPersianWrite V.2.3.0
+# MD-AutoPersianWrite V.2.5.0
 
-ویرایشگر مدرن، ماژولار و راست‌چین (RTL) Markdown با پشتیبانی از فرمول‌های ریاضی KaTeX، دایاگرام‌های Mermaid، Syntax Highlighting، پیش‌نمایش زنده و قابلیت اجرا به صورت PWA (وب‌اپلیکیشن).
+ویرایشگر مدرن، ماژولار و راست‌چین (RTL) Markdown با پشتیبانی از فرمول‌های ریاضی KaTeX، Syntax Highlighting، پیش‌نمایش زنده و قابلیت اجرا به صورت PWA (وب‌اپلیکیشن).
 
 ## 🚀 ویژگی‌های اصلی
 
@@ -16,12 +16,12 @@
 - **Paste هوشمند Markdown/HTML:** تبدیل محتوای HTML و Rich Text موجود در Clipboard به Markdown در هنگام Paste در صورت امکان.
 - **درج فایل (Insert File):** امکان انتخاب و وارد کردن فایل‌های متنی قابل ویرایش مانند Markdown و TXT.
 - **فرمول‌نویسی ریاضی:** رندر سریع فرمول‌های LaTeX درون‌خطی `$ ... $` و بلوکی `$$ ... $$` با KaTeX.
-- **رسم دایاگرام (Mermaid):** رندر زنده نمودارهای Mermaid از جمله Flowchart، Gantt و Class Diagram.
 - **Syntax Highlighting:** نمایش مناسب بلوک‌های کد با Syntax Highlighting.
-- **سیستم تم پویا:** پشتیبانی از تم‌های روشن (Light)، تاریک (Dark) و Sepia با ذخیره‌سازی در LocalStorage.
+- **سیستم تم پویا:** پشتیبانی از تم‌های روشن (Light)، تاریک (Dark)، Sepia و تم‌های فعلی پروژه با ذخیره‌سازی در LocalStorage.
 - **تنظیمات تایپوگرافی:** تغییر اندازه فونت، Font Family و تنظیمات ظاهری متن.
 - **معماری مبتنی بر Plugin:** فراهم بودن زیرساخت Plugin Manager برای توسعه قابلیت‌های آینده.
 - **قابلیت PWA:** امکان نصب و اجرای برنامه به صورت Web App روی سیستم‌های سازگار.
+- **تازه‌سازی داخلی:** گزینه‌ای در منوی فایل برای تازه‌سازی اسناد باز Workspace بدون وابستگی به Refresh مرورگر.
 
 ## 🆕 تغییرات نسخه 2.1.0
 
@@ -52,11 +52,8 @@
 
 - اضافه شدن گزینه **درج فایل (Insert File)** به منوی File.
 - امکان انتخاب فایل متنی از سیستم و وارد کردن محتوای آن در Editor.
-- پشتیبانی اولیه از فایل‌های Markdown و Text مانند:
-  - `.md`
-  - `.markdown`
-  - `.txt`
-  - `.text`
+- اضافه شدن گزینه **تازه‌سازی برنامه و اسناد** برای به‌روزرسانی محتوای فایل‌های Workspace باز.
+- پشتیبانی اولیه از فایل‌های Markdown و Text مانند `.md`، `.markdown`، `.txt` و `.text`.
 
 > توجه: یک Web App مرورگری نمی‌تواند به تنهایی فایل‌های سیستم‌عامل را به عنوان برنامه پیش‌فرض ثبت کند. قابلیت Insert File در این نسخه برای وارد کردن فایل‌های متنی قابل ویرایش طراحی شده است.
 
@@ -74,7 +71,6 @@
 - **Markdown Engine:** React-Markdown
 - **Markdown Plugins:** Remark-GFM + Remark-Math
 - **HTML Processing:** Rehype-KaTeX + Rehype-Prism-Plus
-- **Diagrams:** Mermaid.js
 - **Testing:** Vitest
 - **Linting:** ESLint
 - **Formatting:** Prettier
@@ -94,7 +90,6 @@ src/
 ├── hooks/
 ├── lib/
 │   ├── markdown/
-│   ├── mermaid/
 │   └── export/
 ├── plugins/
 ├── store/
@@ -164,5 +159,3 @@ npm run build
 
 ## 📄 لایسنس
 این پروژه تحت **لایسنس اختصاصی پروژه** مندرج در فایل `LICENSE` منتشر می‌شود. این متن با MIT License یکسان نیست؛ برای شرایط دقیق استفاده، بازتولید، ایجاد تغییر و بازنشر، متن کامل `LICENSE` را مطالعه کنید.
-
-
