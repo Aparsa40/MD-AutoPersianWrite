@@ -20,9 +20,9 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, sourceLine })
 
   useEffect(() => {
     let cancelled = false;
+    const container = containerRef.current;
 
     const renderDiagram = async (): Promise<void> => {
-      const container = containerRef.current;
       if (!container || !chart.trim()) {
         setIsLoading(false);
         return;
@@ -43,7 +43,7 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, sourceLine })
         if (cancelled) return;
 
         const { svg, bindFunctions } = await mermaid.render(createMermaidId(), chart);
-        if (cancelled || !container) return;
+        if (cancelled) return;
 
         container.innerHTML = svg;
 
@@ -70,7 +70,7 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, sourceLine })
 
     return () => {
       cancelled = true;
-      containerRef.current?.replaceChildren();
+      container?.replaceChildren();
     };
   }, [chart, theme]);
 
