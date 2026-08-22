@@ -46,22 +46,6 @@ export const MainLayout: React.FC = () => {
   }, [activeSessionId, createSession, fileName, isDirty, markdown, sessions]);
 
   useEffect(() => {
-    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-      const state = useDocumentSessionStore.getState();
-      const hasDirtySession = state.sessions.some((session) => session.isDirty) || useEditorStore.getState().isDirty;
-      if (!hasDirtySession) return;
-
-      // Browsers own the native leave-confirmation UI. We intentionally do not
-      // render a blocking in-app banner while the document is being edited.
-      event.preventDefault();
-      event.returnValue = '';
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, []);
-
-  useEffect(() => {
     const hasDirtySession = sessions.some((session) => session.isDirty) || isDirty;
     const baseTitle = 'MD-AutoPersianWrite';
     document.title = hasDirtySession ? `● ${fileName || 'سند'} — ${baseTitle}` : baseTitle;
