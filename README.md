@@ -1,70 +1,98 @@
-# MD-AutoPersianWrite V.2.3.0
+# MD-AutoPersianWrite V2.5.0
 
-ویرایشگر مدرن، ماژولار و راست‌چین (RTL) Markdown با پشتیبانی از فرمول‌های ریاضی KaTeX، دایاگرام‌های Mermaid، Syntax Highlighting، پیش‌نمایش زنده و قابلیت اجرا به صورت PWA (وب‌اپلیکیشن).
+ویرایشگر مدرن، ماژولار و راست‌چین (RTL) Markdown با پشتیبانی از فرمول‌های ریاضی KaTeX، دایاگرام‌های Mermaid، Syntax Highlighting، Live Preview و PWA.
 
-## 🚀 ویژگی‌های اصلی
+> **وضعیت نسخه:** `2.5.0` — این نسخه مجموعه‌ای از قابلیت‌های مدیریت سند، Workspace، تم‌ها و Markdown Rendering را تکمیل می‌کند. قابلیت‌های Cloud Workspace و Google Drive هنوز در برنامه توسعه آینده هستند و جزو این نسخه نیستند.
 
-- **رابط کاربری فارسی (RTL):** طراحی شده برای استفاده راحت از متن‌های فارسی و ترکیبی فارسی/انگلیسی.
-- **ویرایشگر Markdown:** ویرایش مستقیم اسناد Markdown با پشتیبانی از متن‌های RTL و LTR.
-- **پیش‌نمایش زنده (Live Preview):** نمایش همزمان خروجی رندرشده Markdown در کنار ویرایشگر.
-- **همگام‌سازی Editor و Preview:** پیمایش Editor و Preview به صورت دوطرفه با تلاش برای حفظ موقعیت متناظر در سند.
-- **ناوبری با Cursor:** با کلیک یا جابه‌جایی Cursor در Editor، Preview به بخش متناظر سند منتقل می‌شود.
-- **پنل‌های قابل تغییر اندازه:** امکان تغییر نسبت Editor و Preview با Drag کردن جداکننده بین دو پنل.
-- **حالت‌های مختلف نمایش:** پشتیبانی از حالت‌های Editor، Preview و Split.
-- **چیدمان افقی و عمودی:** امکان نمایش Editor و Preview به صورت کنار هم یا روی هم.
-- **Outline / فهرست سربرگ‌ها:** نمایش Headingهای سند برای ناوبری سریع در اسناد طولانی.
-- **Paste هوشمند Markdown/HTML:** تبدیل محتوای HTML و Rich Text موجود در Clipboard به Markdown در هنگام Paste در صورت امکان.
-- **درج فایل (Insert File):** امکان انتخاب و وارد کردن فایل‌های متنی قابل ویرایش مانند Markdown و TXT.
-- **فرمول‌نویسی ریاضی:** رندر سریع فرمول‌های LaTeX درون‌خطی `$ ... $` و بلوکی `$$ ... $$` با KaTeX.
-- **رسم دایاگرام (Mermaid):** رندر زنده نمودارهای Mermaid از جمله Flowchart، Gantt و Class Diagram.
-- **Syntax Highlighting:** نمایش مناسب بلوک‌های کد با Syntax Highlighting.
-- **سیستم تم پویا:** پشتیبانی از تم‌های روشن (Light)، تاریک (Dark) و Sepia با ذخیره‌سازی در LocalStorage.
-- **تنظیمات تایپوگرافی:** تغییر اندازه فونت، Font Family و تنظیمات ظاهری متن.
-- **معماری مبتنی بر Plugin:** فراهم بودن زیرساخت Plugin Manager برای توسعه قابلیت‌های آینده.
-- **قابلیت PWA:** امکان نصب و اجرای برنامه به صورت Web App روی سیستم‌های سازگار.
-
-## 🆕 تغییرات نسخه 2.1.0
-
-نسخه `2.1.0` اولین نسخه Minor در خط توسعه نسخه دوم پروژه است و مجموعه‌ای از قابلیت‌های مهم برای بهبود تجربه ویرایش و پیش‌نمایش Markdown را اضافه می‌کند.
+## 🚀 قابلیت‌های اصلی
 
 ### Editor / Preview
 
-- اضافه شدن همگام‌سازی دوطرفه پیمایش Editor و Preview.
-- انتقال Preview به موقعیت تقریبی متن متناظر هنگام کلیک یا حرکت Cursor در Editor.
-- تلاش برای نگه‌داشتن Editor و Preview در موقعیت متناظر هنگام Scroll.
-- اضافه شدن metadata مربوط به شماره خطوط Markdown به عناصر Preview برای بهبود ارتباط Editor و Preview.
+- ویرایش مستقیم Markdown با پشتیبانی از متن‌های فارسی و ترکیبی RTL/LTR.
+- Live Preview با React-Markdown.
+- همگام‌سازی Editor و Preview هنگام Scroll و Cursor navigation.
+- انتقال Preview به بخش متناظر هنگام کلیک یا جابه‌جایی Cursor.
+- Splitter قابل Drag برای تغییر اندازه Editor و Preview.
+- حالت‌های Editor Only، Preview Only و Split.
+- چیدمان افقی و عمودی.
+- Outline / Headings برای ناوبری سریع در سند.
+- حفظ sessionهای باز و مدیریت چند سند در Tabهای Editor.
 
-### Layout
+### Markdown Rendering
 
-- اضافه شدن Splitter قابل Drag برای تغییر اندازه Editor و Preview.
-- اضافه شدن حالت نمایش کامل Editor.
-- اضافه شدن حالت نمایش کامل Preview.
-- اضافه شدن حالت نمایش همزمان Editor و Preview.
-- اضافه شدن چیدمان افقی.
-- اضافه شدن چیدمان عمودی.
+- GitHub Flavored Markdown از طریق `remark-gfm`.
+- فرمول‌های inline و block با `remark-math` و KaTeX.
+- Syntax Highlighting برای code blockها با Prism.
+- Mermaid برای Flowchart، Gantt، Class Diagram و سایر نمودارهای پشتیبانی‌شده.
+- Calloutهای Markdown با الگوی `[!NOTE]`، `[!TIP]`، `[!IMPORTANT]`، `[!WARNING]` و `[!CAUTION]`.
+- پردازش کنترل‌شده HTML در Markdown با رعایت ملاحظات امنیتی.
+- تولید Table of Contents به‌صورت Markdown واقعی با لینک به Headingها.
+- تولید slug برای Headingهای فارسی و انگلیسی و مدیریت Headingهای تکراری.
+- پشتیبانی از لینک‌های داخلی Heading و لینک‌های خارجی.
+- تبدیل HTML/Rich Text موجود در Clipboard به Markdown در صورت امکان.
 
-### Navigation
+### ویرایش و ابزارهای Markdown
 
-- اضافه شدن ابزار Outline / Headings برای مشاهده Headingهای سند.
-- امکان استفاده از Headingها برای ناوبری سریع‌تر در اسناد طولانی.
+- **Hyperlink:** انتخاب متن و درج لینک Markdown از طریق منوی ویرایش.
+- **Table of Contents:** درج فهرست مطالب لینک‌دار در محل Cursor بر اساس Headingهای سند.
+- پشتیبانی از Footnote و قابلیت‌های استاندارد GFM موجود در renderer.
+- Insert File برای وارد کردن فایل‌های Markdown و Text.
+- Save As و مدیریت فایل‌های متنی از طریق File System Access API در مرورگرهای سازگار.
 
-### File Management
+### Document Sessions / Workspace
 
-- اضافه شدن گزینه **درج فایل (Insert File)** به منوی File.
-- امکان انتخاب فایل متنی از سیستم و وارد کردن محتوای آن در Editor.
-- پشتیبانی اولیه از فایل‌های Markdown و Text مانند:
-  - `.md`
-  - `.markdown`
-  - `.txt`
-  - `.text`
+- مدیریت چند سند باز در Tabهای Editor.
+- نگهداری draft و وضعیت `isDirty` برای sessionها.
+- Workspace محلی مبتنی بر File System Access API.
+- نمایش ساختار فایل‌ها و پوشه‌های Workspace.
+- ساخت File و Folder.
+- باز کردن فایل‌های Markdown/TXT در Editor.
+- Save فایل‌های Workspace.
+- Copy، Cut، Paste، Rename و Delete برای فایل‌ها و پوشه‌های Workspace.
+- جلوگیری از بسته‌شدن سند دارای تغییرات ذخیره‌نشده هنگام Cancel کردن فرآیند Save.
+- تشخیص تغییرات ذخیره‌نشده هنگام خروج از صفحه/برنامه از طریق `beforeunload`.
+- نمایش وضعیت Dirty در عنوان برنامه.
 
-> توجه: یک Web App مرورگری نمی‌تواند به تنهایی فایل‌های سیستم‌عامل را به عنوان برنامه پیش‌فرض ثبت کند. قابلیت Insert File در این نسخه برای وارد کردن فایل‌های متنی قابل ویرایش طراحی شده است.
+> **نکته:** نگهداری دائمی Workspaceهای اخیر، بازیابی sessionهای باز و Recovery نسخه موقت فایل‌ها در زمان اجرای مجدد برنامه، هنوز باید در لایه Persistence/Cache پیاده‌سازی شود و در این نسخه به‌عنوان قابلیت تکمیل‌شده ادعا نمی‌شود.
 
-### Paste
+### 🎨 Theme System
 
-- اضافه شدن پردازش HTML موجود در Clipboard.
-- تلاش برای تبدیل Rich Text و HTML به Markdown هنگام Paste.
-- حفظ Markdown به عنوان فرمت اصلی داده در Editor.
+**Application Theme:**
+
+- Light
+- Dark
+- Sepia
+- Black & White — زمینه مشکی با نوشته و خطوط سفید.
+- Navy & White — زمینه سرمه‌ای با نوشته و خطوط سفید، با حال‌وهوای محیط‌های توسعه مانند VS Code.
+
+**Document Theme:**
+
+- Classic
+- GitHub
+- Academic
+- Modern
+
+Document Theme هنگام استفاده از Application Themeهای تیره باید کنتراست مناسب متن، Heading، Code Block، Border و سایر اجزای سند را حفظ کند.
+
+### 📱 PWA
+
+- نصب به‌عنوان Progressive Web App.
+- Manifest با تنظیمات فارسی، RTL و standalone.
+- آیکون‌های PWA در اندازه‌های استاندارد و maskable.
+- Service Worker و Cache lifecycle.
+- حذف Cacheهای قدیمی هنگام فعال شدن نسخه جدید.
+
+### 🧩 Plugin Architecture
+
+- معماری مبتنی بر `PluginManager` برای توسعه قابلیت‌های Markdown و Rendering.
+- جداسازی قابلیت‌های Rendering مانند Callout و HTML از هسته Editor.
+- زیرساخت توسعه قابلیت‌های آینده مانند ابزارهای AI/Agent و Cloud Workspace.
+
+## 🛡️ امنیت و بازیابی سند
+
+برنامه باید بین «ویرایش عادی» و «خروج از برنامه با سند ذخیره‌نشده» تفاوت بگذارد. هشدار خروج نباید به‌صورت Banner سرتاسری رابط کاربری را قفل کند. محافظ خروج از برنامه از `beforeunload` استفاده می‌کند و Browser پیام استاندارد تأیید خروج را نمایش می‌دهد.
+
+برای **Recovery پس از Crash/Close ناخواسته**، نسخه‌های موقت سند باید در یک Persistence/Cache سبک ذخیره شوند؛ این قابلیت در نقشه راه بعدی قرار دارد و نباید با `beforeunload` اشتباه گرفته شود.
 
 ## 🛠️ تکنولوژی‌ها
 
@@ -72,9 +100,11 @@
 - **Styling:** TailwindCSS + CSS Variables
 - **State Management:** Zustand
 - **Markdown Engine:** React-Markdown
-- **Markdown Plugins:** Remark-GFM + Remark-Math
-- **HTML Processing:** Rehype-KaTeX + Rehype-Prism-Plus
+- **Markdown Plugins:** Remark-GFM + Remark-Math + custom callout/TOC processing
+- **HTML/Math/Code Rendering:** Rehype-KaTeX + Rehype-Prism-Plus + controlled HTML processing
 - **Diagrams:** Mermaid.js
+- **Local Workspace:** File System Access API
+- **PWA:** Web App Manifest + Service Worker
 - **Testing:** Vitest
 - **Linting:** ESLint
 - **Formatting:** Prettier
@@ -84,17 +114,20 @@
 ```text
 src/
 ├── components/
+│   ├── document/
 │   ├── editor/
 │   ├── preview/
 │   ├── toolbar/
 │   ├── layout/
 │   ├── settings/
 │   ├── toc/
+│   ├── workspace/
 │   └── ui/
 ├── hooks/
 ├── lib/
 │   ├── markdown/
 │   ├── mermaid/
+│   ├── workspace/
 │   └── export/
 ├── plugins/
 ├── store/
@@ -102,50 +135,15 @@ src/
 └── types/
 ```
 
----
-
-**ساختار پروژه به صورت ماژولار طراحی شده است تا قابلیت‌های جدید بدون وابستگی غیرضروری به هسته برنامه اضافه شوند**.
-
 ## 📦 نصب و اجرا
 
-### نصب وابستگی‌ها
 ```bash
 npm install
-```
-### اجرای سرور توسعه
-```bash
 npm run dev
 ```
 
-### اجرای Lint
-```bash
-npm run lint
-```
+### Validation
 
-### قالب‌بندی کد
-```bash
-npm run format
-```
-
-### ساخت نسخه Production
-```bash
-npm run build
-```
-
-### اجرای تست‌ها
-```bash
-npm run test
-```
-
-## 🐳 اجرا با Docker
-docker-compose up -d --build
-
-## 🔐 امنیت
-برای مشاهده سیاست امنیتی پروژه و نحوه گزارش آسیب‌پذیری‌ها به فایل SECURITY.md مراجعه کنید.
-
-## 🤝 مشارکت
-**راهنمای مشارکت در پروژه در فایل CONTRIBUTING.md قرار دارد**.
-**پیش از ارسال Pull Request، اجرای حداقل دستورات زیر توصیه می‌شود**:
 ```bash
 npm run format
 npm run lint
@@ -154,15 +152,24 @@ npm run test
 npm run build
 ```
 
-### روند تأیید تغییرات
-تمام تغییرات پیشنهادی باید از مسیر رسمی مشارکت پروژه انجام شوند: ابتدا درخواست مشارکت/تغییر از طریق راه ارتباطی اعلام‌شده ارسال شود، سپس تغییرات در یک Branch مستقل انجام و از طریق Pull Request برای بررسی تیم ارسال شوند. هیچ تغییری بدون بررسی و تأیید Maintainer نباید مستقیماً روی `main` اعمال شود.
+## 🐳 Docker
 
-در صورت انتشار نسخه‌ای مشتق‌شده یا بازنشرشده با مجوز پروژه، باید لینک مخزن اصلی پروژه نیز همراه آن درج شود و اعتبار سازندگان حفظ شود.
+```bash
+docker-compose up -d --build
+```
 
-## 📋 تاریخچه تغییرات
-تاریخچه نسخه‌ها و تغییرات پروژه در فایل CHANGELOG.md نگهداری می‌شود.
+## 🔐 امنیت
+
+برای نحوه گزارش آسیب‌پذیری‌ها به `SECURITY.md` مراجعه کنید.
+
+## 🤝 مشارکت
+
+راهنمای کامل مشارکت در `CONTRIBUTING.md` قرار دارد. هر تغییر رفتاری یا قابلیت جدید باید مستندات مرتبط و در صورت نیاز `CHANGELOG.md` را نیز به‌روزرسانی کند.
+
+## 📋 تاریخچه نسخه‌ها
+
+تاریخچه تغییرات و سیاست Semantic Versioning در `CHANGELOG.md` نگهداری می‌شود.
 
 ## 📄 لایسنس
-این پروژه تحت **لایسنس اختصاصی پروژه** مندرج در فایل `LICENSE` منتشر می‌شود. این متن با MIT License یکسان نیست؛ برای شرایط دقیق استفاده، بازتولید، ایجاد تغییر و بازنشر، متن کامل `LICENSE` را مطالعه کنید.
 
-
+این پروژه تحت لایسنس اختصاصی مندرج در `LICENSE` منتشر می‌شود. متن کامل `LICENSE` ملاک شرایط استفاده، تغییر و بازنشر است.
