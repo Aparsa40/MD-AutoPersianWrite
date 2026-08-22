@@ -46,7 +46,12 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
     [customRemarkPlugins]
   );
   const rehypePlugins = useMemo(
-    () => [rehypeHtml, rehypeKatex, rehypePrism, ...customRehypePlugins],
+    () => [
+      rehypeHtml,
+      rehypeKatex,
+      [rehypePrism, { ignoreMissing: true }],
+      ...customRehypePlugins,
+    ],
     [customRehypePlugins]
   );
 
@@ -311,50 +316,56 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
                 </td>
               );
             },
+            pre({ children, node }) {
+              const childElements = React.Children.toArray(children);
+              const containsMermaid = childElements.some(
+                (child) =>
+                  React.isValidElement(child) && child.type === MermaidBlock
+              );
+
+              if (containsMermaid) {
+                return <>{children}</>;
+              }
+
+              return (
+                <pre
+                  data-source-line={getSourceLine(node as MarkdownNode)}
+                  className="dir-ltr my-4 overflow-x-auto rounded-lg border border-border bg-surface p-4 text-left font-mono text-sm shadow-md"
+                  dir="ltr"
+                >
+                  {children}
+                </pre>
+              );
+            },
             code({
-              inline,
               className,
               children,
               node,
               ...props
             }: ComponentPropsWithoutRef<'code'> & {
-              inline?: boolean;
               node?: MarkdownNode;
             }) {
               const match = /language-([\w-]+)/.exec(className || '');
               const chart = String(children).replace(/\n$/, '');
               const sourceLine = getSourceLine(node);
 
-              // Check for Mermaid diagrams by language tag or content detection
               if (
-                !inline &&
-                (match?.[1] === 'mermaid' || isMermaidDiagram(chart))
+                match?.[1]?.toLowerCase() === 'mermaid' ||
+                isMermaidDiagram(chart)
               ) {
                 return (
                   <MermaidBlock chart={chart} sourceLine={sourceLine} />
                 );
               }
 
-              if (inline) {
-                return (
-                  <code
-                    className="dir-ltr inline-block rounded bg-surface px-1.5 py-0.5 font-mono text-xs shadow-sm"
-                    dir="ltr"
-                    {...props}
-                  >
-                    {children}
-                  </code>
-                );
-              }
-
               return (
-                <pre
-                  data-source-line={sourceLine}
-                  className="dir-ltr my-4 overflow-x-auto rounded-lg border border-border bg-surface p-4 text-left font-mono text-sm shadow-md"
+                <code
+                  className={className}
                   dir="ltr"
+                  {...props}
                 >
-                  <code {...props}>{children}</code>
-                </pre>
+                  {children}
+                </code>
               );
             },
           }}
