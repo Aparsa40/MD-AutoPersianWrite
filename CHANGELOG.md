@@ -16,6 +16,26 @@
 
 ---
 
+## [2.5.1] - 2026-08-23
+
+### Fixed
+
+- تثبیت مسیر رندر Mermaid و جلوگیری از تبدیل منبع خام Mermaid توسط `rehype-prism-plus`.
+- حفظ `data-mermaid-source` روی code node و استفاده از منبع اصلی در `PreviewPane` برای جلوگیری از خطاهایی مانند `Syntax error in text` و `[object Object]`.
+- اصلاح زنجیره Mermaid/Prism بدون غیرفعال کردن Syntax Highlighting برای زبان‌های معمولی.
+
+### Added
+
+- اضافه شدن قابلیت **تازه‌سازی برنامه و اسناد** از طریق منوی File.
+- امکان بازخوانی محتوای فایل‌های Workspace باز از طریق `FileSystemFileHandle` و همگام‌سازی session و editor state.
+
+### Validation
+
+- CI با Node.js 20 و 22 برای lint، typecheck، test و build اجرا می‌شود.
+- Vercel deployment نیز باید برای Pull Request نسخه 2.5.1 موفق باشد.
+
+---
+
 ## [2.2.2] - 2026-08-16
 
 ### Added
@@ -204,7 +224,7 @@
 - پشتیبانی بومی از دایاگرام‌های Mermaid با تطابق رنگ و تم برنامه.
 - سیستم هوشمند Syntax Highlighting برای بلاک‌های کد.
 - پنل‌های تنظیمات پیشرفته شامل فونت، رنگ و تم نوری.
-- پشتیبانی از تم‌های Light، Dark و Sepia.
+- پشتیبانی از تم‌های Light, Dark و Sepia.
 - سیستم Plugin Manager پایه برای قابلیت توسعه در نسخه‌های آتی.
 - مستندات Docker و CI/CD.
 - پشتیبانی اولیه از اجرای پروژه به صورت PWA.
