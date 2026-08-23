@@ -1,4 +1,3 @@
-import type React from 'react';
 import type { CloudProviderDefinition, CloudProviderId, CloudStorageProvider } from '../../types/cloud';
 import { googleDriveProvider } from './googleDriveProvider';
 
@@ -6,7 +5,7 @@ const futureProvider = (
   id: CloudProviderId,
   name: string,
   description: string,
-  icon: React.ReactNode,
+  icon: string,
 ): CloudProviderDefinition => ({ id, name, description, available: false, icon });
 
 export const cloudProviderDefinitions: CloudProviderDefinition[] = [

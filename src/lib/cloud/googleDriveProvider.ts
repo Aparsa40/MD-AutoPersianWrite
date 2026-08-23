@@ -35,7 +35,6 @@ const DRIVE_API = 'https://www.googleapis.com/drive/v3';
 const UPLOAD_API = 'https://www.googleapis.com/upload/drive/v3/files';
 
 let scriptPromise: Promise<void> | null = null;
-let tokenClient: GoogleTokenClient | null = null;
 let accessToken: string | null = null;
 let expiresAt = 0;
 
@@ -70,7 +69,7 @@ const requestToken = async (prompt: '' | 'consent' = '') => {
   if (!oauth2) throw new Error('Google Identity Services در مرورگر آماده نشد.');
 
   return new Promise<string>((resolve, reject) => {
-    tokenClient = oauth2.initTokenClient({
+    const tokenClient = oauth2.initTokenClient({
       client_id: clientId,
       scope: DRIVE_SCOPE,
       callback: (response) => {
@@ -182,7 +181,6 @@ export const googleDriveProvider: CloudStorageProvider = {
     }
     accessToken = null;
     expiresAt = 0;
-    tokenClient = null;
   },
 
   isConnected() {
