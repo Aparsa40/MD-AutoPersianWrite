@@ -1,4 +1,4 @@
-const CACHE_NAME = "md-autopersianwrite-v2.3.0";
+const CACHE_NAME = "md-autopersianwrite-v2.5.2";
 
 const APP_SHELL = [
   "/",
@@ -43,6 +43,13 @@ self.addEventListener("fetch", (event) => {
 
   const requestUrl = new URL(request.url);
 
+  // Never intercept or cache requests from browser extensions or other origins.
+  // Browser extension requests use schemes such as chrome-extension:// which
+  // Cache Storage does not support.
+  if (requestUrl.origin !== self.location.origin) {
+    return;
+  }
+
   if (request.mode === "navigate") {
     event.respondWith(
       fetch(request)
@@ -63,47 +70,25 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  if (requestUrl.origin === self.location.origin) {
-    event.respondWith(
-      caches.match(request).then((cachedResponse) => {
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-
-        return fetch(request).then((response) => {
-          if (!response || !response.ok) {
-            return response;
-          }
-
-          const responseClone = response.clone();
-
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
-          });
-
-          return response;
-        });
-      })
-    );
-
-    return;
-  }
-
   event.respondWith(
-    fetch(request)
-      .then((response) => {
-        if (response && (response.ok || response.type === "opaque")) {
-          const responseClone = response.clone();
+    caches.match(request).then((cachedResponse) => {
+      if (cachedResponse) {
+        return cachedResponse;
+      }
 
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(request, responseClone);
-          });
+      return fetch(request).then((response) => {
+        if (!response || !response.ok) {
+          return response;
         }
+
+        const responseClone = response.clone();
+
+        caches.open(CACHE_NAME).then((cache) => {
+          cache.put(request, responseClone);
+        });
 
         return response;
-      })
-      .catch(() => caches.match(request))
+      });
+    })
   );
 });
-
-
