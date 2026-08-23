@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import { cloudProviderDefinitions } from '../../lib/cloud/providerRegistry';
 import { useCloudStore } from '../../store/useCloudStore';
 import type { CloudProviderId } from '../../types/cloud';
-import { GoogleDriveTestPanel } from './GoogleDriveTestPanel';
 
 const GoogleDriveIcon = () => (
   <svg viewBox="0 0 48 48" aria-hidden="true" className="h-7 w-7">
@@ -22,6 +21,7 @@ export const CloudMenu: React.FC = () => {
   const connections = useCloudStore((state) => state.connections);
   const connect = useCloudStore((state) => state.connect);
   const disconnect = useCloudStore((state) => state.disconnect);
+  const openProvider = useCloudStore((state) => state.openProvider);
 
   const handleConnect = async (providerId: CloudProviderId) => {
     setBusyProvider(providerId);
@@ -48,7 +48,6 @@ export const CloudMenu: React.FC = () => {
   };
 
   const connected = cloudProviderDefinitions.filter((provider) => connections[provider.id]?.status === 'connected');
-  const googleDriveConnected = connections['google-drive']?.status === 'connected';
 
   return (
     <div className="relative">
@@ -61,11 +60,11 @@ export const CloudMenu: React.FC = () => {
       </button>
 
       {isOpen && (
-        <div className="absolute right-full top-0 mr-1 w-80 rounded border border-border bg-surface p-2 shadow-lg" dir="rtl">
+        <div className="absolute right-full top-0 mr-1 w-[23rem] rounded border border-border bg-surface p-2 shadow-lg" dir="rtl">
           <div className="flex items-center justify-between border-b border-border px-2 pb-2">
             <div>
               <div className="text-sm font-semibold">فضاهای ابری</div>
-              <div className="text-[11px] text-text-muted">اتصال امن از طریق حساب سرویس‌دهنده</div>
+              <div className="text-[11px] text-text-muted">مدیریت اتصال و باز کردن محیط رسمی سرویس‌دهنده</div>
             </div>
             <button type="button" onClick={() => setShowProviders((value) => !value)} className="rounded border border-border px-2 py-1 text-xs font-medium hover:bg-bg">
               + اتصال
@@ -86,13 +85,13 @@ export const CloudMenu: React.FC = () => {
                   <ProviderIcon id={provider.id} fallback={provider.icon} />
                   <span className="min-w-0 flex-1">
                     <span className="block text-sm font-medium">{provider.name}</span>
-                    <span className="block truncate text-[10px] text-text-muted">{provider.available ? 'آماده اتصال' : 'به‌زودی'}</span>
+                    <span className="block truncate text-[10px] text-text-muted">{provider.available ? 'آماده استفاده' : 'به‌زودی'}</span>
                   </span>
                   {busyProvider === provider.id && <span className="text-xs text-text-muted">در حال اتصال...</span>}
                 </button>
               ))}
               <div className="px-2 pb-1 pt-2 text-[10px] leading-5 text-text-muted">
-                Google One اتصال جداگانه‌ای ندارد؛ فضای آن از طریق Google Drive مدیریت می‌شود.
+                ورود به حساب، احراز هویت و مدیریت فایل‌ها در محیط رسمی هر سرویس‌دهنده انجام می‌شود.
               </div>
             </div>
           )}
@@ -112,6 +111,16 @@ export const CloudMenu: React.FC = () => {
                       <span className="h-1.5 w-1.5 rounded-full bg-green-500" /> متصل و فعال
                     </div>
                   </div>
+                </div>
+                <div className="mt-2 flex items-center justify-end gap-2">
+                  <button
+                    type="button"
+                    onClick={() => openProvider(provider.id)}
+                    disabled={busyProvider !== null}
+                    className="rounded border border-border px-2 py-1 text-xs font-medium hover:bg-bg disabled:opacity-50"
+                  >
+                    Open {provider.name === 'Google Drive' ? 'Drive' : provider.name}
+                  </button>
                   <button
                     type="button"
                     disabled={busyProvider !== null}
@@ -121,7 +130,6 @@ export const CloudMenu: React.FC = () => {
                     قطع اتصال
                   </button>
                 </div>
-                {provider.id === 'google-drive' && googleDriveConnected && <GoogleDriveTestPanel />}
               </div>
             ))}
           </div>
