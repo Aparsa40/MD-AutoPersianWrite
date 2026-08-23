@@ -1,13 +1,13 @@
 import { create } from 'zustand';
 import { useEditorStore } from './useEditorStore';
+import type { WorkspaceFileReference } from '../types/workspaceFileReference';
 
 export interface DocumentSession {
   id: string;
   fileName: string;
   markdown: string;
   isDirty: boolean;
-  fileHandle: FileSystemFileHandle | null;
-  workspaceDirectory: FileSystemDirectoryHandle | null;
+  workspaceFile: WorkspaceFileReference | null;
   isWorkspaceFile: boolean;
   isNewWorkspaceFile: boolean;
 }
@@ -20,10 +20,9 @@ interface DocumentSessionState {
   closeSession: (id: string) => void;
   updateSession: (id: string, draft: Partial<DocumentSession>) => void;
   updateActiveDraft: (draft: Partial<Pick<DocumentSession, 'markdown' | 'fileName' | 'isDirty'>>) => void;
-  setWorkspaceFile: (fileHandle: FileSystemFileHandle, workspaceDirectory: FileSystemDirectoryHandle, isNew?: boolean) => void;
+  setWorkspaceFile: (reference: WorkspaceFileReference, isNew?: boolean) => void;
   clearSession: () => void;
-  markPersisted: (fileHandle?: FileSystemFileHandle) => void;
-  refreshOpenSessions: () => Promise<void>;
+  markPersisted: (reference?: WorkspaceFileReference) => void;
 }
 
 const createId = () => {
@@ -54,8 +53,7 @@ const initialSession: DocumentSession = {
   fileName: initialEditor.fileName,
   markdown: initialEditor.markdown,
   isDirty: initialEditor.isDirty,
-  fileHandle: null,
-  workspaceDirectory: null,
+  workspaceFile: null,
   isWorkspaceFile: false,
   isNewWorkspaceFile: false,
 };
@@ -103,15 +101,15 @@ export const useDocumentSessionStore = create<DocumentSessionState>((set) => ({
     sessions: state.sessions.map((session) => session.id === state.activeSessionId ? { ...session, ...draft } : session),
   })),
 
-  setWorkspaceFile: (fileHandle, workspaceDirectory, isNew = false) => set((state) => ({
-    sessions: state.sessions.map((session) => session.id === state.activeSessionId ? { ...session, fileHandle, workspaceDirectory, isWorkspaceFile: true, isNewWorkspaceFile: isNew } : session),
+  setWorkspaceFile: (reference, isNew = false) => set((state) => ({
+    sessions: state.sessions.map((session) => session.id === state.activeSessionId ? { ...session, workspaceFile: reference, isWorkspaceFile: true, isNewWorkspaceFile: isNew } : session),
   })),
 
   clearSession: () => set((state) => ({
-    sessions: state.sessions.map((session) => session.id === state.activeSessionId ? { ...session, fileHandle: null, workspaceDirectory: null, isWorkspaceFile: false, isNewWorkspaceFile: false } : session),
+    sessions: state.sessions.map((session) => session.id === state.activeSessionId ? { ...session, workspaceFile: null, isWorkspaceFile: false, isNewWorkspaceFile: false } : session),
   })),
 
-  markPersisted: (fileHandle) => set((state) => {
+  markPersisted: (reference) => set((state) => {
     const active = state.sessions.find((session) => session.id === state.activeSessionId);
     if (!active) return state;
     const editor = useEditorStore.getState();
@@ -119,7 +117,7 @@ export const useDocumentSessionStore = create<DocumentSessionState>((set) => ({
       ...session,
       markdown: editor.markdown,
       fileName: editor.fileName,
-      fileHandle: fileHandle ?? session.fileHandle,
+      workspaceFile: reference ?? session.workspaceFile,
       isWorkspaceFile: true,
       isNewWorkspaceFile: false,
       isDirty: false,
@@ -127,24 +125,4 @@ export const useDocumentSessionStore = create<DocumentSessionState>((set) => ({
     useEditorStore.setState({ isDirty: false });
     return { sessions: nextSessions };
   }),
-
-  refreshOpenSessions: async () => {
-    const state = useDocumentSessionStore.getState();
-    const current = snapshotEditor(state.sessions, state.activeSessionId);
-    const refreshed = await Promise.all(current.map(async (session) => {
-      if (!session.isWorkspaceFile || !session.fileHandle) return session;
-      try {
-        const file = await session.fileHandle.getFile();
-        return { ...session, fileName: file.name, markdown: await file.text(), isDirty: false };
-      } catch {
-        return session;
-      }
-    }));
-
-    set((nextState) => {
-      const active = refreshed.find((session) => session.id === nextState.activeSessionId);
-      applySessionToEditor(active);
-      return { sessions: refreshed };
-    });
-  },
 }));
