@@ -29,14 +29,6 @@ interface GoogleTokenClient {
   requestAccessToken: (options?: { prompt?: string }) => void;
 }
 
-interface ViteImportMetaEnv {
-  readonly VITE_GOOGLE_DRIVE_CLIENT_ID?: string;
-}
-
-interface ImportMeta {
-  readonly env: ViteImportMetaEnv;
-}
-
 const GIS_SCRIPT_URL = 'https://accounts.google.com/gsi/client';
 const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
 const DRIVE_API = 'https://www.googleapis.com/drive/v3';
