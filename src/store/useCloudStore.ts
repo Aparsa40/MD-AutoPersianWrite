@@ -13,8 +13,9 @@ interface CloudState {
 const STORAGE_KEY = 'md-autopersianwrite-cloud-connections';
 
 const readStoredConnections = (): Record<string, CloudConnection> => {
+  if (typeof window === 'undefined') return {};
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return {};
     const parsed = JSON.parse(raw) as Record<string, CloudConnection>;
     return Object.fromEntries(
@@ -26,6 +27,7 @@ const readStoredConnections = (): Record<string, CloudConnection> => {
 };
 
 const persistConnections = (connections: Record<string, CloudConnection>) => {
+  if (typeof window === 'undefined') return;
   const safeConnections = Object.fromEntries(
     Object.entries(connections).map(([id, connection]) => [id, {
       providerId: connection.providerId,
@@ -33,7 +35,7 @@ const persistConnections = (connections: Record<string, CloudConnection>) => {
       connectedAt: connection.connectedAt,
     }]),
   );
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(safeConnections));
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(safeConnections));
 };
 
 export const useCloudStore = create<CloudState>((set, get) => ({
