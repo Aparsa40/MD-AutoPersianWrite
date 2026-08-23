@@ -31,13 +31,26 @@ export const TopToolbar: React.FC = () => {
   const updateSession = useDocumentSessionStore((state) => state.updateSession);
   const createSession = useDocumentSessionStore((state) => state.createSession);
   const closeSession = useDocumentSessionStore((state) => state.closeSession);
+  const refreshOpenSessions = useDocumentSessionStore((state) => state.refreshOpenSessions);
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [isAboutOpen, setIsAboutOpen] = useState(false);
   const [isHyperlinkOpen, setIsHyperlinkOpen] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const closeMenu = () => setActiveMenu(null);
+
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+    setIsRefreshing(true);
+    try {
+      await refreshOpenSessions();
+    } finally {
+      setIsRefreshing(false);
+      closeMenu();
+    }
+  };
 
   const handleOpenFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -122,6 +135,8 @@ export const TopToolbar: React.FC = () => {
               <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full px-4 py-2 text-right text-sm font-medium text-primary hover:bg-bg">درج فایل...</button>
               <button type="button" onClick={() => void handleSaveAs()} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">ذخیره با نام...</button>
               <button type="button" onClick={() => { exportAsMarkdown(markdown, fileName); closeMenu(); }} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">خروجی Markdown</button>
+              <div className="my-1 border-t border-border" />
+              <button type="button" onClick={() => void handleRefresh()} disabled={isRefreshing} className="w-full px-4 py-2 text-right text-sm hover:bg-bg disabled:cursor-wait disabled:opacity-60">🔄 {isRefreshing ? 'در حال تازه‌سازی...' : 'تازه‌سازی برنامه و اسناد'}</button>
               <div className="my-1 border-t border-border" />
               <button type="button" onClick={() => void handleDeleteDocument()} className="w-full px-4 py-2 text-right text-sm text-red-600 hover:bg-bg">حذف / Delete</button>
             </div>}

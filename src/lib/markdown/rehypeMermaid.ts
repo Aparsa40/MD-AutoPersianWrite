@@ -1,16 +1,23 @@
 type RehypeNode = {
   type?: string;
   tagName?: string;
+  value?: string;
   properties?: {
     className?: unknown;
+    [key: string]: unknown;
   };
   children?: RehypeNode[];
 };
 
+const getTextContent = (node: RehypeNode): string => {
+  if (node.type === 'text') return node.value ?? '';
+  return (node.children ?? []).map(getTextContent).join('');
+};
+
 /**
- * Protect Mermaid code blocks from rehype-prism-plus.
- * Prism transforms code text into React elements, which would make
- * MermaidBlock receive values such as "[object Object]" instead of source text.
+ * Preserve Mermaid source before rehype-prism-plus can transform code children.
+ * The original source is stored on the HAST node so the ReactMarkdown renderer
+ * can use it even if a syntax-highlighting plugin changes the child structure.
  */
 export const rehypeProtectMermaid = () => (tree: RehypeNode): void => {
   const visit = (node: RehypeNode): void => {
@@ -23,8 +30,10 @@ export const rehypeProtectMermaid = () => (tree: RehypeNode): void => {
           : [];
 
       if (classes.some((className) => className.toLowerCase() === 'language-mermaid')) {
+        const rawSource = getTextContent(node);
         node.properties = {
           ...node.properties,
+          'data-mermaid-source': rawSource,
           className: classes.map((className) =>
             className.toLowerCase() === 'language-mermaid'
               ? 'language-mermaid-raw'
