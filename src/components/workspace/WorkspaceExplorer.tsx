@@ -5,6 +5,7 @@ import { useWorkspaceStore } from '../../store/useWorkspaceStore';
 import { useCloudStore } from '../../store/useCloudStore';
 import { createLocalWorkspaceProvider } from '../../lib/workspace/localWorkspaceProvider';
 import { getCloudProvider } from '../../lib/cloud/providerRegistry';
+import type { CloudProviderId } from '../../types/cloud';
 import type { WorkspaceEntry, WorkspaceProvider } from '../../types/workspaceProvider';
 import type { WorkspaceFileReference } from '../../types/workspaceFileReference';
 
@@ -44,7 +45,7 @@ export const WorkspaceExplorer: React.FC = () => {
     }
     const providerId = activeWorkspace.providerId ?? activeCloudProviderId;
     if (!providerId) return null;
-    return getCloudProvider(providerId)?.getWorkspaceProvider?.() ?? null;
+    return getCloudProvider(providerId as CloudProviderId)?.getWorkspaceProvider?.() ?? null;
   }, [activeWorkspace, activeCloudProviderId]);
 
   const parentId = currentPath.length ? currentPath[currentPath.length - 1] : null;
@@ -95,14 +96,7 @@ export const WorkspaceExplorer: React.FC = () => {
     const name = promptName('نام فایل:', 'document.md');
     if (!provider || !name) return;
     const entry = await provider.createFile(parentId, name);
-    createSession({
-      fileName: entry.name,
-      markdown: '',
-      isDirty: false,
-      workspaceFile: makeReference(entry),
-      isWorkspaceFile: true,
-      isNewWorkspaceFile: true,
-    });
+    createSession({ fileName: entry.name, markdown: '', isDirty: false, workspaceFile: makeReference(entry), isWorkspaceFile: true, isNewWorkspaceFile: true });
     await refresh();
   };
 
@@ -110,19 +104,13 @@ export const WorkspaceExplorer: React.FC = () => {
     if (!provider || entry.type !== 'file') return;
     try {
       const content = decodeText(await provider.readFile(entry.id));
-      const existing = sessions.find((session) => session.workspaceFile?.entryId === entry.id && session.workspaceFile?.providerId === (activeWorkspace?.providerId ?? 'local'));
+      const providerId = activeWorkspace?.providerId ?? (activeWorkspace?.type === 'local' ? 'local' : activeCloudProviderId);
+      const existing = sessions.find((session) => session.workspaceFile?.entryId === entry.id && session.workspaceFile?.providerId === providerId);
       if (existing) {
         activateSession(existing.id);
         return;
       }
-      createSession({
-        fileName: entry.name,
-        markdown: content,
-        isDirty: false,
-        workspaceFile: makeReference(entry),
-        isWorkspaceFile: true,
-        isNewWorkspaceFile: false,
-      });
+      createSession({ fileName: entry.name, markdown: content, isDirty: false, workspaceFile: makeReference(entry), isWorkspaceFile: true, isNewWorkspaceFile: false });
     } catch (error) {
       window.alert(error instanceof Error ? error.message : 'باز کردن فایل انجام نشد.');
     }
@@ -155,11 +143,8 @@ export const WorkspaceExplorer: React.FC = () => {
 
   const handlePaste = async () => {
     if (!provider || !clipboard) return;
-    if (clipboard.cut) {
-      await provider.move(clipboard.entry.id, parentId);
-    } else {
-      await provider.copy(clipboard.entry.id, parentId);
-    }
+    if (clipboard.cut) await provider.move(clipboard.entry.id, parentId);
+    else await provider.copy(clipboard.entry.id, parentId);
     setClipboard(null);
     await refresh();
   };
