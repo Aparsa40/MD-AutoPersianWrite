@@ -19,7 +19,10 @@ const readStoredConnections = (): Record<string, CloudConnection> => {
     if (!raw) return {};
     const parsed = JSON.parse(raw) as Record<string, CloudConnection>;
     return Object.fromEntries(
-      Object.entries(parsed).map(([id, connection]) => [id, { ...connection, status: 'disconnected' }]),
+      Object.entries(parsed).map(([id, connection]): [string, CloudConnection] => [
+        id,
+        { ...connection, status: 'disconnected' },
+      ]),
     );
   } catch {
     return {};
@@ -29,7 +32,7 @@ const readStoredConnections = (): Record<string, CloudConnection> => {
 const persistConnections = (connections: Record<string, CloudConnection>) => {
   if (typeof window === 'undefined') return;
   const safeConnections = Object.fromEntries(
-    Object.entries(connections).map(([id, connection]) => [id, {
+    Object.entries(connections).map(([id, connection]): [string, CloudConnection] => [id, {
       providerId: connection.providerId,
       status: 'disconnected',
       connectedAt: connection.connectedAt,
@@ -56,9 +59,14 @@ export const useCloudStore = create<CloudState>((set, _get) => ({
     try {
       await provider.connect();
       set((state) => {
-        const connections = {
+        const connection: CloudConnection = {
+          providerId,
+          status: 'connected',
+          connectedAt: Date.now(),
+        };
+        const connections: Record<string, CloudConnection> = {
           ...state.connections,
-          [providerId]: { providerId, status: 'connected', connectedAt: Date.now() },
+          [providerId]: connection,
         };
         persistConnections(connections);
         return { connections, activeProviderId: providerId };
@@ -83,7 +91,7 @@ export const useCloudStore = create<CloudState>((set, _get) => ({
     if (!provider) return;
     await provider.disconnect();
     set((state) => {
-      const connections = { ...state.connections };
+      const connections: Record<string, CloudConnection> = { ...state.connections };
       delete connections[providerId];
       persistConnections(connections);
       return {
