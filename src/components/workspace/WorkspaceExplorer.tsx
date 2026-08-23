@@ -2,8 +2,10 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useEditorStore } from '../../store/useEditorStore';
 import { useDocumentSessionStore } from '../../store/useDocumentSessionStore';
 import { useWorkspaceStore } from '../../store/useWorkspaceStore';
+import { useCloudStore } from '../../store/useCloudStore';
 import { createLocalWorkspaceProvider } from '../../lib/workspace/localWorkspaceProvider';
-import type { WorkspaceEntry } from '../../types/workspaceProvider';
+import { getCloudProvider } from '../../lib/cloud/providerRegistry';
+import type { WorkspaceEntry, WorkspaceProvider } from '../../types/workspaceProvider';
 import type { WorkspaceFileReference } from '../../types/workspaceFileReference';
 
 type TreeNode = WorkspaceEntry & { path: string };
@@ -22,33 +24,49 @@ const encodeText = (content: string) => new TextEncoder().encode(content);
 
 export const WorkspaceExplorer: React.FC = () => {
   const { activeWorkspace } = useWorkspaceStore();
+  const activeCloudProviderId = useCloudStore((state) => state.activeProviderId);
   const sessions = useDocumentSessionStore((state) => state.sessions);
   const activeSessionId = useDocumentSessionStore((state) => state.activeSessionId);
   const createSession = useDocumentSessionStore((state) => state.createSession);
   const activateSession = useDocumentSessionStore((state) => state.activateSession);
   const markPersisted = useDocumentSessionStore((state) => state.markPersisted);
-  const setWorkspaceFile = useDocumentSessionStore((state) => state.setWorkspaceFile);
   const markdown = useEditorStore((state) => state.markdown);
   const fileName = useEditorStore((state) => state.fileName);
   const [entries, setEntries] = useState<TreeNode[]>([]);
   const [currentPath, setCurrentPath] = useState<string[]>([]);
   const [clipboard, setClipboard] = useState<{ entry: WorkspaceEntry; cut: boolean } | null>(null);
 
-  const provider = useMemo(() => {
-    if (!activeWorkspace || activeWorkspace.type !== 'local' || !activeWorkspace.handle) return null;
-    return createLocalWorkspaceProvider(activeWorkspace);
-  }, [activeWorkspace]);
+  const provider = useMemo<WorkspaceProvider | null>(() => {
+    if (!activeWorkspace) return null;
+    if (activeWorkspace.type === 'local') {
+      if (!activeWorkspace.handle) return null;
+      return createLocalWorkspaceProvider(activeWorkspace);
+    }
+    const providerId = activeWorkspace.providerId ?? activeCloudProviderId;
+    if (!providerId) return null;
+    return getCloudProvider(providerId)?.getWorkspaceProvider?.() ?? null;
+  }, [activeWorkspace, activeCloudProviderId]);
 
-  const parentId = currentPath.length ? currentPath.join('/') : null;
+  const parentId = currentPath.length ? currentPath[currentPath.length - 1] : null;
 
   const refresh = useCallback(async () => {
     if (!provider) {
       setEntries([]);
       return;
     }
-    const result = await provider.list(parentId);
-    setEntries(result.map((entry) => ({ ...entry, path: entry.id })));
+    try {
+      const result = await provider.list(parentId);
+      setEntries(result.map((entry) => ({ ...entry, path: entry.id })));
+    } catch (error) {
+      setEntries([]);
+      window.alert(error instanceof Error ? error.message : 'خواندن Workspace انجام نشد.');
+    }
   }, [provider, parentId]);
+
+  useEffect(() => {
+    setCurrentPath([]);
+    void refresh();
+  }, [provider]);
 
   useEffect(() => {
     void refresh();
@@ -60,7 +78,7 @@ export const WorkspaceExplorer: React.FC = () => {
   };
 
   const makeReference = (entry: WorkspaceEntry): WorkspaceFileReference => ({
-    providerId: 'local',
+    providerId: activeWorkspace!.providerId ?? (activeWorkspace!.type === 'local' ? 'local' : activeCloudProviderId ?? 'cloud'),
     workspaceId: activeWorkspace!.id,
     entryId: entry.id,
     parentId: entry.parentId,
@@ -78,12 +96,11 @@ export const WorkspaceExplorer: React.FC = () => {
     const name = promptName('نام فایل:', 'document.md');
     if (!provider || !name) return;
     const entry = await provider.createFile(parentId, name);
-    const reference = makeReference(entry);
     createSession({
       fileName: entry.name,
       markdown: '',
       isDirty: true,
-      workspaceFile: reference,
+      workspaceFile: makeReference(entry),
       isWorkspaceFile: true,
       isNewWorkspaceFile: true,
     });
@@ -93,13 +110,14 @@ export const WorkspaceExplorer: React.FC = () => {
   const handleSaveFile = async () => {
     if (!provider || activeSessionId === null) return;
     const activeSession = sessions.find((session) => session.id === activeSessionId);
-    if (activeSession?.workspaceFile && activeSession.workspaceFile.providerId === 'local') {
+    if (activeSession?.workspaceFile && activeSession.workspaceFile.providerId === (activeWorkspace?.providerId ?? (activeWorkspace?.type === 'local' ? 'local' : activeCloudProviderId))) {
       await provider.writeFile(activeSession.workspaceFile.entryId, encodeText(markdown));
       markPersisted(activeSession.workspaceFile);
       await refresh();
       return;
     }
 
+    if (activeWorkspace?.type !== 'local') return;
     const picker = getSaveFilePicker();
     if (!picker) {
       window.alert('مرورگر فعلی از ذخیره‌سازی فایل با پنجره انتخاب فایل پشتیبانی نمی‌کند.');
@@ -107,7 +125,7 @@ export const WorkspaceExplorer: React.FC = () => {
     }
 
     try {
-      const handle = await picker({ suggestedName: fileName?.trim() || 'document.md', startIn: activeWorkspace?.handle });
+      const handle = await picker({ suggestedName: fileName?.trim() || 'document.md', startIn: activeWorkspace.handle });
       const writable = await handle.createWritable();
       await writable.write(markdown);
       await writable.close();
@@ -121,7 +139,7 @@ export const WorkspaceExplorer: React.FC = () => {
   const handleOpen = async (entry: WorkspaceEntry) => {
     if (!provider) return;
     if (entry.type === 'folder') {
-      setCurrentPath(entry.id.split('/').filter(Boolean));
+      setCurrentPath((path) => [...path, entry.id]);
       return;
     }
 
@@ -152,9 +170,7 @@ export const WorkspaceExplorer: React.FC = () => {
     });
   };
 
-  const handleCopy = (entry: WorkspaceEntry, cut: boolean) => {
-    setClipboard({ entry, cut });
-  };
+  const handleCopy = (entry: WorkspaceEntry, cut: boolean) => setClipboard({ entry, cut });
 
   const handlePaste = async () => {
     if (!provider || !clipboard) return;
