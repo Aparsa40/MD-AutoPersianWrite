@@ -6,4 +6,5 @@ export interface WorkspaceInfo {
   type: WorkspaceStorageType;
   location: string;
   handle?: FileSystemDirectoryHandle;
+  providerId?: string;
 }
