@@ -3,6 +3,7 @@ import { openLocalWorkspace } from '../../lib/workspace/localWorkspace';
 import { listLocalWorkspaces } from '../../lib/workspace/workspaceRegistry';
 import { useWorkspaceStore } from '../../store/useWorkspaceStore';
 import type { WorkspaceInfo } from '../../types/workspace';
+import { CloudMenu } from './CloudMenu';
 
 type FileSystemPermissionDescriptor = { mode?: 'read' | 'readwrite' };
 type PermissionCapableDirectoryHandle = FileSystemDirectoryHandle & {
@@ -79,7 +80,7 @@ export const WorkspaceMenu: React.FC = () => {
                 ))}
                 {localWorkspaces.length > 0 && <div className="my-1 border-t border-border" />}
                 <button type="button" onClick={handleOpenLocalWorkspace} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">سیستم محلی (Local)</button>
-                <button type="button" onClick={() => window.alert('Workspace ابری را بعد از اتصال Google Drive پیاده‌سازی می‌کنیم.')} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">فضای ابری (Cloud)</button>
+                <CloudMenu />
               </div>
             )}
           </div>
