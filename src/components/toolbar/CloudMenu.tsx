@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { cloudProviderDefinitions } from '../../lib/cloud/providerRegistry';
 import { useCloudStore } from '../../store/useCloudStore';
 import type { CloudProviderId } from '../../types/cloud';
+import { GoogleDriveTestPanel } from './GoogleDriveTestPanel';
 
 const GoogleDriveIcon = () => (
   <svg viewBox="0 0 48 48" aria-hidden="true" className="h-7 w-7">
@@ -47,6 +48,7 @@ export const CloudMenu: React.FC = () => {
   };
 
   const connected = cloudProviderDefinitions.filter((provider) => connections[provider.id]?.status === 'connected');
+  const googleDriveConnected = connections['google-drive']?.status === 'connected';
 
   return (
     <div className="relative">
@@ -101,22 +103,25 @@ export const CloudMenu: React.FC = () => {
 
           <div className="space-y-1">
             {connected.map((provider) => (
-              <div key={provider.id} className="flex items-center gap-2 rounded border border-border px-2 py-2">
-                <ProviderIcon id={provider.id} fallback={provider.icon} />
-                <div className="min-w-0 flex-1">
-                  <div className="truncate text-sm font-medium">{provider.name}</div>
-                  <div className="flex items-center gap-1 text-[10px] text-green-600">
-                    <span className="h-1.5 w-1.5 rounded-full bg-green-500" /> متصل و فعال
+              <div key={provider.id} className="rounded border border-border px-2 py-2">
+                <div className="flex items-center gap-2">
+                  <ProviderIcon id={provider.id} fallback={provider.icon} />
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium">{provider.name}</div>
+                    <div className="flex items-center gap-1 text-[10px] text-green-600">
+                      <span className="h-1.5 w-1.5 rounded-full bg-green-500" /> متصل و فعال
+                    </div>
                   </div>
+                  <button
+                    type="button"
+                    disabled={busyProvider !== null}
+                    onClick={() => void handleDisconnect(provider.id)}
+                    className="rounded px-2 py-1 text-xs text-red-600 hover:bg-bg disabled:opacity-50"
+                  >
+                    قطع اتصال
+                  </button>
                 </div>
-                <button
-                  type="button"
-                  disabled={busyProvider !== null}
-                  onClick={() => void handleDisconnect(provider.id)}
-                  className="rounded px-2 py-1 text-xs text-red-600 hover:bg-bg disabled:opacity-50"
-                >
-                  قطع اتصال
-                </button>
+                {provider.id === 'google-drive' && googleDriveConnected && <GoogleDriveTestPanel />}
               </div>
             ))}
           </div>
