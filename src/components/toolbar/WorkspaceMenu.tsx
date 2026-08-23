@@ -15,7 +15,7 @@ const asPermissionCapableHandle = (handle: FileSystemDirectoryHandle): Permissio
   handle as PermissionCapableDirectoryHandle;
 
 export const WorkspaceMenu: React.FC = () => {
-  const { activeWorkspace, setActiveWorkspace } = useWorkspaceStore();
+  const { activeWorkspace, setActiveWorkspace, restoreActiveWorkspace } = useWorkspaceStore();
   const [isOpen, setIsOpen] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState<'open' | null>(null);
   const [localWorkspaces, setLocalWorkspaces] = useState<WorkspaceInfo[]>([]);
@@ -30,7 +30,8 @@ export const WorkspaceMenu: React.FC = () => {
 
   useEffect(() => {
     void refreshWorkspaces();
-  }, []);
+    void restoreActiveWorkspace();
+  }, [restoreActiveWorkspace]);
 
   const closeMenu = () => {
     setIsOpen(false);
