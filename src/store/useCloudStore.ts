@@ -7,10 +7,12 @@ interface CloudState {
   activeProviderId: CloudProviderId | null;
   connect: (providerId: CloudProviderId) => Promise<void>;
   disconnect: (providerId: CloudProviderId) => Promise<void>;
+  openProvider: (providerId: CloudProviderId) => void;
   setActiveProvider: (providerId: CloudProviderId | null) => void;
 }
 
 const STORAGE_KEY = 'md-autopersianwrite-cloud-connections';
+const ACTIVE_PROVIDER_KEY = 'md-autopersianwrite-active-cloud-provider';
 
 const readStoredConnections = (): Record<string, CloudConnection> => {
   if (typeof window === 'undefined') return {};
@@ -21,7 +23,11 @@ const readStoredConnections = (): Record<string, CloudConnection> => {
     return Object.fromEntries(
       Object.entries(parsed).map(([id, connection]): [string, CloudConnection] => [
         id,
-        { ...connection, status: 'disconnected' },
+        {
+          providerId: connection.providerId,
+          status: connection.status === 'connected' ? 'connected' : 'disconnected',
+          connectedAt: connection.connectedAt,
+        },
       ]),
     );
   } catch {
@@ -29,21 +35,20 @@ const readStoredConnections = (): Record<string, CloudConnection> => {
   }
 };
 
-const persistConnections = (connections: Record<string, CloudConnection>) => {
-  if (typeof window === 'undefined') return;
-  const safeConnections = Object.fromEntries(
-    Object.entries(connections).map(([id, connection]): [string, CloudConnection] => [id, {
-      providerId: connection.providerId,
-      status: 'disconnected',
-      connectedAt: connection.connectedAt,
-    }]),
-  );
-  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(safeConnections));
+const readActiveProvider = (): CloudProviderId | null => {
+  if (typeof window === 'undefined') return null;
+  const value = window.localStorage.getItem(ACTIVE_PROVIDER_KEY);
+  return value ? (value as CloudProviderId) : null;
 };
 
-export const useCloudStore = create<CloudState>((set, _get) => ({
+const persistConnections = (connections: Record<string, CloudConnection>) => {
+  if (typeof window === 'undefined') return;
+  window.localStorage.setItem(STORAGE_KEY, JSON.stringify(connections));
+};
+
+export const useCloudStore = create<CloudState>((set, get) => ({
   connections: readStoredConnections(),
-  activeProviderId: null,
+  activeProviderId: readActiveProvider(),
 
   connect: async (providerId) => {
     const provider = getCloudProvider(providerId);
@@ -64,11 +69,9 @@ export const useCloudStore = create<CloudState>((set, _get) => ({
           status: 'connected',
           connectedAt: Date.now(),
         };
-        const connections: Record<string, CloudConnection> = {
-          ...state.connections,
-          [providerId]: connection,
-        };
+        const connections = { ...state.connections, [providerId]: connection };
         persistConnections(connections);
+        window.localStorage.setItem(ACTIVE_PROVIDER_KEY, providerId);
         return { connections, activeProviderId: providerId };
       });
     } catch (error) {
@@ -90,16 +93,31 @@ export const useCloudStore = create<CloudState>((set, _get) => ({
     const provider = getCloudProvider(providerId);
     if (!provider) return;
     await provider.disconnect();
+
     set((state) => {
       const connections: Record<string, CloudConnection> = { ...state.connections };
       delete connections[providerId];
       persistConnections(connections);
-      return {
-        connections,
-        activeProviderId: state.activeProviderId === providerId ? null : state.activeProviderId,
-      };
+
+      const nextActive = state.activeProviderId === providerId ? null : state.activeProviderId;
+      if (nextActive) window.localStorage.setItem(ACTIVE_PROVIDER_KEY, nextActive);
+      else window.localStorage.removeItem(ACTIVE_PROVIDER_KEY);
+
+      return { connections, activeProviderId: nextActive };
     });
   },
 
-  setActiveProvider: (providerId) => set({ activeProviderId: providerId }),
+  openProvider: (providerId) => {
+    const provider = getCloudProvider(providerId);
+    if (!provider) return;
+    provider.openWeb();
+  },
+
+  setActiveProvider: (providerId) => {
+    set({ activeProviderId: providerId });
+    if (typeof window !== 'undefined') {
+      if (providerId) window.localStorage.setItem(ACTIVE_PROVIDER_KEY, providerId);
+      else window.localStorage.removeItem(ACTIVE_PROVIDER_KEY);
+    }
+  },
 }));
