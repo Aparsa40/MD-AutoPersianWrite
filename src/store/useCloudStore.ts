@@ -46,7 +46,7 @@ const persistConnections = (connections: Record<string, CloudConnection>) => {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(connections));
 };
 
-export const useCloudStore = create<CloudState>((set, get) => ({
+export const useCloudStore = create<CloudState>((set) => ({
   connections: readStoredConnections(),
   activeProviderId: readActiveProvider(),
 
