@@ -48,7 +48,6 @@ module.exports = {
       "error",
       {
         argsIgnorePattern: "^_",
-        varsIgnorePattern: "^ImportMeta$",
       },
     ],
   },
