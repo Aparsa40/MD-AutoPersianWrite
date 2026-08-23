@@ -1,3 +1,5 @@
+import type { WorkspaceProvider } from './workspaceProvider';
+
 export type CloudProviderId =
   | 'google-drive'
   | 'one-drive'
@@ -29,4 +31,5 @@ export interface CloudStorageProvider {
   disconnect(): Promise<void>;
   isConnected(): boolean;
   openWeb(): void;
+  getWorkspaceProvider(): WorkspaceProvider | null;
 }
