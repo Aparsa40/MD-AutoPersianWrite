@@ -18,6 +18,8 @@ export interface WorkspaceProvider {
   writeFile(id: string, content: Uint8Array): Promise<void>;
   createFile(parentId: string | null, name: string, content?: Uint8Array): Promise<WorkspaceEntry>;
   createFolder(parentId: string | null, name: string): Promise<WorkspaceEntry>;
+  copy(id: string, destinationParentId: string | null): Promise<WorkspaceEntry>;
+  move(id: string, destinationParentId: string | null): Promise<WorkspaceEntry>;
   rename(id: string, name: string): Promise<void>;
   delete(id: string): Promise<void>;
 }
