@@ -65,7 +65,6 @@ export const WorkspaceExplorer: React.FC = () => {
 
   useEffect(() => {
     setCurrentPath([]);
-    void refresh();
   }, [provider]);
 
   useEffect(() => {
@@ -99,7 +98,7 @@ export const WorkspaceExplorer: React.FC = () => {
     createSession({
       fileName: entry.name,
       markdown: '',
-      isDirty: true,
+      isDirty: false,
       workspaceFile: makeReference(entry),
       isWorkspaceFile: true,
       isNewWorkspaceFile: true,
@@ -107,76 +106,34 @@ export const WorkspaceExplorer: React.FC = () => {
     await refresh();
   };
 
-  const handleSaveFile = async () => {
-    if (!provider || activeSessionId === null) return;
-    const activeSession = sessions.find((session) => session.id === activeSessionId);
-    if (activeSession?.workspaceFile && activeSession.workspaceFile.providerId === (activeWorkspace?.providerId ?? (activeWorkspace?.type === 'local' ? 'local' : activeCloudProviderId))) {
-      await provider.writeFile(activeSession.workspaceFile.entryId, encodeText(markdown));
-      markPersisted(activeSession.workspaceFile);
-      await refresh();
-      return;
-    }
-
-    if (activeWorkspace?.type !== 'local') return;
-    const picker = getSaveFilePicker();
-    if (!picker) {
-      window.alert('مرورگر فعلی از ذخیره‌سازی فایل با پنجره انتخاب فایل پشتیبانی نمی‌کند.');
-      return;
-    }
-
-    try {
-      const handle = await picker({ suggestedName: fileName?.trim() || 'document.md', startIn: activeWorkspace.handle });
-      const writable = await handle.createWritable();
-      await writable.write(markdown);
-      await writable.close();
-      useEditorStore.setState({ fileName: handle.name, isDirty: false });
-    } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') return;
-      window.alert(error instanceof Error ? error.message : 'ذخیره فایل انجام نشد.');
-    }
-  };
-
   const handleOpen = async (entry: WorkspaceEntry) => {
-    if (!provider) return;
-    if (entry.type === 'folder') {
-      setCurrentPath((path) => [...path, entry.id]);
-      return;
+    if (!provider || entry.type !== 'file') return;
+    try {
+      const content = decodeText(await provider.readFile(entry.id));
+      const existing = sessions.find((session) => session.workspaceFile?.entryId === entry.id && session.workspaceFile?.providerId === (activeWorkspace?.providerId ?? 'local'));
+      if (existing) {
+        activateSession(existing.id);
+        return;
+      }
+      createSession({
+        fileName: entry.name,
+        markdown: content,
+        isDirty: false,
+        workspaceFile: makeReference(entry),
+        isWorkspaceFile: true,
+        isNewWorkspaceFile: false,
+      });
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : 'باز کردن فایل انجام نشد.');
     }
-
-    const extension = entry.name.split('.').pop()?.toLowerCase();
-    if (!['md', 'markdown', 'txt'].includes(extension ?? '')) {
-      window.alert('فعلاً فقط فایل‌های متنی Markdown/TXT در Editor باز می‌شوند.');
-      return;
-    }
-
-    const reference = makeReference(entry);
-    const existing = sessions.find(
-      (session) => session.workspaceFile?.providerId === reference.providerId
-        && session.workspaceFile?.workspaceId === reference.workspaceId
-        && session.workspaceFile?.entryId === reference.entryId,
-    );
-    if (existing) {
-      activateSession(existing.id);
-      return;
-    }
-
-    createSession({
-      fileName: entry.name,
-      markdown: decodeText(await provider.readFile(entry.id)),
-      isDirty: false,
-      workspaceFile: reference,
-      isWorkspaceFile: true,
-      isNewWorkspaceFile: false,
-    });
   };
 
-  const handleCopy = (entry: WorkspaceEntry, cut: boolean) => setClipboard({ entry, cut });
-
-  const handlePaste = async () => {
-    if (!provider || !clipboard) return;
-    if (clipboard.cut) await provider.move(clipboard.entry.id, parentId);
-    else await provider.copy(clipboard.entry.id, parentId);
-    setClipboard(null);
+  const handleSave = async () => {
+    if (!provider || !activeSessionId) return;
+    const session = sessions.find((item) => item.id === activeSessionId);
+    if (!session?.workspaceFile) return;
+    await provider.writeFile(session.workspaceFile.entryId, encodeText(markdown));
+    markPersisted(session.workspaceFile);
     await refresh();
   };
 
@@ -188,46 +145,58 @@ export const WorkspaceExplorer: React.FC = () => {
   };
 
   const handleDelete = async (entry: WorkspaceEntry) => {
-    if (!provider || !window.confirm(`حذف «${entry.name}» انجام شود؟`)) return;
+    if (!provider || !window.confirm(`حذف «${entry.name}»؟`)) return;
     await provider.delete(entry.id);
     await refresh();
   };
 
-  if (!activeWorkspace) return null;
+  const handleCopy = (entry: WorkspaceEntry) => setClipboard({ entry, cut: false });
+  const handleCut = (entry: WorkspaceEntry) => setClipboard({ entry, cut: true });
+
+  const handlePaste = async () => {
+    if (!provider || !clipboard) return;
+    if (clipboard.cut) {
+      await provider.move(clipboard.entry.id, parentId);
+    } else {
+      await provider.copy(clipboard.entry.id, parentId);
+    }
+    setClipboard(null);
+    await refresh();
+  };
+
+  const handleOpenFolder = (entry: WorkspaceEntry) => {
+    if (entry.type === 'folder') setCurrentPath((path) => [...path, entry.id]);
+  };
+
+  const handleSaveAs = async () => {
+    const picker = getSaveFilePicker();
+    if (!picker) return;
+    const handle = await picker({ suggestedName: fileName || 'document.md' });
+    const writable = await handle.createWritable();
+    await writable.write(markdown);
+    await writable.close();
+  };
 
   return (
-    <aside className="flex w-72 shrink-0 flex-col border-l border-border bg-surface" dir="rtl">
-      <div className="border-b border-border p-3">
-        <div className="text-sm font-semibold">{activeWorkspace.name}</div>
-        <div className="mt-2 flex flex-wrap gap-1">
-          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handleSaveFile()} title="Save">Save</button>
-          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handleCreateFile()} title="New File">New File</button>
-          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handleCreateFolder()} title="New Folder">New Folder</button>
-          <button className="rounded border border-border px-2 py-1 text-xs hover:bg-bg" onClick={() => void handlePaste()} disabled={!clipboard}>Paste</button>
-        </div>
+    <div className="workspace-explorer">
+      <div className="workspace-explorer__actions">
+        <button type="button" onClick={handleCreateFile}>New File</button>
+        <button type="button" onClick={handleCreateFolder}>New Folder</button>
+        <button type="button" onClick={() => void handlePaste()} disabled={!clipboard}>Paste</button>
+        <button type="button" onClick={() => void handleSave()} disabled={!activeSessionId}>Save</button>
+        <button type="button" onClick={() => void handleSaveAs()} disabled={!fileName}>Save As</button>
       </div>
-      <div className="flex-1 overflow-auto p-2 text-sm">
-        <div className="mb-2 flex items-center gap-1 text-text-muted">
-          <button className="hover:text-primary disabled:opacity-40" disabled={!currentPath.length} onClick={() => setCurrentPath((path) => path.slice(0, -1))}>←</button>
-          <button className="hover:text-primary" onClick={() => setCurrentPath([])}>{activeWorkspace.name}</button>
-          {currentPath.map((part) => <span key={part}>/ {part}</span>)}
-        </div>
-        {entries.map((entry) => {
-          const isNewCurrentFile = entry.type === 'file' && sessions.some(
-            (session) => session.id === activeSessionId && session.workspaceFile?.entryId === entry.id && session.isNewWorkspaceFile,
-          );
-          return (
-            <div key={entry.path} className="group flex items-center gap-1 rounded px-2 py-1 hover:bg-bg">
-              <button className="min-w-0 flex-1 truncate text-right" onDoubleClick={() => void handleOpen(entry)}>{entry.type === 'folder' ? '📁' : '📄'} {entry.name}</button>
-              <button title="Copy" className="hidden text-xs group-hover:inline" onClick={() => handleCopy(entry, false)}>C</button>
-              <button title="Cut" className="hidden text-xs group-hover:inline" onClick={() => handleCopy(entry, true)}>X</button>
-              <button title="Rename" className="hidden text-xs group-hover:inline" onClick={() => void handleRename(entry)}>R</button>
-              <button title="Delete" className="hidden text-xs group-hover:inline" onClick={() => void handleDelete(entry)}>D</button>
-              {isNewCurrentFile && <button title="Save" className="hidden text-xs group-hover:inline" onClick={() => void handleSaveFile()}>S</button>}
-            </div>
-          );
-        })}
+      <div className="workspace-explorer__entries">
+        {entries.map((entry) => (
+          <div className="workspace-explorer__entry" key={entry.id}>
+            <button type="button" onClick={() => entry.type === 'folder' ? handleOpenFolder(entry) : void handleOpen(entry)}>{entry.name}</button>
+            <button type="button" onClick={() => handleCopy(entry)}>Copy</button>
+            <button type="button" onClick={() => handleCut(entry)}>Cut</button>
+            <button type="button" onClick={() => void handleRename(entry)}>Rename</button>
+            <button type="button" onClick={() => void handleDelete(entry)}>Delete</button>
+          </div>
+        ))}
       </div>
-    </aside>
+    </div>
   );
 };
