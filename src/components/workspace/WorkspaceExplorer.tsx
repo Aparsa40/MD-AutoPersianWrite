@@ -1,18 +1,10 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useEditorStore } from '../../store/useEditorStore';
 import { useDocumentSessionStore } from '../../store/useDocumentSessionStore';
 import { useWorkspaceStore } from '../../store/useWorkspaceStore';
-import {
-  copyEntry,
-  createFile,
-  createFolder,
-  deleteEntry,
-  listDirectory,
-  readTextFile,
-  renameEntry,
-  type WorkspaceEntry,
-  writeTextFile,
-} from '../../lib/workspace/localWorkspaceFiles';
+import { createLocalWorkspaceProvider } from '../../lib/workspace/localWorkspaceProvider';
+import type { WorkspaceEntry } from '../../types/workspaceProvider';
+import type { WorkspaceFileReference } from '../../types/workspaceFileReference';
 
 type TreeNode = WorkspaceEntry & { path: string };
 
@@ -24,6 +16,9 @@ const getSaveFilePicker = () => {
   const picker = (window as FileSystemSavePickerWindow).showSaveFilePicker;
   return typeof picker === 'function' ? picker.bind(window) : null;
 };
+
+const decodeText = (content: Uint8Array) => new TextDecoder().decode(content);
+const encodeText = (content: string) => new TextEncoder().encode(content);
 
 export const WorkspaceExplorer: React.FC = () => {
   const { activeWorkspace } = useWorkspaceStore();
@@ -37,24 +32,23 @@ export const WorkspaceExplorer: React.FC = () => {
   const fileName = useEditorStore((state) => state.fileName);
   const [entries, setEntries] = useState<TreeNode[]>([]);
   const [currentPath, setCurrentPath] = useState<string[]>([]);
-  const [clipboard, setClipboard] = useState<{ entry: WorkspaceEntry; parent: FileSystemDirectoryHandle; cut: boolean } | null>(null);
+  const [clipboard, setClipboard] = useState<{ entry: WorkspaceEntry; cut: boolean } | null>(null);
 
-  const currentDirectory = useCallback(async () => {
-    if (!activeWorkspace?.handle) return null;
-    let directory = activeWorkspace.handle;
-    for (const part of currentPath) directory = await directory.getDirectoryHandle(part);
-    return directory;
-  }, [activeWorkspace, currentPath]);
+  const provider = useMemo(() => {
+    if (!activeWorkspace || activeWorkspace.type !== 'local' || !activeWorkspace.handle) return null;
+    return createLocalWorkspaceProvider(activeWorkspace);
+  }, [activeWorkspace]);
+
+  const parentId = currentPath.length ? currentPath.join('/') : null;
 
   const refresh = useCallback(async () => {
-    const directory = await currentDirectory();
-    if (!directory) {
+    if (!provider) {
       setEntries([]);
       return;
     }
-    const result = await listDirectory(directory);
-    setEntries(result.map((entry) => ({ ...entry, path: [...currentPath, entry.name].join('/') })));
-  }, [currentDirectory, currentPath]);
+    const result = await provider.list(parentId);
+    setEntries(result.map((entry) => ({ ...entry, path: entry.id })));
+  }, [provider, parentId]);
 
   useEffect(() => {
     void refresh();
@@ -65,26 +59,31 @@ export const WorkspaceExplorer: React.FC = () => {
     return value || null;
   };
 
+  const makeReference = (entry: WorkspaceEntry): WorkspaceFileReference => ({
+    providerId: 'local',
+    workspaceId: activeWorkspace!.id,
+    entryId: entry.id,
+    parentId: entry.parentId,
+    name: entry.name,
+  });
+
   const handleCreateFolder = async () => {
-    const directory = await currentDirectory();
     const name = promptName('نام پوشه:');
-    if (!directory || !name) return;
-    await createFolder(directory, name);
+    if (!provider || !name) return;
+    await provider.createFolder(parentId, name);
     await refresh();
   };
 
   const handleCreateFile = async () => {
-    const directory = await currentDirectory();
     const name = promptName('نام فایل:', 'document.md');
-    if (!directory || !name) return;
-
-    const handle = await createFile(directory, name);
+    if (!provider || !name) return;
+    const entry = await provider.createFile(parentId, name);
+    const reference = makeReference(entry);
     createSession({
-      fileName: handle.name,
+      fileName: entry.name,
       markdown: '',
       isDirty: true,
-      fileHandle: handle,
-      workspaceDirectory: directory,
+      workspaceFile: reference,
       isWorkspaceFile: true,
       isNewWorkspaceFile: true,
     });
@@ -92,13 +91,11 @@ export const WorkspaceExplorer: React.FC = () => {
   };
 
   const handleSaveFile = async () => {
-    const directory = await currentDirectory();
-    if (!directory || activeSessionId === null) return;
-
+    if (!provider || activeSessionId === null) return;
     const activeSession = sessions.find((session) => session.id === activeSessionId);
-    if (activeSession?.isWorkspaceFile && activeSession.fileHandle) {
-      await writeTextFile(activeSession.fileHandle, markdown);
-      markPersisted(activeSession.fileHandle);
+    if (activeSession?.workspaceFile && activeSession.workspaceFile.providerId === 'local') {
+      await provider.writeFile(activeSession.workspaceFile.entryId, encodeText(markdown));
+      markPersisted(activeSession.workspaceFile);
       await refresh();
       return;
     }
@@ -110,14 +107,11 @@ export const WorkspaceExplorer: React.FC = () => {
     }
 
     try {
-      const handle = await picker({
-        suggestedName: fileName?.trim() || 'document.md',
-        startIn: directory,
-      });
-      await writeTextFile(handle, markdown);
-      setWorkspaceFile(handle, directory, false);
+      const handle = await picker({ suggestedName: fileName?.trim() || 'document.md', startIn: activeWorkspace?.handle });
+      const writable = await handle.createWritable();
+      await writable.write(markdown);
+      await writable.close();
       useEditorStore.setState({ fileName: handle.name, isDirty: false });
-      await refresh();
     } catch (error) {
       if (error instanceof DOMException && error.name === 'AbortError') return;
       window.alert(error instanceof Error ? error.message : 'ذخیره فایل انجام نشد.');
@@ -125,8 +119,9 @@ export const WorkspaceExplorer: React.FC = () => {
   };
 
   const handleOpen = async (entry: WorkspaceEntry) => {
-    if (entry.kind === 'directory') {
-      setCurrentPath((path) => [...path, entry.name]);
+    if (!provider) return;
+    if (entry.type === 'folder') {
+      setCurrentPath(entry.id.split('/').filter(Boolean));
       return;
     }
 
@@ -136,10 +131,12 @@ export const WorkspaceExplorer: React.FC = () => {
       return;
     }
 
-    const directory = await currentDirectory();
-    if (!directory) return;
-
-    const existing = sessions.find((session) => session.fileHandle === entry.handle);
+    const reference = makeReference(entry);
+    const existing = sessions.find(
+      (session) => session.workspaceFile?.providerId === reference.providerId
+        && session.workspaceFile?.workspaceId === reference.workspaceId
+        && session.workspaceFile?.entryId === reference.entryId,
+    );
     if (existing) {
       activateSession(existing.id);
       return;
@@ -147,43 +144,36 @@ export const WorkspaceExplorer: React.FC = () => {
 
     createSession({
       fileName: entry.name,
-      markdown: await readTextFile(entry.handle as FileSystemFileHandle),
+      markdown: decodeText(await provider.readFile(entry.id)),
       isDirty: false,
-      fileHandle: entry.handle as FileSystemFileHandle,
-      workspaceDirectory: directory,
+      workspaceFile: reference,
       isWorkspaceFile: true,
       isNewWorkspaceFile: false,
     });
   };
 
-  const handleCopy = async (entry: WorkspaceEntry, cut: boolean) => {
-    const directory = await currentDirectory();
-    if (!directory) return;
-    setClipboard({ entry, parent: directory, cut });
+  const handleCopy = (entry: WorkspaceEntry, cut: boolean) => {
+    setClipboard({ entry, cut });
   };
 
   const handlePaste = async () => {
-    if (!clipboard) return;
-    const directory = await currentDirectory();
-    if (!directory) return;
-    await copyEntry(clipboard.entry.handle, directory);
-    if (clipboard.cut) await deleteEntry(clipboard.parent, clipboard.entry.name, true);
+    if (!provider || !clipboard) return;
+    if (clipboard.cut) await provider.move(clipboard.entry.id, parentId);
+    else await provider.copy(clipboard.entry.id, parentId);
     setClipboard(null);
     await refresh();
   };
 
   const handleRename = async (entry: WorkspaceEntry) => {
-    const directory = await currentDirectory();
     const name = promptName('نام جدید:', entry.name);
-    if (!directory || !name || name === entry.name) return;
-    await renameEntry(directory, entry.name, name);
+    if (!provider || !name || name === entry.name) return;
+    await provider.rename(entry.id, name);
     await refresh();
   };
 
   const handleDelete = async (entry: WorkspaceEntry) => {
-    const directory = await currentDirectory();
-    if (!directory || !window.confirm(`حذف «${entry.name}» انجام شود؟`)) return;
-    await deleteEntry(directory, entry.name, true);
+    if (!provider || !window.confirm(`حذف «${entry.name}» انجام شود؟`)) return;
+    await provider.delete(entry.id);
     await refresh();
   };
 
@@ -207,14 +197,14 @@ export const WorkspaceExplorer: React.FC = () => {
           {currentPath.map((part) => <span key={part}>/ {part}</span>)}
         </div>
         {entries.map((entry) => {
-          const isNewCurrentFile = entry.kind === 'file' && sessions.some(
-            (session) => session.id === activeSessionId && session.fileHandle === entry.handle && session.isNewWorkspaceFile,
+          const isNewCurrentFile = entry.type === 'file' && sessions.some(
+            (session) => session.id === activeSessionId && session.workspaceFile?.entryId === entry.id && session.isNewWorkspaceFile,
           );
           return (
             <div key={entry.path} className="group flex items-center gap-1 rounded px-2 py-1 hover:bg-bg">
-              <button className="min-w-0 flex-1 truncate text-right" onDoubleClick={() => void handleOpen(entry)}>{entry.kind === 'directory' ? '📁' : '📄'} {entry.name}</button>
-              <button title="Copy" className="hidden text-xs group-hover:inline" onClick={() => void handleCopy(entry, false)}>C</button>
-              <button title="Cut" className="hidden text-xs group-hover:inline" onClick={() => void handleCopy(entry, true)}>X</button>
+              <button className="min-w-0 flex-1 truncate text-right" onDoubleClick={() => void handleOpen(entry)}>{entry.type === 'folder' ? '📁' : '📄'} {entry.name}</button>
+              <button title="Copy" className="hidden text-xs group-hover:inline" onClick={() => handleCopy(entry, false)}>C</button>
+              <button title="Cut" className="hidden text-xs group-hover:inline" onClick={() => handleCopy(entry, true)}>X</button>
               <button title="Rename" className="hidden text-xs group-hover:inline" onClick={() => void handleRename(entry)}>R</button>
               <button title="Delete" className="hidden text-xs group-hover:inline" onClick={() => void handleDelete(entry)}>D</button>
               {isNewCurrentFile && <button title="Save" className="hidden text-xs group-hover:inline" onClick={() => void handleSaveFile()}>S</button>}
