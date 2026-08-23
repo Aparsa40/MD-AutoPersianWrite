@@ -111,7 +111,7 @@ const driveRequest = async <T>(path: string, init: RequestInit = {}): Promise<T>
     ...init,
     headers: {
       Authorization: `Bearer ${requireToken()}`,
-      ...(init.body ? { 'Content-Type': 'application/json' } : {}),
+      ...(init.body && !(init.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}),
       ...init.headers,
     },
   });
@@ -126,10 +126,7 @@ const driveRequest = async <T>(path: string, init: RequestInit = {}): Promise<T>
 const uploadRequest = async (path: string, init: RequestInit): Promise<DriveFile> => {
   const response = await fetch(`${DRIVE_UPLOAD_URL}${path}`, {
     ...init,
-    headers: {
-      Authorization: `Bearer ${requireToken()}`,
-      ...init.headers,
-    },
+    headers: { Authorization: `Bearer ${requireToken()}`, ...init.headers },
   });
   if (!response.ok) {
     const message = await response.text();
@@ -183,30 +180,28 @@ class GoogleDriveWorkspaceProvider implements WorkspaceProvider {
   }
 
   async createFolder(parentId: string | null, name: string): Promise<WorkspaceEntry> {
-    const file = await driveRequest<DriveFile>('/files', {
+    return toEntry(await driveRequest<DriveFile>('/files', {
       method: 'POST',
       body: JSON.stringify({ name, mimeType: DRIVE_FOLDER_MIME, parents: [parentId || ROOT_ID] }),
-    });
-    return toEntry(file);
+    }));
   }
 
   async copy(id: string, targetParentId: string | null): Promise<WorkspaceEntry> {
-    const file = await driveRequest<DriveFile>(`/files/${encodeURIComponent(id)}/copy`, {
+    return toEntry(await driveRequest<DriveFile>(`/files/${encodeURIComponent(id)}/copy`, {
       method: 'POST',
       body: JSON.stringify({ parents: [targetParentId || ROOT_ID] }),
-    });
-    return toEntry(file);
+    }));
   }
 
-  async move(id: string, targetParentId: string | null): Promise<WorkspaceEntry> {
-    const current = await driveRequest<DriveFile>(`/files/${encodeURIComponent(id)}?fields=id,parents,name,mimeType,size,modifiedTime`);
+  async move(id: string, targetParentId: string | null): Promise<void> {
+    const current = await driveRequest<DriveFile>(`/files/${encodeURIComponent(id)}?fields=id,parents`);
     const oldParents = (current.parents ?? []).join(',');
     const params = new URLSearchParams({
       addParents: targetParentId || ROOT_ID,
       removeParents: oldParents,
-      fields: 'id,name,mimeType,parents,size,modifiedTime',
+      fields: 'id',
     });
-    return toEntry(await driveRequest<DriveFile>(`/files/${encodeURIComponent(id)}?${params.toString()}`, { method: 'PATCH', body: JSON.stringify({}) }));
+    await driveRequest<DriveFile>(`/files/${encodeURIComponent(id)}?${params.toString()}`, { method: 'PATCH' });
   }
 
   async rename(id: string, name: string): Promise<void> {
@@ -229,25 +224,20 @@ export const googleDriveProvider: CloudStorageProvider = {
     icon: 'google-drive',
     webUrl: GOOGLE_DRIVE_URL,
   },
-
   async connect() {
     accessToken = await authorizeGoogleDrive();
     workspaceProvider = new GoogleDriveWorkspaceProvider();
   },
-
   async disconnect() {
     accessToken = null;
     workspaceProvider = null;
   },
-
   isConnected() {
     return accessToken !== null;
   },
-
   getWorkspaceProvider() {
     return workspaceProvider;
   },
-
   openWeb() {
     window.open(GOOGLE_DRIVE_URL, '_blank', 'noopener,noreferrer');
   },
