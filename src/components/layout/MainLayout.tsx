@@ -71,11 +71,15 @@ export const MainLayout: React.FC = () => {
   const previewVisible = activeSessionId !== null && (viewMode === 'split' || viewMode === 'preview-only');
 
   return (
-    <div dir="ltr" className="flex h-screen w-screen flex-col overflow-hidden bg-bg text-text-main">
-      <TopToolbar />
-      <div className="flex min-h-0 flex-1 overflow-hidden">
-        <TableOfContents />
-        <main className="order-1 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+    <div className="flex h-screen w-screen flex-col overflow-hidden bg-bg text-text-main">
+      <div dir="rtl">
+        <TopToolbar />
+      </div>
+      <div className="flex min-h-0 flex-1 overflow-hidden" dir="ltr">
+        <div dir="rtl" className="min-h-0 min-w-0 flex-1 overflow-hidden">
+          <TableOfContents />
+        </div>
+        <main dir="rtl" className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <DocumentSessionTabs />
           <div className={`flex min-h-0 min-w-0 flex-1 overflow-hidden ${horizontal ? 'flex-row' : 'flex-col'}`}>
             {editorVisible && (
