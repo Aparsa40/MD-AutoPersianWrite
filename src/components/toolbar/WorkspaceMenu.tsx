@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { openLocalWorkspace } from '../../lib/workspace/localWorkspace';
 import { listLocalWorkspaces } from '../../lib/workspace/workspaceRegistry';
 import { useWorkspaceStore } from '../../store/useWorkspaceStore';
+import { useWorkspacePanelStore } from '../../store/useWorkspacePanelStore';
 import type { WorkspaceInfo } from '../../types/workspace';
 import { CloudMenu } from './CloudMenu';
 
@@ -11,21 +12,19 @@ type PermissionCapableDirectoryHandle = FileSystemDirectoryHandle & {
   requestPermission: (descriptor?: FileSystemPermissionDescriptor) => Promise<PermissionState>;
 };
 
-const asPermissionCapableHandle = (handle: FileSystemDirectoryHandle): PermissionCapableDirectoryHandle =>
-  handle as PermissionCapableDirectoryHandle;
+const asPermissionCapableHandle = (handle: FileSystemDirectoryHandle): PermissionCapableDirectoryHandle => handle as PermissionCapableDirectoryHandle;
 
 export const WorkspaceMenu: React.FC = () => {
   const { activeWorkspace, setActiveWorkspace, restoreActiveWorkspace } = useWorkspaceStore();
+  const workspacePanelOpen = useWorkspacePanelStore((state) => state.isOpen);
+  const openWorkspacePanel = useWorkspacePanelStore((state) => state.open);
+  const closeWorkspacePanel = useWorkspacePanelStore((state) => state.close);
   const [isOpen, setIsOpen] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState<'open' | null>(null);
   const [localWorkspaces, setLocalWorkspaces] = useState<WorkspaceInfo[]>([]);
 
   const refreshWorkspaces = async () => {
-    try {
-      setLocalWorkspaces(await listLocalWorkspaces());
-    } catch {
-      setLocalWorkspaces([]);
-    }
+    try { setLocalWorkspaces(await listLocalWorkspaces()); } catch { setLocalWorkspaces([]); }
   };
 
   useEffect(() => {
@@ -33,15 +32,13 @@ export const WorkspaceMenu: React.FC = () => {
     void restoreActiveWorkspace();
   }, [restoreActiveWorkspace]);
 
-  const closeMenu = () => {
-    setIsOpen(false);
-    setActiveSubmenu(null);
-  };
+  const closeMenu = () => { setIsOpen(false); setActiveSubmenu(null); };
 
   const handleOpenLocalWorkspace = async () => {
     try {
       const workspace = await openLocalWorkspace();
       setActiveWorkspace(workspace);
+      openWorkspacePanel();
       await refreshWorkspaces();
       closeMenu();
     } catch (error) {
@@ -55,10 +52,9 @@ export const WorkspaceMenu: React.FC = () => {
     try {
       const handle = asPermissionCapableHandle(workspace.handle);
       const permission = await handle.queryPermission({ mode: 'readwrite' });
-      if (permission !== 'granted' && await handle.requestPermission({ mode: 'readwrite' }) !== 'granted') {
-        throw new Error('دسترسی Workspace تأیید نشد.');
-      }
+      if (permission !== 'granted' && await handle.requestPermission({ mode: 'readwrite' }) !== 'granted') throw new Error('دسترسی Workspace تأیید نشد.');
       setActiveWorkspace(workspace);
+      openWorkspacePanel();
       closeMenu();
     } catch (error) {
       window.alert(error instanceof Error ? error.message : 'باز کردن Workspace انجام نشد.');
@@ -76,9 +72,7 @@ export const WorkspaceMenu: React.FC = () => {
             <button type="button" onClick={toggleOpenSubmenu} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">باز کردن محیط کاری (Open Workspace)</button>
             {activeSubmenu === 'open' && (
               <div className="absolute right-full top-0 mr-1 w-64 rounded border border-border bg-surface py-1 shadow-lg">
-                {localWorkspaces.map((workspace) => (
-                  <button key={workspace.id} type="button" onClick={() => void handleSelectRegisteredWorkspace(workspace)} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">📁 {workspace.name}</button>
-                ))}
+                {localWorkspaces.map((workspace) => <button key={workspace.id} type="button" onClick={() => void handleSelectRegisteredWorkspace(workspace)} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">📁 {workspace.name}</button>)}
                 {localWorkspaces.length > 0 && <div className="my-1 border-t border-border" />}
                 <button type="button" onClick={handleOpenLocalWorkspace} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">سیستم محلی (Local)</button>
                 <CloudMenu />
@@ -90,6 +84,9 @@ export const WorkspaceMenu: React.FC = () => {
             <>
               <div className="my-1 border-t border-border" />
               <div className="px-4 py-2 text-xs text-text-muted">محیط فعال: <span className="font-medium text-text">{activeWorkspace.name}</span></div>
+              <button type="button" onClick={() => { workspacePanelOpen ? closeWorkspacePanel() : openWorkspacePanel(); closeMenu(); }} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">
+                {workspacePanelOpen ? 'بستن پنل Workspace' : 'نمایش پنل Workspace'}
+              </button>
             </>
           )}
         </div>
