@@ -11,11 +11,10 @@ type PermissionCapableDirectoryHandle = FileSystemDirectoryHandle & {
   requestPermission: (descriptor?: FileSystemPermissionDescriptor) => Promise<PermissionState>;
 };
 
-const asPermissionCapableHandle = (handle: FileSystemDirectoryHandle): PermissionCapableDirectoryHandle =>
-  handle as PermissionCapableDirectoryHandle;
+const asPermissionCapableHandle = (handle: FileSystemDirectoryHandle): PermissionCapableDirectoryHandle => handle as PermissionCapableDirectoryHandle;
 
 export const WorkspaceMenu: React.FC = () => {
-  const { activeWorkspace, setActiveWorkspace, restoreActiveWorkspace } = useWorkspaceStore();
+  const { activeWorkspace, setActiveWorkspace, restoreActiveWorkspace, openPanel } = useWorkspaceStore();
   const [isOpen, setIsOpen] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState<'open' | null>(null);
   const [localWorkspaces, setLocalWorkspaces] = useState<WorkspaceInfo[]>([]);
@@ -36,6 +35,11 @@ export const WorkspaceMenu: React.FC = () => {
   const closeMenu = () => {
     setIsOpen(false);
     setActiveSubmenu(null);
+  };
+
+  const handleWorkspaceMenuClick = () => {
+    openPanel();
+    setIsOpen((open) => !open);
   };
 
   const handleOpenLocalWorkspace = async () => {
@@ -69,7 +73,7 @@ export const WorkspaceMenu: React.FC = () => {
 
   return (
     <div className="relative">
-      <button type="button" onClick={() => setIsOpen((open) => !open)} className="rounded px-3 py-1.5 text-sm font-medium hover:bg-bg">Workspace</button>
+      <button type="button" onClick={handleWorkspaceMenuClick} className="rounded px-3 py-1.5 text-sm font-medium hover:bg-bg">Workspace</button>
       {isOpen && (
         <div className="absolute right-0 mt-2 w-72 rounded border border-border bg-surface py-1 shadow-lg">
           <div className="relative">
@@ -85,7 +89,6 @@ export const WorkspaceMenu: React.FC = () => {
               </div>
             )}
           </div>
-
           {activeWorkspace && (
             <>
               <div className="my-1 border-t border-border" />
