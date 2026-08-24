@@ -37,7 +37,27 @@ export const WorkspaceMenu: React.FC = () => {
     setActiveSubmenu(null);
   };
 
-  const handleWorkspaceMenuClick = () => {
+  const ensureLocalWorkspacePermission = async (workspace: WorkspaceInfo): Promise<boolean> => {
+    if (workspace.type !== 'local' || !workspace.handle) return true;
+    const handle = asPermissionCapableHandle(workspace.handle);
+    const permission = await handle.queryPermission({ mode: 'readwrite' });
+    if (permission === 'granted') return true;
+    return (await handle.requestPermission({ mode: 'readwrite' })) === 'granted';
+  };
+
+  const handleWorkspaceMenuClick = async () => {
+    // File System Access permission checks must happen in the user's click
+    // activation. Doing this during render/effect causes Chromium to reject
+    // the request with "The request is not allowed by the user agent...".
+    if (activeWorkspace?.type === 'local' && activeWorkspace.handle) {
+      try {
+        const granted = await ensureLocalWorkspacePermission(activeWorkspace);
+        if (!granted) return;
+      } catch {
+        // Do not show a browser alert here. The panel can still be opened so
+        // the user can explicitly choose another Workspace.
+      }
+    }
     openPanel();
     setIsOpen((open) => !open);
   };
@@ -55,17 +75,13 @@ export const WorkspaceMenu: React.FC = () => {
   };
 
   const handleSelectRegisteredWorkspace = async (workspace: WorkspaceInfo) => {
-    if (!workspace.handle) return;
     try {
-      const handle = asPermissionCapableHandle(workspace.handle);
-      const permission = await handle.queryPermission({ mode: 'readwrite' });
-      if (permission !== 'granted' && await handle.requestPermission({ mode: 'readwrite' }) !== 'granted') {
-        throw new Error('دسترسی Workspace تأیید نشد.');
-      }
+      const granted = await ensureLocalWorkspacePermission(workspace);
+      if (!granted) return;
       setActiveWorkspace(workspace);
       closeMenu();
-    } catch (error) {
-      window.alert(error instanceof Error ? error.message : 'باز کردن Workspace انجام نشد.');
+    } catch {
+      // Permission failures are handled silently; the user can retry from the menu.
     }
   };
 
@@ -73,7 +89,7 @@ export const WorkspaceMenu: React.FC = () => {
 
   return (
     <div className="relative">
-      <button type="button" onClick={handleWorkspaceMenuClick} className="rounded px-3 py-1.5 text-sm font-medium hover:bg-bg">Workspace</button>
+      <button type="button" onClick={() => void handleWorkspaceMenuClick()} className="rounded px-3 py-1.5 text-sm font-medium hover:bg-bg">Workspace</button>
       {isOpen && (
         <div className="absolute right-0 mt-2 w-72 rounded border border-border bg-surface py-1 shadow-lg">
           <div className="relative">
@@ -84,7 +100,7 @@ export const WorkspaceMenu: React.FC = () => {
                   <button key={workspace.id} type="button" onClick={() => void handleSelectRegisteredWorkspace(workspace)} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">📁 {workspace.name}</button>
                 ))}
                 {localWorkspaces.length > 0 && <div className="my-1 border-t border-border" />}
-                <button type="button" onClick={handleOpenLocalWorkspace} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">سیستم محلی (Local)</button>
+                <button type="button" onClick={() => void handleOpenLocalWorkspace()} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">سیستم محلی (Local)</button>
                 <CloudMenu />
               </div>
             )}
