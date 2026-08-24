@@ -5,15 +5,16 @@ import { useWorkspaceStore } from '../../store/useWorkspaceStore';
 export const WorkspaceManager: React.FC = () => {
   const isOpen = useWorkspaceStore((state) => state.isPanelOpen);
   const closePanel = useWorkspaceStore((state) => state.closePanel);
+  const openPanel = useWorkspaceStore((state) => state.openPanel);
   const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace);
-  const [width, setWidth] = useState(340);
+  const width = useWorkspaceStore((state) => state.panelWidth);
+  const setPanelWidth = useWorkspaceStore((state) => state.setPanelWidth);
   const [resizing, setResizing] = useState(false);
 
   const handleMouseMove = useCallback((event: MouseEvent) => {
     if (!resizing) return;
-    const next = window.innerWidth - event.clientX;
-    setWidth(Math.min(560, Math.max(260, next)));
-  }, [resizing]);
+    setPanelWidth(window.innerWidth - event.clientX);
+  }, [resizing, setPanelWidth]);
 
   useEffect(() => {
     if (!resizing) return;
@@ -28,7 +29,19 @@ export const WorkspaceManager: React.FC = () => {
     };
   }, [resizing, handleMouseMove]);
 
-  if (!isOpen) return null;
+  if (!isOpen) {
+    return (
+      <button
+        type="button"
+        onClick={openPanel}
+        className="flex h-full w-8 shrink-0 items-center justify-center border-l border-border bg-surface text-text-muted transition hover:bg-bg hover:text-text"
+        aria-label="باز کردن Workspace Manager"
+        title="باز کردن Workspace Manager"
+      >
+        <span aria-hidden="true">‹</span>
+      </button>
+    );
+  }
 
   return (
     <aside
