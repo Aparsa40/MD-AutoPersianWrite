@@ -75,10 +75,8 @@ export const MainLayout: React.FC = () => {
       <div dir="rtl">
         <TopToolbar />
       </div>
-      <div className="flex min-h-0 flex-1 overflow-hidden" dir="ltr">
-        <div dir="rtl" className="min-h-0 min-w-0 flex-1 overflow-hidden">
-          <TableOfContents />
-        </div>
+      <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden" dir="ltr">
+        <TableOfContents />
         <main dir="rtl" className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <DocumentSessionTabs />
           <div className={`flex min-h-0 min-w-0 flex-1 overflow-hidden ${horizontal ? 'flex-row' : 'flex-col'}`}>
