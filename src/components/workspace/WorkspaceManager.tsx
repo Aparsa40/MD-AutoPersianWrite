@@ -34,7 +34,7 @@ export const WorkspaceManager: React.FC = () => {
       <button
         type="button"
         onClick={openPanel}
-        className="flex h-full w-8 shrink-0 items-center justify-center border-l border-border bg-surface text-text-muted transition hover:bg-bg hover:text-text"
+        className="order-2 flex h-full w-8 shrink-0 items-center justify-center border-l border-border bg-surface text-text-muted transition hover:bg-bg hover:text-text"
         aria-label="باز کردن Workspace Manager"
         title="باز کردن Workspace Manager"
       >
@@ -45,7 +45,7 @@ export const WorkspaceManager: React.FC = () => {
 
   return (
     <aside
-      className="relative flex h-full min-h-0 shrink-0 flex-col border-l border-border bg-surface"
+      className="relative order-2 flex h-full min-h-0 shrink-0 flex-col border-l border-border bg-surface"
       style={{ width }}
       aria-label="Workspace Manager"
     >
@@ -57,8 +57,8 @@ export const WorkspaceManager: React.FC = () => {
         title="برای تغییر اندازه بکشید"
       />
 
-      <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">
-        <div className="min-w-0 text-right" dir="rtl">
+      <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2" dir="rtl">
+        <div className="min-w-0 text-right">
           <div className="text-[11px] font-semibold uppercase tracking-wide text-text-muted">WS-manager</div>
           <div className="truncate text-sm font-medium text-text">{activeWorkspace?.name ?? 'Workspace'}</div>
         </div>
