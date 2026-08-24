@@ -14,10 +14,15 @@ type PickerWindow = Window & {
   showOpenFilePicker?: (options?: { multiple?: boolean }) => Promise<FileSystemFileHandle[]>;
   showDirectoryPicker?: () => Promise<FileSystemDirectoryHandle>;
 };
+type DirectoryEntriesHandle = FileSystemDirectoryHandle & {
+  entries: () => AsyncIterableIterator<[string, FileSystemFileHandle | FileSystemDirectoryHandle]>;
+};
 
 const decodeText = (content: Uint8Array) => new TextDecoder().decode(content);
 const encodeText = (content: string) => new TextEncoder().encode(content);
 const pickerWindow = () => window as PickerWindow;
+const getDirectoryEntries = (directory: FileSystemDirectoryHandle) =>
+  (directory as DirectoryEntriesHandle).entries();
 
 export const WorkspaceExplorer: React.FC = () => {
   const { activeWorkspace } = useWorkspaceStore();
@@ -109,7 +114,7 @@ export const WorkspaceExplorer: React.FC = () => {
   const importDirectory = async (handle: FileSystemDirectoryHandle, targetParentId: string | null) => {
     if (!provider) return;
     const folder = await provider.createFolder(targetParentId, handle.name);
-    for await (const item of handle.values()) {
+    for await (const [, item] of getDirectoryEntries(handle)) {
       if (item.kind === 'file') {
         const file = await item.getFile();
         await provider.createFile(folder.id, file.name, new Uint8Array(await file.arrayBuffer()));
