@@ -9,6 +9,7 @@ import { useScrollSync } from '../../hooks/useScrollSync';
 import { useLayoutStore } from '../../store/useLayoutStore';
 import { useEditorStore } from '../../store/useEditorStore';
 import { useDocumentSessionStore } from '../../store/useDocumentSessionStore';
+import { useWorkspaceStore } from '../../store/useWorkspaceStore';
 
 export const MainLayout: React.FC = () => {
   const activeSessionId = useDocumentSessionStore((state) => state.activeSessionId);
@@ -20,6 +21,8 @@ export const MainLayout: React.FC = () => {
   const fileName = useEditorStore((state) => state.fileName);
   const markdown = useEditorStore((state) => state.markdown);
   const isDirty = useEditorStore((state) => state.isDirty);
+  const isWorkspacePanelOpen = useWorkspaceStore((state) => state.isPanelOpen);
+  const openWorkspacePanel = useWorkspaceStore((state) => state.openPanel);
   const [isResizing, setIsResizing] = useState(false);
   const handledResetRef = useRef<string | null>(null);
 
@@ -94,6 +97,17 @@ export const MainLayout: React.FC = () => {
           </div>
         </main>
         <WorkspaceManager />
+        {!isWorkspacePanelOpen && (
+          <button
+            type="button"
+            onClick={openWorkspacePanel}
+            className="flex w-8 shrink-0 items-center justify-center border-l border-border bg-surface text-text-muted transition hover:bg-bg hover:text-text"
+            aria-label="باز کردن Workspace Manager"
+            title="باز کردن Workspace Manager"
+          >
+            <span className="text-base">‹</span>
+          </button>
+        )}
       </div>
     </div>
   );
