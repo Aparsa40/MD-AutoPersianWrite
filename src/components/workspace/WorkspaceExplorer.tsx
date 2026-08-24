@@ -8,6 +8,7 @@ import { getCloudProvider } from '../../lib/cloud/providerRegistry';
 import type { CloudProviderId } from '../../types/cloud';
 import type { WorkspaceEntry, WorkspaceProvider } from '../../types/workspaceProvider';
 import { WorkspaceEntryRow } from './WorkspaceEntryRow';
+import { WorkspaceToolbar } from './WorkspaceToolbar';
 import type { WorkspaceEntryAction } from './WorkspaceToolbar';
 
 type PickerWindow = Window & {
@@ -60,7 +61,6 @@ export const WorkspaceExplorer: React.FC = () => {
 
   const parentId = currentPath.length ? currentPath[currentPath.length - 1].id : null;
   const selectedEntries = entries.filter((entry) => selectedIds.includes(entry.id));
-  const selectedEntry = selectedEntries[0] ?? null;
 
   const refresh = useCallback(async () => {
     if (!provider) {
@@ -103,6 +103,7 @@ export const WorkspaceExplorer: React.FC = () => {
   }, []);
 
   const promptName = (message: string, initial = '') => window.prompt(message, initial)?.trim() || null;
+  const reportError = (cause: unknown, fallback: string) => setError(cause instanceof Error ? cause.message : fallback);
 
   const makeReference = (entry: WorkspaceEntry) => ({
     providerId: activeWorkspace!.providerId ?? (activeWorkspace!.type === 'local' ? 'local' : activeCloudProviderId ?? 'cloud'),
@@ -112,13 +113,10 @@ export const WorkspaceExplorer: React.FC = () => {
     name: entry.name,
   });
 
-  const reportError = (cause: unknown, fallback: string) => setError(cause instanceof Error ? cause.message : fallback);
-
   const createFolder = async () => {
     if (!provider) return;
     const name = promptName('نام پوشه:');
     if (!name) return;
-    setError(null);
     try {
       if (entries.some((entry) => entry.name === name)) throw new Error(`«${name}» از قبل در این پوشه وجود دارد.`);
       await provider.createFolder(parentId, name);
@@ -130,7 +128,6 @@ export const WorkspaceExplorer: React.FC = () => {
     if (!provider) return;
     const name = promptName('نام فایل:', 'document.md');
     if (!name) return;
-    setError(null);
     try {
       if (entries.some((entry) => entry.name === name)) throw new Error(`«${name}» از قبل در این پوشه وجود دارد.`);
       const entry = await provider.createFile(parentId, name);
@@ -235,9 +232,6 @@ export const WorkspaceExplorer: React.FC = () => {
       setError('امکان انتقال یک پوشه به خودش یا یکی از زیرپوشه‌هایش وجود ندارد.');
       return;
     }
-    if (targetParentId === clipboard.entry.parentId && !clipboard.cut) {
-      // Copying into the same folder is valid but must never silently overwrite.
-    }
     try {
       if (destinationExists(targetParentId, clipboard.entry.name) && !window.confirm(`«${clipboard.entry.name}» در مقصد وجود دارد. عملیات ادامه پیدا کند؟`)) return;
       if (clipboard.cut) await provider.move(clipboard.entry.id, targetParentId);
@@ -319,19 +313,33 @@ export const WorkspaceExplorer: React.FC = () => {
       const children = await provider.list(entry.id);
       setChildCounts((current) => ({ ...current, [entry.id]: children.length }));
       setHoverPreview(children.slice(0, 6));
-    } catch {
-      setHoverPreview([]);
-    }
+    } catch { setHoverPreview([]); }
   };
 
   if (!activeWorkspace) return <div className="flex flex-1 items-center justify-center p-6 text-center text-sm text-text-muted">برای نمایش Workspace، ابتدا یک Local یا Cloud Workspace انتخاب یا ایجاد کنید.</div>;
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden" dir="rtl">
+      <WorkspaceToolbar
+        workspaceName={activeWorkspace.name}
+        currentPath={currentPath.map((entry) => entry.name)}
+        selectedCount={selectedEntries.length}
+        canPaste={Boolean(clipboard)}
+        clipboardLabel={clipboard ? `Paste ${clipboard.entry.name}` : 'Paste'}
+        onCreateFile={() => void createFile()}
+        onCreateFolder={() => void createFolder()}
+        onInsertFile={() => void insertFile()}
+        onInsertFolder={() => void insertFolder()}
+        onPaste={() => void pasteEntry()}
+        onRefresh={() => void refresh()}
+        onNavigateUp={() => { setCurrentPath((path) => path.slice(0, -1)); setSelectedIds([]); }}
+        onClearSelection={() => setSelectedIds([])}
+      />
+
       <div className="min-h-0 flex-1 overflow-auto p-2" onContextMenu={(event) => { if (event.target === event.currentTarget) { event.preventDefault(); setContext({ x: event.clientX, y: event.clientY, entry: null }); } }}>
         {loading && <div className="px-3 py-2 text-xs text-text-muted">در حال بارگذاری Workspace…</div>}
         {error && <div className="mb-2 rounded-md border border-red-400/40 bg-red-500/10 px-3 py-2 text-xs text-red-700 dark:text-red-200" role="alert">{error}</div>}
-        {!loading && !error && entries.length === 0 && <div className="rounded-md border border-dashed border-border p-6 text-center text-xs text-text-muted">این پوشه خالی است. از Toolbar فایل یا پوشه جدید بسازید.</div>}
+        {!loading && !error && entries.length === 0 && <div className="rounded-md border border-dashed border-border p-6 text-center text-xs text-text-muted">این پوشه خالی است.</div>}
         <div className="space-y-0.5">
           {entries.map((entry) => (
             <div key={entry.id} onMouseEnter={() => void handleFolderHover(entry)} onMouseLeave={() => { setHoveredFolder(null); setHoverPreview([]); }}>
@@ -375,16 +383,6 @@ export const WorkspaceExplorer: React.FC = () => {
           <button type="button" onClick={() => { setContext(null); void refresh(); }} className="block w-full rounded px-3 py-2 text-right text-xs hover:bg-bg">تازه‌سازی</button>
         </>}
       </div>}
-
-      <div className="hidden" aria-hidden="true">
-        <button type="button" onClick={() => void insertFile()}>insert-file</button>
-        <button type="button" onClick={() => void insertFolder()}>insert-folder</button>
-      </div>
     </div>
   );
-};
-
-export const workspaceExplorerActions = {
-  insertFileLabel: 'درج فایل',
-  insertFolderLabel: 'درج پوشه',
 };
