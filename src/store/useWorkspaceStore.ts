@@ -4,8 +4,11 @@ import type { WorkspaceInfo } from '../types/workspace';
 
 interface WorkspaceState {
   activeWorkspace: WorkspaceInfo | null;
+  isPanelOpen: boolean;
   setActiveWorkspace: (workspace: WorkspaceInfo) => void;
   clearActiveWorkspace: () => void;
+  openPanel: () => void;
+  closePanel: () => void;
   restoreActiveWorkspace: () => Promise<void>;
 }
 
@@ -18,9 +21,10 @@ const readActiveWorkspaceId = (): string | null => {
 
 export const useWorkspaceStore = create<WorkspaceState>((set) => ({
   activeWorkspace: null,
+  isPanelOpen: false,
 
   setActiveWorkspace: (workspace) => {
-    set({ activeWorkspace: workspace });
+    set({ activeWorkspace: workspace, isPanelOpen: true });
     if (typeof window !== 'undefined') {
       window.localStorage.setItem(ACTIVE_WORKSPACE_KEY, workspace.id);
     }
@@ -32,6 +36,9 @@ export const useWorkspaceStore = create<WorkspaceState>((set) => ({
       window.localStorage.removeItem(ACTIVE_WORKSPACE_KEY);
     }
   },
+
+  openPanel: () => set({ isPanelOpen: true }),
+  closePanel: () => set({ isPanelOpen: false }),
 
   restoreActiveWorkspace: async () => {
     const workspaceId = readActiveWorkspaceId();
