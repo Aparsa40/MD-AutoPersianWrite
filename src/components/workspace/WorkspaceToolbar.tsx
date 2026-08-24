@@ -1,5 +1,4 @@
 import React from 'react';
-import type { WorkspaceEntry } from '../../types/workspaceProvider';
 
 interface WorkspaceToolbarProps {
   workspaceName: string;
@@ -9,6 +8,8 @@ interface WorkspaceToolbarProps {
   clipboardLabel?: string;
   onCreateFile: () => void;
   onCreateFolder: () => void;
+  onInsertFile: () => void;
+  onInsertFolder: () => void;
   onPaste: () => void;
   onRefresh: () => void;
   onNavigateUp: () => void;
@@ -23,18 +24,22 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({
   clipboardLabel,
   onCreateFile,
   onCreateFolder,
+  onInsertFile,
+  onInsertFolder,
   onPaste,
   onRefresh,
   onNavigateUp,
   onClearSelection,
 }) => (
   <div className="shrink-0 border-b border-border bg-surface" dir="rtl">
-    <div className="flex items-center gap-1 border-b border-border px-2 py-1.5">
-      <button type="button" onClick={onCreateFile} className="rounded px-2 py-1 text-xs hover:bg-bg" title="فایل جدید">+ فایل</button>
-      <button type="button" onClick={onCreateFolder} className="rounded px-2 py-1 text-xs hover:bg-bg" title="پوشه جدید">+ پوشه</button>
-      <button type="button" onClick={onPaste} disabled={!canPaste} className="rounded px-2 py-1 text-xs font-semibold hover:bg-bg disabled:cursor-not-allowed disabled:opacity-35" title={clipboardLabel ?? 'Paste'}>P</button>
-      <button type="button" onClick={onRefresh} className="mr-auto rounded px-2 py-1 text-xs hover:bg-bg" title="تازه‌سازی">↻</button>
-      {selectedCount > 0 && <button type="button" onClick={onClearSelection} className="rounded px-2 py-1 text-xs hover:bg-bg" title="لغو انتخاب">×</button>}
+    <div className="flex items-center gap-1 overflow-x-auto border-b border-border px-2 py-1.5">
+      <button type="button" onClick={onCreateFile} className="shrink-0 rounded px-2 py-1 text-xs hover:bg-bg" title="فایل جدید">+ فایل</button>
+      <button type="button" onClick={onCreateFolder} className="shrink-0 rounded px-2 py-1 text-xs hover:bg-bg" title="پوشه جدید">+ پوشه</button>
+      <button type="button" onClick={onInsertFile} className="shrink-0 rounded px-2 py-1 text-xs hover:bg-bg" title="درج فایل">درج فایل</button>
+      <button type="button" onClick={onInsertFolder} className="shrink-0 rounded px-2 py-1 text-xs hover:bg-bg" title="درج پوشه">درج پوشه</button>
+      <button type="button" onClick={onPaste} disabled={!canPaste} className="shrink-0 rounded px-2 py-1 text-xs font-semibold hover:bg-bg disabled:cursor-not-allowed disabled:opacity-35" title={clipboardLabel ?? 'Paste'}>P</button>
+      <button type="button" onClick={onRefresh} className="mr-auto shrink-0 rounded px-2 py-1 text-xs hover:bg-bg" title="تازه‌سازی">↻</button>
+      {selectedCount > 0 && <button type="button" onClick={onClearSelection} className="shrink-0 rounded px-2 py-1 text-xs hover:bg-bg" title="لغو انتخاب">×</button>}
     </div>
     <div className="flex min-w-0 items-center gap-1 px-3 py-2 text-[11px] text-text-muted">
       <span className="shrink-0 font-semibold text-text">{workspaceName}</span>
@@ -51,15 +56,3 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({
 );
 
 export type WorkspaceEntryAction = 'copy' | 'cut' | 'rename' | 'delete' | 'paste';
-export type WorkspaceEntryRowProps = {
-  entry: WorkspaceEntry;
-  selected: boolean;
-  showPaste: boolean;
-  childCount?: number;
-  onOpen: (entry: WorkspaceEntry) => void;
-  onSelect: (entry: WorkspaceEntry, event: React.MouseEvent) => void;
-  onAction: (entry: WorkspaceEntry, action: WorkspaceEntryAction) => void;
-  onDragStart: (entry: WorkspaceEntry, event: React.DragEvent) => void;
-  onDragOver: (entry: WorkspaceEntry, event: React.DragEvent) => void;
-  onDrop: (entry: WorkspaceEntry, event: React.DragEvent) => void;
-};
