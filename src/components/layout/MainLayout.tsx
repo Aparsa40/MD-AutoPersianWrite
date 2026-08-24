@@ -9,6 +9,7 @@ import { useScrollSync } from '../../hooks/useScrollSync';
 import { useLayoutStore } from '../../store/useLayoutStore';
 import { useEditorStore } from '../../store/useEditorStore';
 import { useDocumentSessionStore } from '../../store/useDocumentSessionStore';
+import { useWorkspaceStore } from '../../store/useWorkspaceStore';
 
 export const MainLayout: React.FC = () => {
   const activeSessionId = useDocumentSessionStore((state) => state.activeSessionId);
@@ -20,8 +21,14 @@ export const MainLayout: React.FC = () => {
   const fileName = useEditorStore((state) => state.fileName);
   const markdown = useEditorStore((state) => state.markdown);
   const isDirty = useEditorStore((state) => state.isDirty);
+  const activeWorkspace = useWorkspaceStore((state) => state.activeWorkspace);
+  const restoreActiveWorkspace = useWorkspaceStore((state) => state.restoreActiveWorkspace);
   const [isResizing, setIsResizing] = useState(false);
   const handledResetRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    void restoreActiveWorkspace();
+  }, [restoreActiveWorkspace]);
 
   useEffect(() => {
     if (!activeSessionId) return;
@@ -87,7 +94,7 @@ export const MainLayout: React.FC = () => {
     <div className="flex h-screen w-screen flex-col overflow-hidden bg-bg text-text-main">
       <TopToolbar />
       <div className="flex min-h-0 flex-1 overflow-hidden">
-        <WorkspaceExplorer />
+        {activeWorkspace && <WorkspaceExplorer />}
         <TableOfContents />
         <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <DocumentSessionTabs />
