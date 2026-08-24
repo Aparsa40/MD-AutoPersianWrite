@@ -37,6 +37,10 @@ export const WorkspaceExplorer: React.FC = () => {
   const [currentPath, setCurrentPath] = useState<string[]>([]);
   const [clipboard, setClipboard] = useState<{ entry: WorkspaceEntry; cut: boolean } | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [toolsOpen, setToolsOpen] = useState(false);
+  const [childCounts, setChildCounts] = useState<Record<string, number>>({});
+  const [hoveredFolder, setHoveredFolder] = useState<string | null>(null);
+  const [hoverPreview, setHoverPreview] = useState<WorkspaceEntry[]>([]);
 
   const provider = useMemo<WorkspaceProvider | null>(() => {
     if (!activeWorkspace) return null;
@@ -60,6 +64,7 @@ export const WorkspaceExplorer: React.FC = () => {
     try {
       const result = await provider.list(parentId);
       setEntries(result.map((entry) => ({ ...entry, path: entry.id })));
+      setChildCounts({});
     } catch (error) {
       setEntries([]);
       window.alert(error instanceof Error ? error.message : 'خواندن Workspace انجام نشد.');
@@ -175,8 +180,23 @@ export const WorkspaceExplorer: React.FC = () => {
     await refresh();
   };
 
-  const selectedEntry = entries.find((entry) => entry.id === selectedId) ?? null;
+  const handleFolderHover = async (entry: WorkspaceEntry) => {
+    if (!provider || entry.type !== 'folder') {
+      setHoveredFolder(null);
+      setHoverPreview([]);
+      return;
+    }
+    setHoveredFolder(entry.id);
+    try {
+      const children = await provider.list(entry.id);
+      setChildCounts((current) => ({ ...current, [entry.id]: children.length }));
+      setHoverPreview(children.slice(0, 6));
+    } catch {
+      setHoverPreview([]);
+    }
+  };
 
+  const selectedEntry = entries.find((entry) => entry.id === selectedId) ?? null;
   const handleTopRename = () => { if (selectedEntry) void handleRename(selectedEntry); };
   const handleTopDelete = () => { if (selectedEntry) void handleDelete(selectedEntry); };
 
@@ -185,37 +205,81 @@ export const WorkspaceExplorer: React.FC = () => {
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      <div className="flex flex-wrap gap-1 border-b border-border p-2">
-        <button type="button" onClick={() => void handleCreateFolder()} title="New Folder" className="rounded px-2 py-1 text-xs hover:bg-bg">📁 New Folder</button>
-        <button type="button" onClick={() => void handleCreateFile()} title="New File" className="rounded px-2 py-1 text-xs hover:bg-bg">➕ New File</button>
-        <button type="button" onClick={() => void handleInsertFile()} title="Insert File" className="rounded px-2 py-1 text-xs hover:bg-bg">📥 Insert File</button>
-        <button type="button" onClick={() => void handleInsertFolder()} title="Insert Folder" className="rounded px-2 py-1 text-xs hover:bg-bg">📁 Insert Folder</button>
-        <button type="button" onClick={handleTopRename} disabled={!selectedEntry} title="Rename selected" className="rounded px-2 py-1 text-xs hover:bg-bg disabled:opacity-40">✏️ Rename</button>
-        <button type="button" onClick={handleTopDelete} disabled={!selectedEntry} title="Delete selected" className="rounded px-2 py-1 text-xs hover:bg-bg disabled:opacity-40">🗑️ Delete</button>
-      </div>
-      <div className="border-b border-border px-3 py-1.5 text-xs text-text-muted">{currentPath.length ? `📁 ${currentPath[currentPath.length - 1]}` : `📁 ${activeWorkspace.name}`}</div>
-      <div className="min-h-0 flex-1 overflow-auto p-2">
-        {currentPath.length > 0 && (
-          <button type="button" onClick={() => setCurrentPath((path) => path.slice(0, -1))} className="mb-1 flex w-full items-center rounded px-2 py-1.5 text-left text-sm hover:bg-bg">↩ ..</button>
-        )}
-        {entries.length === 0 && <div className="p-4 text-center text-xs text-text-muted">این پوشه خالی است.</div>}
-        {entries.map((entry) => (
-          <div key={entry.id} onMouseEnter={() => setSelectedId(entry.id)} onClick={() => setSelectedId(entry.id)} className={`group flex items-center gap-1 rounded px-2 py-1.5 text-sm ${selectedId === entry.id ? 'bg-bg' : 'hover:bg-bg'}`}>
-            <button type="button" onDoubleClick={() => entry.type === 'folder' ? setCurrentPath((path) => [...path, entry.id]) : void handleOpen(entry)} onClick={() => setSelectedId(entry.id)} className="min-w-0 flex-1 truncate text-left">
-              {entry.type === 'folder' ? '📁' : '📄'} {entry.name}
-            </button>
-            <div className="hidden shrink-0 items-center gap-0.5 group-hover:flex">
-              <button type="button" onClick={() => handleCopy(entry)} title="Copy" className="rounded px-1.5 py-0.5 text-[11px] hover:bg-surface">C</button>
-              <button type="button" onClick={() => void handleRename(entry)} title="Rename" className="rounded px-1.5 py-0.5 text-[11px] hover:bg-surface">R</button>
-              <button type="button" onClick={() => handleCut(entry)} title="Cut" className="rounded px-1.5 py-0.5 text-[11px] hover:bg-surface">X</button>
-              {clipboard && <button type="button" onClick={() => void handlePaste(entry)} title="Paste" className="rounded px-1.5 py-0.5 text-[11px] hover:bg-surface">P</button>}
-            </div>
+    <div className="flex min-h-0 flex-1 flex-col overflow-hidden" dir="rtl">
+      <div className="relative shrink-0 border-b border-border p-2">
+        <button
+          type="button"
+          onClick={() => setToolsOpen((open) => !open)}
+          aria-expanded={toolsOpen}
+          aria-haspopup="menu"
+          className="flex w-full items-center justify-between rounded-md border border-border bg-bg px-3 py-2 text-right text-sm font-medium hover:bg-surface"
+        >
+          <span>Tools — Workspace</span>
+          <span className="text-text-muted">{toolsOpen ? '⌃' : '⌄'}</span>
+        </button>
+        {toolsOpen && (
+          <div role="menu" className="absolute right-2 top-[calc(100%-2px)] z-50 min-w-[190px] rounded-md border border-border bg-surface p-1 shadow-lg">
+            <button role="menuitem" type="button" onClick={() => { setToolsOpen(false); void handleCreateFolder(); }} className="block w-full rounded px-3 py-2 text-right text-xs hover:bg-bg">📁 New Folder</button>
+            <button role="menuitem" type="button" onClick={() => { setToolsOpen(false); void handleCreateFile(); }} className="block w-full rounded px-3 py-2 text-right text-xs hover:bg-bg">➕ New File</button>
+            <button role="menuitem" type="button" onClick={() => { setToolsOpen(false); void handleInsertFile(); }} className="block w-full rounded px-3 py-2 text-right text-xs hover:bg-bg">📥 Insert File</button>
+            <button role="menuitem" type="button" onClick={() => { setToolsOpen(false); void handleInsertFolder(); }} className="block w-full rounded px-3 py-2 text-right text-xs hover:bg-bg">📁 Insert Folder</button>
+            <div className="my-1 border-t border-border" />
+            <button role="menuitem" type="button" onClick={() => { setToolsOpen(false); handleTopRename(); }} disabled={!selectedEntry} className="block w-full rounded px-3 py-2 text-right text-xs hover:bg-bg disabled:opacity-40">✏️ Rename</button>
+            <button role="menuitem" type="button" onClick={() => { setToolsOpen(false); handleTopDelete(); }} disabled={!selectedEntry} className="block w-full rounded px-3 py-2 text-right text-xs hover:bg-bg disabled:opacity-40">🗑️ Delete</button>
           </div>
-        ))}
+        )}
       </div>
-      {clipboard && <div className="border-t border-border px-3 py-1.5 text-[11px] text-text-muted">{clipboard.cut ? '✂' : '⧉'} {clipboard.entry.name} — برای Paste روی P بزنید.</div>}
-      {activeSessionId && markdown && <button type="button" onClick={async () => { const session = sessions.find((item) => item.id === activeSessionId); if (!provider || !session?.workspaceFile) return; await provider.writeFile(session.workspaceFile.entryId, encodeText(markdown)); markPersisted(session.workspaceFile); await refresh(); }} className="border-t border-border px-3 py-2 text-xs hover:bg-bg">ذخیره تغییرات فایل فعال</button>}
+
+      <div className="flex shrink-0 items-center gap-2 border-b border-border px-3 py-2 text-xs text-text-muted">
+        <span>📁</span>
+        <span className="min-w-0 truncate">{currentPath.length ? currentPath[currentPath.length - 1] : activeWorkspace.name}</span>
+        {currentPath.length > 0 && <button type="button" onClick={() => setCurrentPath((path) => path.slice(0, -1))} className="mr-auto rounded px-2 py-1 hover:bg-bg" title="پوشه والد">↩</button>}
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-auto p-2">
+        {entries.length === 0 && <div className="p-5 text-center text-xs text-text-muted">این پوشه خالی است.</div>}
+        <div className="space-y-0.5">
+          {entries.map((entry) => (
+            <div
+              key={entry.id}
+              onMouseEnter={() => void handleFolderHover(entry)}
+              onMouseLeave={() => { setHoveredFolder(null); setHoverPreview([]); }}
+              onClick={() => setSelectedId(entry.id)}
+              className={`group relative flex min-h-9 items-center rounded-md px-2 py-1.5 transition ${selectedId === entry.id ? 'bg-bg' : 'hover:bg-bg'}`}
+            >
+              <button
+                type="button"
+                onDoubleClick={() => entry.type === 'folder' ? setCurrentPath((path) => [...path, entry.id]) : void handleOpen(entry)}
+                onClick={() => setSelectedId(entry.id)}
+                className="min-w-0 flex-1 truncate text-right text-sm"
+                title={entry.type === 'folder' ? 'دابل‌کلیک برای ورود به پوشه' : 'دابل‌کلیک برای باز کردن فایل'}
+              >
+                <span className="ml-1">{entry.type === 'folder' ? '📁' : '📄'}</span>
+                <span>{entry.name}</span>
+                {entry.type === 'folder' && childCounts[entry.id] > 0 && <span className="mr-1 text-[11px] text-text-muted">({childCounts[entry.id]})</span>}
+              </button>
+
+              <div className="mr-auto hidden shrink-0 items-center gap-0.5 group-hover:flex" dir="ltr">
+                <button type="button" onClick={() => handleCopy(entry)} title="Copy" className="rounded px-1.5 py-0.5 text-[11px] font-semibold hover:bg-surface">C</button>
+                <button type="button" onClick={() => void handleRename(entry)} title="Rename" className="rounded px-1.5 py-0.5 text-[11px] font-semibold hover:bg-surface">R</button>
+                <button type="button" onClick={() => handleCut(entry)} title="Cut" className="rounded px-1.5 py-0.5 text-[11px] font-semibold hover:bg-surface">X</button>
+                {clipboard && <button type="button" onClick={() => void handlePaste(entry)} title="Paste" className="rounded px-1.5 py-0.5 text-[11px] font-semibold hover:bg-surface">P</button>}
+              </div>
+
+              {hoveredFolder === entry.id && hoverPreview.length > 0 && (
+                <div className="pointer-events-none absolute right-2 top-full z-30 mt-1 w-[calc(100%-16px)] rounded-md border border-border bg-surface p-2 text-right text-[11px] shadow-lg">
+                  <div className="mb-1 font-medium text-text">محتویات پوشه</div>
+                  {hoverPreview.map((child) => <div key={child.id} className="truncate py-0.5 text-text-muted">{child.type === 'folder' ? '📁' : '📄'} {child.name}</div>)}
+                  {childCounts[entry.id] > hoverPreview.length && <div className="pt-1 text-text-muted">+ {childCounts[entry.id] - hoverPreview.length} مورد دیگر</div>}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {clipboard && <div className="shrink-0 border-t border-border px-3 py-1.5 text-right text-[11px] text-text-muted">{clipboard.cut ? '✂' : '⧉'} {clipboard.entry.name} — برای Paste روی P بزنید.</div>}
+      {activeSessionId && markdown && <button type="button" onClick={async () => { const session = sessions.find((item) => item.id === activeSessionId); if (!provider || !session?.workspaceFile) return; await provider.writeFile(session.workspaceFile.entryId, encodeText(markdown)); markPersisted(session.workspaceFile); await refresh(); }} className="shrink-0 border-t border-border px-3 py-2 text-right text-xs hover:bg-bg">ذخیره تغییرات فایل فعال</button>}
     </div>
   );
 };
