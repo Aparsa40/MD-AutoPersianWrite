@@ -4,6 +4,7 @@ import { EditorPane } from '../editor/EditorPane';
 import { PreviewPane } from '../preview/PreviewPane';
 import { TableOfContents } from '../toc/TableOfContents';
 import { DocumentSessionTabs } from '../document/DocumentSessionTabs';
+import { WorkspaceManager } from '../workspace/WorkspaceManager';
 import { useScrollSync } from '../../hooks/useScrollSync';
 import { useLayoutStore } from '../../store/useLayoutStore';
 import { useEditorStore } from '../../store/useEditorStore';
@@ -33,14 +34,7 @@ export const MainLayout: React.FC = () => {
     handledResetRef.current = resetSignature;
     const active = sessions.find((session) => session.id === activeSessionId);
     if (active && active.fileName === 'untitled.md' && active.markdown === '' && !active.isWorkspaceFile) return;
-    createSession({
-      fileName: 'untitled.md',
-      markdown: '',
-      isDirty: false,
-      workspaceFile: null,
-      isWorkspaceFile: false,
-      isNewWorkspaceFile: false,
-    });
+    createSession({ fileName: 'untitled.md', markdown: '', isDirty: false, workspaceFile: null, isWorkspaceFile: false, isNewWorkspaceFile: false });
   }, [activeSessionId, createSession, fileName, isDirty, markdown, sessions]);
 
   useEffect(() => {
@@ -52,17 +46,11 @@ export const MainLayout: React.FC = () => {
     };
   }, [fileName, isDirty, sessions]);
 
-  const handleMouseMove = useCallback(
-    (event: MouseEvent) => {
-      if (!isResizing) return;
-      const ratio =
-        orientation === 'horizontal'
-          ? (event.clientX / window.innerWidth) * 100
-          : (event.clientY / window.innerHeight) * 100;
-      setSplitRatio(ratio);
-    },
-    [isResizing, orientation, setSplitRatio],
-  );
+  const handleMouseMove = useCallback((event: MouseEvent) => {
+    if (!isResizing) return;
+    const ratio = orientation === 'horizontal' ? (event.clientX / window.innerWidth) * 100 : (event.clientY / window.innerHeight) * 100;
+    setSplitRatio(ratio);
+  }, [isResizing, orientation, setSplitRatio]);
 
   const handleMouseUp = useCallback(() => setIsResizing(false), []);
 
@@ -83,50 +71,29 @@ export const MainLayout: React.FC = () => {
   const previewVisible = activeSessionId !== null && (viewMode === 'split' || viewMode === 'preview-only');
 
   return (
-    <div className="flex h-screen w-screen flex-col overflow-hidden bg-bg text-text-main">
+    <div dir="ltr" className="flex h-screen w-screen flex-col overflow-hidden bg-bg text-text-main">
       <TopToolbar />
       <div className="flex min-h-0 flex-1 overflow-hidden">
         <TableOfContents />
-        <main className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <main className="order-1 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <DocumentSessionTabs />
           <div className={`flex min-h-0 min-w-0 flex-1 overflow-hidden ${horizontal ? 'flex-row' : 'flex-col'}`}>
             {editorVisible && (
-              <section
-                key={`editor-${activeSessionId}`}
-                className="min-h-0 min-w-0 overflow-hidden"
-                style={{
-                  width: horizontal && viewMode === 'split' ? `${splitRatio}%` : horizontal ? '100%' : undefined,
-                  height: !horizontal && viewMode === 'split' ? `${splitRatio}%` : !horizontal ? '100%' : undefined,
-                }}
-              >
+              <section key={`editor-${activeSessionId}`} className="min-h-0 min-w-0 overflow-hidden" style={{ width: horizontal && viewMode === 'split' ? `${splitRatio}%` : horizontal ? '100%' : undefined, height: !horizontal && viewMode === 'split' ? `${splitRatio}%` : !horizontal ? '100%' : undefined }}>
                 <EditorPane editorRef={editorRef} />
               </section>
             )}
-
             {viewMode === 'split' && activeSessionId !== null && (
-              <div
-                role="separator"
-                aria-orientation={horizontal ? 'vertical' : 'horizontal'}
-                aria-label="تغییر اندازه پنل‌ها"
-                onMouseDown={() => setIsResizing(true)}
-                className={`z-20 shrink-0 bg-border transition-colors hover:bg-primary/50 ${horizontal ? 'w-1.5 cursor-col-resize' : 'h-1.5 cursor-row-resize'}`}
-              />
+              <div role="separator" aria-orientation={horizontal ? 'vertical' : 'horizontal'} aria-label="تغییر اندازه پنل‌ها" onMouseDown={() => setIsResizing(true)} className={`z-20 shrink-0 bg-border transition-colors hover:bg-primary/50 ${horizontal ? 'w-1.5 cursor-col-resize' : 'h-1.5 cursor-row-resize'}`} />
             )}
-
             {previewVisible && (
-              <section
-                key={`preview-${activeSessionId}`}
-                className="min-h-0 min-w-0 overflow-hidden"
-                style={{
-                  width: horizontal && viewMode === 'split' ? `${100 - splitRatio}%` : horizontal ? '100%' : undefined,
-                  height: !horizontal && viewMode === 'split' ? `${100 - splitRatio}%` : !horizontal ? '100%' : undefined,
-                }}
-              >
+              <section key={`preview-${activeSessionId}`} className="min-h-0 min-w-0 overflow-hidden" style={{ width: horizontal && viewMode === 'split' ? `${100 - splitRatio}%` : horizontal ? '100%' : undefined, height: !horizontal && viewMode === 'split' ? `${100 - splitRatio}%` : !horizontal ? '100%' : undefined }}>
                 <PreviewPane previewRef={previewRef} />
               </section>
             )}
           </div>
         </main>
+        <WorkspaceManager />
       </div>
     </div>
   );
