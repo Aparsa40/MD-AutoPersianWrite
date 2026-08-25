@@ -11,9 +11,11 @@ type PermissionCapableDirectoryHandle = FileSystemDirectoryHandle & {
   requestPermission: (descriptor?: FileSystemPermissionDescriptor) => Promise<PermissionState>;
 };
 
+interface WorkspaceMenuProps { onOpen?: () => void; }
+
 const asPermissionCapableHandle = (handle: FileSystemDirectoryHandle): PermissionCapableDirectoryHandle => handle as PermissionCapableDirectoryHandle;
 
-export const WorkspaceMenu: React.FC = () => {
+export const WorkspaceMenu: React.FC<WorkspaceMenuProps> = ({ onOpen }) => {
   const { activeWorkspace, setActiveWorkspace, restoreActiveWorkspace } = useWorkspaceStore();
   const [isOpen, setIsOpen] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState<'open' | null>(null);
@@ -39,7 +41,7 @@ export const WorkspaceMenu: React.FC = () => {
   };
 
   const toggleWorkspaceMenu = () => {
-    // Opening the top-level Workspace menu must never open the Workspace Manager.
+    onOpen?.();
     setIsOpen((open) => !open);
     setActiveSubmenu(null);
   };
@@ -73,7 +75,7 @@ export const WorkspaceMenu: React.FC = () => {
     <div className="relative">
       <button type="button" onClick={toggleWorkspaceMenu} aria-expanded={isOpen} className="rounded px-3 py-1.5 text-sm font-medium hover:bg-bg">Workspace</button>
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-72 rounded border border-border bg-surface py-1 shadow-lg z-50">
+        <div className="absolute right-0 z-50 mt-2 w-72 rounded border border-border bg-surface py-1 shadow-lg">
           <div className="relative">
             <button type="button" onClick={() => setActiveSubmenu(activeSubmenu === 'open' ? null : 'open')} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">باز کردن محیط کاری (Open Workspace)</button>
             {activeSubmenu === 'open' && (
