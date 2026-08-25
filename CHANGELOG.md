@@ -16,6 +16,75 @@
 
 ---
 
+## [2.6.0] - 2026-08-25
+
+### Added
+
+#### Workspace
+
+- اضافه شدن معماری `WorkspaceProvider` برای جداسازی UI از Storage.
+- تکمیل Workspace Manager و Workspace Explorer.
+- پشتیبانی از Local Workspace بر پایه File System Access API.
+- اضافه شدن Cloud Workspace architecture با Google Drive provider.
+- اضافه شدن عملیات Create File / Folder، Rename، Delete، Copy، Move و Refresh.
+- اضافه شدن Contextual Toolbar، Hover actions، Multi-selection، Keyboard shortcuts و Drag/Drop.
+- همگام‌سازی عملیات فایل با Editor sessions.
+
+#### Cloud Provider Architecture
+
+- اضافه شدن قرارداد رفتاری مشترک `WorkspaceProvider`.
+- اضافه شدن `LocalWorkspaceProvider` برای Local Storage.
+- اضافه شدن `GoogleDriveProvider` برای Google Drive.
+- اضافه شدن `providerRegistry` برای مدیریت Cloud Providerها.
+- جداسازی Workspace UI از جزئیات Storage و API.
+
+### Improved
+
+#### Workspace UX
+
+- بهبود نمایش درخت فایل‌ها و پوشه‌ها و نمایش سطح اول Workspace به شکل مرتب.
+- بهبود Hover information و Contextual actions برای پوشه‌ها و فایل‌ها.
+- بهبود باز و بسته شدن Workspace Manager و قابلیت Resize.
+- بهبود Session synchronization پس از Rename/Delete/Move/Copy.
+- مدیریت بهتر Permission و خطاهای Local File System.
+- بهبود مسیر Google Drive برای Pagination، Cache، Retry و Authentication.
+
+#### RTL Layout
+
+- اصلاح جایگاه Workspace در سمت راست رابط RTL.
+- اصلاح ترتیب Editor و Preview در Split View.
+- اصلاح ترتیب بصری Toolbar و منوها برای چیدمان RTL.
+- حفظ مستقل بودن جهت چیدمان پنل‌ها از منطق تشخیص RTL/LTR متن.
+
+#### Reliability
+
+- بهبود نصب optional dependencies در محیط Linux/Vercel.
+- هماهنگی نسخه `2.6.0` در `package.json` و `package-lock.json`.
+- CI با Node.js 20 و 22 و اعتبارسنجی Production Build.
+
+### Fixed
+
+- رفع چیدمان چپ/راست Workspace، Editor و Preview در رابط RTL.
+- جلوگیری از خروج Contextual Workspace menu از محدوده پنل پس از اصلاح Layout.
+- حفظ منطق تشخیص و نمایش مستقل متن فارسی و انگلیسی هنگام تغییر ترتیب پنل‌ها.
+
+### Documentation
+
+- به‌روزرسانی `README.md` برای معرفی کامل قابلیت‌های نسخه `2.6.0`.
+- اضافه شدن `docs/RELEASE_NOTES_v2.6.0.md`.
+- به‌روزرسانی این فایل با قابلیت‌های Workspace، Provider architecture و RTL layout.
+
+### Validation
+
+- GitHub Actions CI با Node.js 20 و 22: موفق.
+- CodeQL: بدون Alert جدید در تغییرات مرتبط.
+- Vercel Preview: موفق.
+- Production build: موفق.
+
+> مسیر Google Drive از نظر معماری و Build در این Release یکپارچه شده است؛ تست عملیاتی حساب Google Drive به دسترسی و تنظیمات حساب کاربر وابسته است.
+
+---
+
 ## [2.5.1] - 2026-08-23
 
 ### Fixed
