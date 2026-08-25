@@ -83,7 +83,7 @@ export const TopToolbar: React.FC = () => {
     <>
       <input ref={fileInputRef} type="file" accept=".md,.markdown,.txt,.text" className="hidden" onChange={handleOpenFile} />
       <header className="z-40 flex h-14 shrink-0 items-center justify-between border-b border-border bg-surface px-4 shadow-sm">
-        <div className="relative flex items-center space-x-2 space-x-reverse">
+        <div className="relative flex flex-row-reverse items-center space-x-2 space-x-reverse">
           <div className="relative">
             <button type="button" onClick={() => setActiveMenu(activeMenu === 'file' ? null : 'file')} className="rounded px-3 py-1.5 text-sm font-medium hover:bg-bg">فایل</button>
             {activeMenu === 'file' && <div className="absolute right-0 mt-2 w-56 rounded border border-border bg-surface py-1 shadow-lg"><button type="button" onClick={() => { resetEditor(); closeMenu(); }} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">فایل جدید</button><button type="button" onClick={() => fileInputRef.current?.click()} className="w-full px-4 py-2 text-right text-sm font-medium text-primary hover:bg-bg">درج فایل...</button><button type="button" onClick={() => void handleSaveAs()} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">ذخیره با نام...</button><button type="button" onClick={() => { exportAsMarkdown(markdown, fileName); closeMenu(); }} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">خروجی Markdown</button></div>}
