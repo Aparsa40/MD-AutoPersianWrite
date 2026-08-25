@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-export type ThemeMode = 'light' | 'dark' | 'sepia' | 'black-white' | 'navy-white';
+export type ThemeMode = 'light' | 'dark' | 'sepia' | 'black-white' | 'navy-white' | 'graphite';
 
 interface ThemeState {
   theme: ThemeMode;
@@ -13,7 +13,7 @@ interface ThemeState {
   setTextColor: (color: string) => void;
 }
 
-const THEME_CLASSES: ThemeMode[] = ['light', 'dark', 'sepia', 'black-white', 'navy-white'];
+const THEME_CLASSES: ThemeMode[] = ['light', 'dark', 'sepia', 'black-white', 'navy-white', 'graphite'];
 
 export const useThemeStore = create<ThemeState>((set) => {
   const storedTheme = localStorage.getItem('md_app_theme') as ThemeMode | null;

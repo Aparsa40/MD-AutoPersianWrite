@@ -23,6 +23,15 @@
     --color-border: #475569;
   }
 
+  .graphite {
+    --color-bg: #202428;
+    --color-surface: #2b3035;
+    --color-primary: #7dd3fc;
+    --color-text-main: #f3f4f6;
+    --color-text-muted: #b9c0c8;
+    --color-border: #59616a;
+  }
+
   .sepia {
     --color-bg: #f4ebd9;
     --color-surface: #fbf0d9;
@@ -54,6 +63,26 @@
     @apply bg-bg text-text-main font-vazir transition-colors duration-200;
     direction: rtl;
   }
+
+  button:focus-visible,
+  [role='button']:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.graphite header,
+.graphite aside,
+.graphite [role='menu'] {
+  box-shadow: inset 0 -1px 0 rgb(255 255 255 / 5%), 0 1px 0 rgb(0 0 0 / 20%);
+}
+
+.graphite .preview-markdown pre {
+  --preview-code-bg: #252a2f;
+  box-shadow: 0 6px 18px rgb(0 0 0 / 28%);
 }
 
 pre code {
@@ -75,6 +104,7 @@ pre code {
 }
 
 .dark .preview-markdown pre,
+.graphite .preview-markdown pre,
 .black-white .preview-markdown pre,
 .navy-white .preview-markdown pre {
   box-shadow: 0 5px 16px rgb(0 0 0 / 35%);
@@ -115,12 +145,14 @@ pre code {
 }
 
 .dark .preview-markdown,
+.graphite .preview-markdown,
 .black-white .preview-markdown,
 .navy-white .preview-markdown {
   color: var(--color-text-main);
 }
 
 .dark .preview-markdown a,
+.graphite .preview-markdown a,
 .black-white .preview-markdown a,
 .navy-white .preview-markdown a {
   color: #93c5fd;
