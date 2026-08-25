@@ -11,11 +11,10 @@ type PermissionCapableDirectoryHandle = FileSystemDirectoryHandle & {
   requestPermission: (descriptor?: FileSystemPermissionDescriptor) => Promise<PermissionState>;
 };
 
-interface WorkspaceMenuProps { onOpen?: () => void; }
-
+interface WorkspaceMenuProps { onOpen?: () => void; activeTopMenu?: string | null; }
 const asPermissionCapableHandle = (handle: FileSystemDirectoryHandle): PermissionCapableDirectoryHandle => handle as PermissionCapableDirectoryHandle;
 
-export const WorkspaceMenu: React.FC<WorkspaceMenuProps> = ({ onOpen }) => {
+export const WorkspaceMenu: React.FC<WorkspaceMenuProps> = ({ onOpen, activeTopMenu }) => {
   const { activeWorkspace, setActiveWorkspace, restoreActiveWorkspace } = useWorkspaceStore();
   const [isOpen, setIsOpen] = useState(false);
   const [activeSubmenu, setActiveSubmenu] = useState<'open' | null>(null);
@@ -30,8 +29,14 @@ export const WorkspaceMenu: React.FC<WorkspaceMenuProps> = ({ onOpen }) => {
     void restoreActiveWorkspace();
   }, [restoreActiveWorkspace]);
 
-  const closeMenu = () => { setIsOpen(false); setActiveSubmenu(null); };
+  useEffect(() => {
+    if (activeTopMenu !== 'workspace') {
+      setIsOpen(false);
+      setActiveSubmenu(null);
+    }
+  }, [activeTopMenu]);
 
+  const closeMenu = () => { setIsOpen(false); setActiveSubmenu(null); };
   const ensureLocalWorkspacePermission = async (workspace: WorkspaceInfo): Promise<boolean> => {
     if (workspace.type !== 'local' || !workspace.handle) return true;
     const handle = asPermissionCapableHandle(workspace.handle);
@@ -80,9 +85,7 @@ export const WorkspaceMenu: React.FC<WorkspaceMenuProps> = ({ onOpen }) => {
             <button type="button" onClick={() => setActiveSubmenu(activeSubmenu === 'open' ? null : 'open')} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">باز کردن محیط کاری (Open Workspace)</button>
             {activeSubmenu === 'open' && (
               <div className="absolute right-full top-0 mr-1 w-64 rounded border border-border bg-surface py-1 shadow-lg">
-                {localWorkspaces.map((workspace) => (
-                  <button key={workspace.id} type="button" onClick={() => void handleSelectRegisteredWorkspace(workspace)} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">📁 {workspace.name}</button>
-                ))}
+                {localWorkspaces.map((workspace) => <button key={workspace.id} type="button" onClick={() => void handleSelectRegisteredWorkspace(workspace)} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">📁 {workspace.name}</button>)}
                 {localWorkspaces.length > 0 && <div className="my-1 border-t border-border" />}
                 <button type="button" onClick={() => void handleOpenLocalWorkspace()} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">سیستم محلی (Local)</button>
                 <CloudMenu />
