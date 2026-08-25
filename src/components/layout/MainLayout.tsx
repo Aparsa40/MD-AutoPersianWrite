@@ -77,7 +77,7 @@ export const MainLayout: React.FC = () => {
         <TableOfContents />
         <main className="order-1 flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
           <DocumentSessionTabs />
-          <div className={`flex min-h-0 min-w-0 flex-1 overflow-hidden ${horizontal ? 'flex-row' : 'flex-col'}`}>
+          <div className={`flex min-h-0 min-w-0 flex-1 overflow-hidden ${horizontal ? 'flex-row-reverse' : 'flex-col'}`}>
             {editorVisible && (
               <section key={`editor-${activeSessionId}`} className="min-h-0 min-w-0 overflow-hidden" style={{ width: horizontal && viewMode === 'split' ? `${splitRatio}%` : horizontal ? '100%' : undefined, height: !horizontal && viewMode === 'split' ? `${splitRatio}%` : !horizontal ? '100%' : undefined }}>
                 <EditorPane editorRef={editorRef} />
