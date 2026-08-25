@@ -100,16 +100,16 @@ export const TopToolbar: React.FC = () => {
             {activeMenu === 'themes' && <div className="absolute right-0 z-50 mt-2 w-64 rounded border border-border bg-surface py-1 shadow-lg" role="menu"><div className="px-4 py-1 text-xs font-semibold text-text-muted">تم برنامه</div>{themes.map((item) => <button type="button" key={item.id} onClick={() => { setTheme(item.id); closeMenu(); }} className={`w-full px-4 py-2 text-right text-sm hover:bg-bg ${theme === item.id ? 'font-bold text-primary' : ''}`}>{item.label}</button>)}<div className="my-1 border-t border-border" /><DocumentStyleMenu embedded onSelect={closeMenu} /></div>}
           </div>
 
-          <WorkspaceMenu onOpen={() => setActiveMenu('workspace')} />
+          <WorkspaceMenu activeTopMenu={activeMenu} onOpen={() => setActiveMenu('workspace')} />
 
-          <button type="button" onClick={toggleToc} className={`rounded px-3 py-1.5 text-sm font-medium ${isTocOpen ? 'bg-primary text-white' : 'hover:bg-bg'}`}>فهرست مطالب</button>
+          <button type="button" onClick={() => { toggleToc(); closeMenu(); }} className={`rounded px-3 py-1.5 text-sm font-medium ${isTocOpen ? 'bg-primary text-white' : 'hover:bg-bg'}`}>فهرست مطالب</button>
 
           <div className="relative">
             <button type="button" onClick={() => toggleMenu('preview')} className="rounded px-3 py-1.5 text-sm font-medium hover:bg-bg">نمایش</button>
             {activeMenu === 'preview' && <div className="absolute right-0 z-50 mt-2 w-60 rounded border border-border bg-surface py-1 shadow-lg"><button type="button" onClick={() => { setViewMode('split'); closeMenu(); }} className={`w-full px-4 py-2 text-right text-sm hover:bg-bg ${viewMode === 'split' ? 'font-bold text-primary' : ''}`}>حالت پیش‌فرض (دو پنل)</button><button type="button" onClick={() => { setViewMode('preview-only'); closeMenu(); }} className={`w-full px-4 py-2 text-right text-sm hover:bg-bg ${viewMode === 'preview-only' ? 'font-bold text-primary' : ''}`}>نمایش کامل پیش‌نمایش</button><button type="button" onClick={() => { setViewMode('editor-only'); closeMenu(); }} className={`w-full px-4 py-2 text-right text-sm hover:bg-bg ${viewMode === 'editor-only' ? 'font-bold text-primary' : ''}`}>نمایش کامل ویرایشگر</button><div className="my-1 border-t border-border" /><button type="button" onClick={() => { setOrientation('horizontal'); setViewMode('split'); closeMenu(); }} className={`w-full px-4 py-2 text-right text-sm hover:bg-bg ${orientation === 'horizontal' ? 'font-bold text-primary' : ''}`}>چینش افقی (کنار هم)</button><button type="button" onClick={() => { setOrientation('vertical'); setViewMode('split'); closeMenu(); }} className={`w-full px-4 py-2 text-right text-sm hover:bg-bg ${orientation === 'vertical' ? 'font-bold text-primary' : ''}`}>چینش عمودی (بالا و پایین)</button></div>}
           </div>
 
-          <AgentMenu onOpen={() => setActiveMenu('agent')} />
+          <AgentMenu activeTopMenu={activeMenu} onOpen={() => setActiveMenu('agent')} />
 
           <div className="relative"><button type="button" onClick={() => toggleMenu('help')} className="rounded px-3 py-1.5 text-sm font-medium hover:bg-bg">راهنما / Help</button>{activeMenu === 'help' && <div className="absolute right-0 z-50 mt-2 w-48 rounded border border-border bg-surface py-1 shadow-lg"><button type="button" onClick={() => { setIsFeedbackOpen(true); closeMenu(); }} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">ارسال نظر / باگ</button><button type="button" onClick={() => { setIsAboutOpen(true); closeMenu(); }} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">راهنمای برنامه</button></div>}</div>
         </div>
