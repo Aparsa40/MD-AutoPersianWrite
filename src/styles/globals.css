@@ -27,9 +27,9 @@
     --color-bg: #202428;
     --color-surface: #2b3035;
     --color-primary: #7dd3fc;
-    --color-text-main: #f3f4f6;
-    --color-text-muted: #b9c0c8;
-    --color-border: #59616a;
+    --color-text-main: #ffffff;
+    --color-text-muted: #d1d5db;
+    --color-border: #69727c;
   }
 
   .sepia {
@@ -77,12 +77,42 @@
 .graphite header,
 .graphite aside,
 .graphite [role='menu'] {
-  box-shadow: inset 0 -1px 0 rgb(255 255 255 / 5%), 0 1px 0 rgb(0 0 0 / 20%);
+  box-shadow: inset 0 -1px 0 rgb(255 255 255 / 8%), 0 1px 0 rgb(0 0 0 / 28%);
+}
+
+.graphite .preview-markdown {
+  color: #ffffff;
+}
+
+.graphite .preview-markdown h1,
+.graphite .preview-markdown h2,
+.graphite .preview-markdown h3,
+.graphite .preview-markdown h4,
+.graphite .preview-markdown h5,
+.graphite .preview-markdown h6 {
+  color: #ffffff;
+}
+
+.graphite .preview-markdown table,
+.graphite .preview-markdown th,
+.graphite .preview-markdown td {
+  border-color: #aeb6bf !important;
+}
+
+.graphite .preview-markdown hr {
+  border-color: #aeb6bf !important;
+  opacity: 1;
 }
 
 .graphite .preview-markdown pre {
-  --preview-code-bg: #252a2f;
-  box-shadow: 0 6px 18px rgb(0 0 0 / 28%);
+  --preview-code-bg: #666c72;
+  color: #ffffff;
+  border: 2px solid #aeb6bf;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 34%);
+}
+
+.graphite .preview-markdown pre code {
+  color: #ffffff !important;
 }
 
 pre code {
