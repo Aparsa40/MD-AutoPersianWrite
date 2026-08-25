@@ -1,4 +1,16 @@
 import React, { useState } from 'react';
+import { useEditorStore } from '../../store/useEditorStore';
+import { useDocumentSessionStore } from '../../store/useDocumentSessionStore';
+
+type SavePickerWindow = Window & {
+  showSaveFilePicker?: (options?: {
+    suggestedName?: string;
+    types?: Array<{
+      description?: string;
+      accept: Record<string, string[]>;
+    }>;
+  }) => Promise<FileSystemFileHandle>;
+};
 
 interface WorkspaceToolbarProps {
   workspaceName: string;
@@ -6,8 +18,8 @@ interface WorkspaceToolbarProps {
   selectedCount: number;
   canPaste: boolean;
   clipboardLabel?: string;
-  onSave: () => void;
-  onDelete: () => void;
+  onSave?: () => void;
+  onDelete?: () => void;
   onCreateFile: () => void;
   onCreateFolder: () => void;
   onInsertFile: () => void;
@@ -17,6 +29,11 @@ interface WorkspaceToolbarProps {
   onNavigateUp: () => void;
   onClearSelection: () => void;
 }
+
+const savePickerWindow = () => window as SavePickerWindow;
+
+const ensureMarkdownExtension = (name: string) =>
+  /\.[^./\\]+$/.test(name) ? name : `${name}.md`;
 
 export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({
   workspaceName,
@@ -36,9 +53,62 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({
   onClearSelection,
 }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const markdown = useEditorStore((state) => state.markdown);
+  const fileName = useEditorStore((state) => state.fileName);
+  const activeSessionId = useDocumentSessionStore((state) => state.activeSessionId);
+  const sessions = useDocumentSessionStore((state) => state.sessions);
+  const markPersisted = useDocumentSessionStore((state) => state.markPersisted);
 
-  const run = (action: () => void) => {
-    action();
+  const saveCurrentDocument = async () => {
+    if (onSave) {
+      onSave();
+      return;
+    }
+
+    const picker = savePickerWindow();
+    const suggestedName = ensureMarkdownExtension(
+      fileName || sessions.find((session) => session.id === activeSessionId)?.fileName || 'document',
+    );
+
+    try {
+      if (picker.showSaveFilePicker) {
+        const handle = await picker.showSaveFilePicker({
+          suggestedName,
+          types: [{
+            description: 'Markdown document',
+            accept: { 'text/markdown': ['.md', '.markdown'] },
+          }],
+        });
+        const writable = await handle.createWritable();
+        await writable.write(markdown);
+        await writable.close();
+        markPersisted(handle);
+        return;
+      }
+
+      const blob = new Blob([markdown], { type: 'text/markdown;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement('a');
+      anchor.href = url;
+      anchor.download = suggestedName;
+      anchor.click();
+      URL.revokeObjectURL(url);
+    } catch (cause) {
+      if (cause instanceof DOMException && cause.name === 'AbortError') return;
+      throw cause;
+    }
+  };
+
+  const deleteSelected = () => {
+    if (onDelete) {
+      onDelete();
+      return;
+    }
+    window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete' }));
+  };
+
+  const run = (action: () => void | Promise<void>) => {
+    void action();
     setMenuOpen(false);
   };
 
@@ -68,14 +138,14 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({
               role="menu"
               onMouseEnter={() => setMenuOpen(true)}
             >
-              <button type="button" onClick={() => run(onSave)} className="block w-full rounded px-3 py-1.5 text-right text-xs hover:bg-bg" role="menuitem">ذخیره با نام…</button>
+              <button type="button" onClick={() => run(saveCurrentDocument)} className="block w-full rounded px-3 py-1.5 text-right text-xs hover:bg-bg" role="menuitem">ذخیره با نام…</button>
               <button type="button" onClick={() => run(onCreateFile)} className="block w-full rounded px-3 py-1.5 text-right text-xs hover:bg-bg" role="menuitem">+ فایل جدید</button>
               <button type="button" onClick={() => run(onCreateFolder)} className="block w-full rounded px-3 py-1.5 text-right text-xs hover:bg-bg" role="menuitem">+ پوشه جدید</button>
               <button type="button" onClick={() => run(onInsertFile)} className="block w-full rounded px-3 py-1.5 text-right text-xs hover:bg-bg" role="menuitem">درج فایل</button>
               <button type="button" onClick={() => run(onInsertFolder)} className="block w-full rounded px-3 py-1.5 text-right text-xs hover:bg-bg" role="menuitem">درج پوشه</button>
               <button type="button" onClick={() => run(onPaste)} disabled={!canPaste} className="block w-full rounded px-3 py-1.5 text-right text-xs hover:bg-bg disabled:cursor-not-allowed disabled:opacity-35" title={clipboardLabel ?? 'Paste'} role="menuitem">Paste</button>
               <button type="button" onClick={() => run(onRefresh)} className="block w-full rounded px-3 py-1.5 text-right text-xs hover:bg-bg" role="menuitem">تازه‌سازی</button>
-              <button type="button" onClick={() => run(onDelete)} disabled={!selectedCount} className="block w-full rounded px-3 py-1.5 text-right text-xs text-red-700 hover:bg-bg disabled:cursor-not-allowed disabled:opacity-35 dark:text-red-300" role="menuitem">حذف {selectedCount > 0 ? `(${selectedCount})` : ''}</button>
+              <button type="button" onClick={deleteSelected} disabled={!selectedCount} className="block w-full rounded px-3 py-1.5 text-right text-xs text-red-700 hover:bg-bg disabled:cursor-not-allowed disabled:opacity-35 dark:text-red-300" role="menuitem">حذف {selectedCount > 0 ? `(${selectedCount})` : ''}</button>
               {selectedCount > 0 && <button type="button" onClick={() => run(onClearSelection)} className="block w-full rounded px-3 py-1.5 text-right text-xs hover:bg-bg" role="menuitem">لغو انتخاب</button>}
             </div>
           )}
