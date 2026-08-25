@@ -11,7 +11,7 @@ export const EditorPane: React.FC<EditorPaneProps> = ({ editorRef }) => {
   const localRef = useRef<HTMLTextAreaElement>(null);
   const textareaRef = editorRef ?? localRef;
   const { markdown, setMarkdown, setTextareaRef } = useEditorStore();
-  const { fontSize, fontFamily } = useThemeStore();
+  const { fontSize, fontFamily, textColor } = useThemeStore();
 
   useEffect(() => {
     setTextareaRef(textareaRef.current);
@@ -53,7 +53,7 @@ export const EditorPane: React.FC<EditorPaneProps> = ({ editorRef }) => {
         style={{
           fontSize: `${fontSize}px`,
           fontFamily,
-          color: 'inherit',
+          color: textColor,
           unicodeBidi: 'plaintext',
           textAlign: 'initial',
         }}
