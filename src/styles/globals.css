@@ -80,8 +80,11 @@
   box-shadow: inset 0 -1px 0 rgb(255 255 255 / 8%), 0 1px 0 rgb(0 0 0 / 28%);
 }
 
-.graphite .preview-markdown {
-  color: #ffffff;
+.graphite .preview-markdown,
+.dark .preview-markdown,
+.black-white .preview-markdown,
+.navy-white .preview-markdown {
+  color: var(--editor-text-color, var(--color-text-main));
 }
 
 .graphite .preview-markdown h1,
@@ -89,8 +92,26 @@
 .graphite .preview-markdown h3,
 .graphite .preview-markdown h4,
 .graphite .preview-markdown h5,
-.graphite .preview-markdown h6 {
-  color: #ffffff;
+.graphite .preview-markdown h6,
+.dark .preview-markdown h1,
+.dark .preview-markdown h2,
+.dark .preview-markdown h3,
+.dark .preview-markdown h4,
+.dark .preview-markdown h5,
+.dark .preview-markdown h6,
+.black-white .preview-markdown h1,
+.black-white .preview-markdown h2,
+.black-white .preview-markdown h3,
+.black-white .preview-markdown h4,
+.black-white .preview-markdown h5,
+.black-white .preview-markdown h6,
+.navy-white .preview-markdown h1,
+.navy-white .preview-markdown h2,
+.navy-white .preview-markdown h3,
+.navy-white .preview-markdown h4,
+.navy-white .preview-markdown h5,
+.navy-white .preview-markdown h6 {
+  color: var(--editor-text-color, var(--color-text-main));
 }
 
 .graphite .preview-markdown table,
@@ -123,6 +144,7 @@ pre code {
 
 .preview-markdown {
   --preview-code-bg: color-mix(in srgb, var(--color-surface) 88%, var(--color-primary));
+  color: var(--editor-text-color, var(--color-text-main));
 }
 
 .preview-markdown pre {
@@ -154,6 +176,7 @@ pre code {
 .preview-markdown th,
 .preview-markdown td {
   border: 1px solid var(--color-border);
+  color: var(--editor-text-color, var(--color-text-main));
 }
 
 .preview-markdown th {
@@ -171,14 +194,7 @@ pre code {
 .preview-markdown h4,
 .preview-markdown h5,
 .preview-markdown h6 {
-  color: var(--color-text-main);
-}
-
-.dark .preview-markdown,
-.graphite .preview-markdown,
-.black-white .preview-markdown,
-.navy-white .preview-markdown {
-  color: var(--color-text-main);
+  color: var(--editor-text-color, var(--color-text-main));
 }
 
 .dark .preview-markdown a,
