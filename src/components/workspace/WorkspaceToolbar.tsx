@@ -13,15 +13,20 @@ interface WorkspaceToolbarProps {
   clipboardLabel?: string;
   onCreateFile?: () => void;
   onCreateFolder?: () => void;
+  onInsertFile?: () => void;
+  onInsertFolder?: () => void;
+  onSave?: () => void;
+  onDelete?: () => void;
   onPaste: () => void;
   onRefresh: () => void;
+  onNavigateUp?: () => void;
   onClearSelection: () => void;
 }
 
 const savePickerWindow = () => window as SavePickerWindow;
 const ensureMarkdownExtension = (name: string) => /\.[^./\\]+$/.test(name) ? name : `${name}.md`;
 
-export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({ workspaceName, currentPath, selectedCount, canPaste, clipboardLabel, onPaste, onRefresh, onClearSelection }) => {
+export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({ workspaceName, currentPath, selectedCount, canPaste, clipboardLabel, onPaste, onRefresh, onNavigateUp, onClearSelection }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const markdown = useEditorStore((state) => state.markdown);
   const fileName = useEditorStore((state) => state.fileName);
@@ -123,7 +128,7 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({ workspaceNam
           </div>}
         </div>
       </div>
-      <div className="flex min-w-0 items-center gap-1 px-3 py-2 text-[11px] text-text-muted"><span className="shrink-0 font-semibold text-text">{workspaceName}</span>{currentPath.map((part, index) => <React.Fragment key={`${part}-${index}`}><span aria-hidden="true">/</span><span className="min-w-0 truncate">{part}</span></React.Fragment>)}</div>
+      <div className="flex min-w-0 items-center gap-1 px-3 py-2 text-[11px] text-text-muted"><span className="shrink-0 font-semibold text-text">{workspaceName}</span>{currentPath.map((part, index) => <React.Fragment key={`${part}-${index}`}><span aria-hidden="true">/</span><span className="min-w-0 truncate">{part}</span></React.Fragment>)}{currentPath.length > 0 && onNavigateUp && <button type="button" onClick={onNavigateUp} className="mr-auto rounded px-2 py-0.5 hover:bg-bg" title="پوشه والد">↩</button>}</div>
       {selectedCount > 0 && <div className="px-3 pb-1.5 text-[10px] text-text-muted">{selectedCount} مورد انتخاب شده</div>}
     </div>
   );
