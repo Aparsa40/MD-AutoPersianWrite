@@ -37,11 +37,11 @@ html[data-document-theme='academic'] .preview-markdown {
 html[data-document-theme='modern'] .preview-markdown {
   --doc-text: #20242a;
   --doc-muted: #667085;
-  --doc-border: #cbd5e1;
+  --doc-border: #b8c2cf;
   --doc-surface: #eef2f7;
-  --doc-code-bg: #111827;
-  --doc-code-text: #f8fafc;
-  --doc-accent: #7c3aed;
+  --doc-code-bg: #666c72;
+  --doc-code-text: #ffffff;
+  --doc-accent: #2563eb;
   --doc-heading: #111827;
   --doc-radius: 0.9rem;
 }
@@ -83,9 +83,14 @@ html[data-document-theme='academic'] .preview-markdown h3 {
   padding-bottom: 0.25em;
 }
 
+html[data-document-theme='modern'] .preview-markdown h1 { color: #1d4ed8 !important; }
+html[data-document-theme='modern'] .preview-markdown h2 { color: #15803d !important; }
+html[data-document-theme='modern'] .preview-markdown h3 { color: #dc2626 !important; }
+
 html[data-document-theme='modern'] .preview-markdown h1,
 html[data-document-theme='modern'] .preview-markdown h2,
 html[data-document-theme='modern'] .preview-markdown h3 {
+  font-weight: 800;
   letter-spacing: -0.02em;
 }
 
@@ -112,9 +117,9 @@ html[data-document-theme] .preview-markdown code:not(pre code) {
 html[data-document-theme] .preview-markdown pre {
   background: var(--doc-code-bg) !important;
   color: var(--doc-code-text) !important;
-  border: 1px solid var(--doc-border) !important;
+  border: 2px solid var(--doc-border) !important;
   border-radius: var(--doc-radius);
-  box-shadow: 0 8px 24px rgb(0 0 0 / 18%);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 22%);
   padding: 1rem 1.15rem !important;
 }
 
