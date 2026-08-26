@@ -3,9 +3,7 @@ import { useEditorStore } from '../../store/useEditorStore';
 import { useDocumentSessionStore } from '../../store/useDocumentSessionStore';
 import { getWorkspaceProvider } from '../../lib/workspace/providerRegistry';
 
-type SavePickerWindow = Window & {
-  showSaveFilePicker?: (options?: { suggestedName?: string; types?: Array<{ description?: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle>;
-};
+type SavePickerWindow = Window & { showSaveFilePicker?: (options?: { suggestedName?: string; types?: Array<{ description?: string; accept: Record<string, string[]> }> }) => Promise<FileSystemFileHandle> };
 
 interface WorkspaceToolbarProps {
   workspaceName: string;
@@ -13,6 +11,8 @@ interface WorkspaceToolbarProps {
   selectedCount: number;
   canPaste: boolean;
   clipboardLabel?: string;
+  onCreateFile?: () => void;
+  onCreateFolder?: () => void;
   onPaste: () => void;
   onRefresh: () => void;
   onClearSelection: () => void;
@@ -33,10 +33,7 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({ workspaceNam
   const saveAs = async () => {
     const picker = savePickerWindow();
     const suggestedName = ensureMarkdownExtension(fileName || 'document');
-    if (!picker.showSaveFilePicker) {
-      window.alert('مرورگر فعلی از پنجره انتخاب محل ذخیره پشتیبانی نمی‌کند.');
-      return;
-    }
+    if (!picker.showSaveFilePicker) { window.alert('مرورگر فعلی از پنجره انتخاب محل ذخیره پشتیبانی نمی‌کند.'); return; }
     try {
       const handle = await picker.showSaveFilePicker({ suggestedName, types: [{ description: 'Markdown document', accept: { 'text/markdown': ['.md', '.markdown'] } }] });
       const writable = await handle.createWritable();
@@ -50,26 +47,18 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({ workspaceNam
   };
 
   const saveCurrent = async () => {
-    if (!activeSession?.workspaceFile) {
-      await saveAs();
-      return;
-    }
+    if (!activeSession?.workspaceFile) { await saveAs(); return; }
     try {
       const provider = getWorkspaceProvider(activeSession.workspaceFile.providerId);
       if (!provider) throw new Error('Provider فضای کاری پیدا نشد.');
       await provider.writeFile(activeSession.workspaceFile.entryId, new TextEncoder().encode(markdown));
       markPersisted(activeSession.workspaceFile);
-    } catch (cause) {
-      window.alert(cause instanceof Error ? cause.message : 'ذخیره فایل انجام نشد.');
-    }
+    } catch (cause) { window.alert(cause instanceof Error ? cause.message : 'ذخیره فایل انجام نشد.'); }
   };
 
   const createDefaultFile = async () => {
     const reference = activeSession?.workspaceFile;
-    if (!reference) {
-      window.alert('برای ساخت فایل جدید، ابتدا یک فایل Workspace را باز کنید.');
-      return;
-    }
+    if (!reference) { window.alert('برای ساخت فایل جدید، ابتدا یک فایل Workspace را باز کنید.'); return; }
     try {
       const provider = getWorkspaceProvider(reference.providerId);
       if (!provider) throw new Error('Provider فضای کاری پیدا نشد.');
@@ -80,17 +69,13 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({ workspaceNam
       while (siblings.some((entry) => entry.name === name)) name = `document-${index++}.md`;
       const entry = await provider.createFile(reference.parentId ?? null, name, new TextEncoder().encode(''));
       createSession({ fileName: entry.name, markdown: '', isDirty: false, workspaceFile: { ...reference, entryId: entry.id, parentId: entry.parentId, name: entry.name }, isWorkspaceFile: true, isNewWorkspaceFile: true, fileHandle: null, workspaceDirectory: null });
-    } catch (cause) {
-      window.alert(cause instanceof Error ? cause.message : 'ساخت فایل جدید انجام نشد.');
-    }
+      await onRefresh();
+    } catch (cause) { window.alert(cause instanceof Error ? cause.message : 'ساخت فایل جدید انجام نشد.'); }
   };
 
   const createDefaultFolder = async () => {
     const reference = activeSession?.workspaceFile;
-    if (!reference) {
-      window.alert('برای ساخت پوشه جدید، ابتدا یک فایل Workspace را باز کنید.');
-      return;
-    }
+    if (!reference) { window.alert('برای ساخت پوشه جدید، ابتدا یک فایل Workspace را باز کنید.'); return; }
     try {
       const provider = getWorkspaceProvider(reference.providerId);
       if (!provider) throw new Error('Provider فضای کاری پیدا نشد.');
@@ -100,15 +85,14 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({ workspaceNam
       let index = 2;
       while (siblings.some((entry) => entry.name === name)) name = `${base} ${index++}`;
       await provider.createFolder(reference.parentId ?? null, name);
-      window.dispatchEvent(new Event('workspace:refresh'));
-    } catch (cause) {
-      window.alert(cause instanceof Error ? cause.message : 'ساخت پوشه جدید انجام نشد.');
-    }
+      await onRefresh();
+    } catch (cause) { window.alert(cause instanceof Error ? cause.message : 'ساخت پوشه جدید انجام نشد.'); }
   };
 
   const deleteSelected = () => {
     if (!selectedCount && activeSession?.workspaceFile?.entryId) {
-      const row = document.querySelector<HTMLElement>(`[data-workspace-entry="${CSS.escape(activeSession.workspaceFile.entryId)}"]`);
+      const escapedId = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(activeSession.workspaceFile.entryId) : activeSession.workspaceFile.entryId.replace(/"/g, '\\"');
+      const row = document.querySelector<HTMLElement>(`[data-workspace-entry="${escapedId}"]`);
       row?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     }
     window.dispatchEvent(new KeyboardEvent('keydown', { key: 'Delete', bubbles: true }));
@@ -119,10 +103,7 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({ workspaceNam
     rows.forEach((row, index) => row.dispatchEvent(new MouseEvent('click', { bubbles: true, ctrlKey: index > 0 })));
   };
 
-  const run = (action: () => void | Promise<void>) => {
-    void action();
-    setMenuOpen(false);
-  };
+  const run = (action: () => void | Promise<void>) => { void action(); setMenuOpen(false); };
 
   return (
     <div className="shrink-0 border-b border-border bg-surface" dir="rtl">
