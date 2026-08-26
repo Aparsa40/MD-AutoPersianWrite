@@ -1,10 +1,11 @@
 import type { CloudStorageProvider } from '../../types/cloud';
 import type { WorkspaceEntry, WorkspaceProvider } from '../../types/workspaceProvider';
+import { registerWorkspaceProvider, unregisterWorkspaceProvider } from '../workspace/providerRegistry';
 
 declare global {
   interface Window {
     google?: {
-      accounts?: { oauth2?: { initTokenClient: (options: { client_id: string; scope: string; callback: (response: GoogleTokenResponse) => void; error_callback?: (error: unknown) => void; }) => GoogleTokenClient } };
+      accounts?: { oauth2?: { initTokenClient: (options: { client_id: string; scope: string; callback: (response: GoogleTokenResponse) => void; error_callback?: (error: unknown) => void }) => GoogleTokenClient } };
     };
   }
 }
@@ -15,13 +16,14 @@ interface DriveFile { id: string; name: string; mimeType: string; parents?: stri
 interface DriveListResponse { files?: DriveFile[]; nextPageToken?: string; }
 
 const GIS_SCRIPT_URL = 'https://accounts.google.com/gsi/client';
-const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive.file';
+const DRIVE_SCOPE = 'https://www.googleapis.com/auth/drive';
 const GOOGLE_DRIVE_URL = 'https://drive.google.com/';
 const DRIVE_API_URL = 'https://www.googleapis.com/drive/v3';
 const DRIVE_UPLOAD_URL = 'https://www.googleapis.com/upload/drive/v3';
 const DRIVE_FOLDER_MIME = 'application/vnd.google-apps.folder';
 const ROOT_ID = 'root';
 const LIST_CACHE_TTL = 10_000;
+const WORKSPACE_PROVIDER_ID = 'google-drive';
 let scriptPromise: Promise<void> | null = null;
 let accessToken: string | null = null;
 let workspaceProvider: GoogleDriveWorkspaceProvider | null = null;
@@ -68,6 +70,7 @@ const authorizeGoogleDrive = async (): Promise<string> => {
 const expireAuthentication = () => {
   accessToken = null;
   workspaceProvider = null;
+  unregisterWorkspaceProvider(WORKSPACE_PROVIDER_ID);
   clearCache();
 };
 
@@ -132,13 +135,11 @@ class GoogleDriveWorkspaceProvider implements WorkspaceProvider {
     const all: WorkspaceEntry[] = [];
     let pageToken: string | undefined;
     do {
-      const query = encodeURIComponent(`'${parentId || ROOT_ID}' in parents and trashed = false`);
       const params = new URLSearchParams({ q: `'${parentId || ROOT_ID}' in parents and trashed = false`, pageSize: '1000', fields: 'nextPageToken,files(id,name,mimeType,parents,size,modifiedTime,trashed)' });
       if (pageToken) params.set('pageToken', pageToken);
       const result = await driveRequest<DriveListResponse>(`/files?${params.toString()}`);
       all.push(...(result.files ?? []).map(toEntry));
       pageToken = result.nextPageToken;
-      void query;
     } while (pageToken);
 
     listCache.set(cacheKey, { expiresAt: Date.now() + LIST_CACHE_TTL, entries: all });
@@ -200,7 +201,12 @@ class GoogleDriveWorkspaceProvider implements WorkspaceProvider {
 
 export const googleDriveProvider: CloudStorageProvider = {
   definition: { id: 'google-drive', name: 'Google Drive', description: 'اتصال حساب و مدیریت فایل‌های Workspace در Google Drive', available: true, icon: 'google-drive', webUrl: GOOGLE_DRIVE_URL },
-  async connect() { accessToken = await authorizeGoogleDrive(); workspaceProvider = new GoogleDriveWorkspaceProvider(); clearCache(); },
+  async connect() {
+    accessToken = await authorizeGoogleDrive();
+    workspaceProvider = new GoogleDriveWorkspaceProvider();
+    registerWorkspaceProvider(WORKSPACE_PROVIDER_ID, workspaceProvider);
+    clearCache();
+  },
   async disconnect() { expireAuthentication(); },
   isConnected() { return accessToken !== null; },
   getWorkspaceProvider() { return workspaceProvider; },
