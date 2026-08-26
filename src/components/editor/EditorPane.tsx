@@ -18,6 +18,11 @@ export const EditorPane: React.FC<EditorPaneProps> = ({ editorRef }) => {
     return () => setTextareaRef(null);
   }, [setTextareaRef, textareaRef]);
 
+  useEffect(() => {
+    document.documentElement.style.setProperty('--editor-text-color', textColor);
+    return () => document.documentElement.style.removeProperty('--editor-text-color');
+  }, [textColor]);
+
   const handlePaste = (event: React.ClipboardEvent<HTMLTextAreaElement>) => {
     const html = event.clipboardData.getData('text/html');
     if (!html?.trim()) return;
