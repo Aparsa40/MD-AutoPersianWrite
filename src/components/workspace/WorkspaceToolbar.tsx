@@ -52,12 +52,23 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({ workspaceNam
   };
 
   const saveCurrent = async () => {
-    if (!activeSession?.workspaceFile) { await saveAs(); return; }
     try {
-      const provider = getWorkspaceProvider(activeSession.workspaceFile.providerId);
-      if (!provider) throw new Error('Provider فضای کاری پیدا نشد.');
-      await provider.writeFile(activeSession.workspaceFile.entryId, new TextEncoder().encode(markdown));
-      markPersisted(activeSession.workspaceFile);
+      if (activeSession?.workspaceFile) {
+        const provider = getWorkspaceProvider(activeSession.workspaceFile.providerId);
+        if (!provider) throw new Error('Provider فضای کاری پیدا نشد.');
+        await provider.writeFile(activeSession.workspaceFile.entryId, new TextEncoder().encode(markdown));
+        markPersisted(activeSession.workspaceFile);
+        return;
+      }
+
+      if (activeSession?.fileHandle) {
+        const writable = await activeSession.fileHandle.createWritable();
+        try { await writable.write(markdown); } finally { await writable.close(); }
+        markPersisted(activeSession.fileHandle);
+        return;
+      }
+
+      await saveAs();
     } catch (cause) { window.alert(cause instanceof Error ? cause.message : 'ذخیره فایل انجام نشد.'); }
   };
 
