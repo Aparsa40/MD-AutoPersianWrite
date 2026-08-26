@@ -96,7 +96,9 @@ export const WorkspaceToolbar: React.FC<WorkspaceToolbarProps> = ({ workspaceNam
 
   const deleteSelected = () => {
     if (!selectedCount && activeSession?.workspaceFile?.entryId) {
-      const escapedId = typeof CSS !== 'undefined' && CSS.escape ? CSS.escape(activeSession.workspaceFile.entryId) : activeSession.workspaceFile.entryId.replace(/"/g, '\\"');
+      const escapedId = typeof CSS !== 'undefined' && CSS.escape
+        ? CSS.escape(activeSession.workspaceFile.entryId)
+        : activeSession.workspaceFile.entryId.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
       const row = document.querySelector<HTMLElement>(`[data-workspace-entry="${escapedId}"]`);
       row?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     }
