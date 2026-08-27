@@ -76,7 +76,12 @@ export const DocumentSessionTabs: React.FC = () => {
       const current = session.id === activeSessionId ? { ...session, markdown, fileName, isDirty } : session;
       if (current.isNewWorkspaceFile || current.isDirty) {
         const persisted = await persistSession(current);
-        if (!persisted) return;
+        if (!persisted) {
+          // The user canceled the Windows Save dialog. They explicitly chose
+          // not to save, so honor the Close action and discard unsaved changes.
+          closeSession(session.id);
+          return;
+        }
         updateSession(current.id, {
           ...(persisted.kind === 'workspace' ? { workspaceFile: persisted.reference, fileHandle: null, isWorkspaceFile: true } : { fileHandle: persisted.reference, isWorkspaceFile: true, workspaceFile: null }),
           isDirty: false,
