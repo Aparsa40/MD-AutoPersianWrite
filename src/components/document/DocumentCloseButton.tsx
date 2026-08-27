@@ -30,8 +30,6 @@ export const DocumentCloseButton: React.FC = () => {
   const closeDocument = useCallback(async () => {
     if (!activeSessionId || !activeSession) return;
 
-    // Existing files that have not been changed close immediately. A new
-    // workspace file still needs a save picker because it has no persisted content yet.
     const needsSave = isDirty || activeSession.isNewWorkspaceFile;
 
     if (needsSave) {
@@ -56,14 +54,13 @@ export const DocumentCloseButton: React.FC = () => {
           useEditorStore.setState({ isDirty: false, fileName: handle.name });
         }
       } catch (error) {
-        // Canceling the Save dialog means the user chose not to close yet.
-        // Keep the document open so unsaved work cannot disappear accidentally.
         if (error instanceof DOMException && error.name === 'AbortError') {
+          // Canceling the Windows Save dialog means discard the unsaved changes
+          // and continue the Close action requested by the user.
+        } else {
+          window.alert(error instanceof Error ? error.message : 'ذخیره فایل انجام نشد.');
           return;
         }
-
-        window.alert(error instanceof Error ? error.message : 'ذخیره فایل انجام نشد.');
-        return;
       } finally {
         setIsSaving(false);
       }
