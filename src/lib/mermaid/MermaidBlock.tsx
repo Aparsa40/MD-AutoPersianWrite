@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from 'react';
-import mermaid from 'mermaid';
 import { useThemeStore } from '../../store/useThemeStore';
 
 interface MermaidBlockProps {
@@ -32,6 +31,9 @@ export const MermaidBlock: React.FC<MermaidBlockProps> = ({ chart, sourceLine })
         setError(false);
         setIsLoading(true);
         container.replaceChildren();
+
+        const { default: mermaid } = await import('mermaid');
+        if (cancelled) return;
 
         mermaid.initialize({
           startOnLoad: false,
