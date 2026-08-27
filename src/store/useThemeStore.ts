@@ -21,7 +21,7 @@ const defaultTextColorForTheme = (theme: ThemeMode) => {
     case 'black-white':
     case 'navy-white':
     case 'graphite':
-      return '#f8fafc';
+      return '#e6edf7';
     case 'sepia':
       return '#432818';
     case 'light':
@@ -29,6 +29,8 @@ const defaultTextColorForTheme = (theme: ThemeMode) => {
       return '#0f172a';
   }
 };
+
+const isSupportedTextColor = (color: string): boolean => /^#[0-9a-fA-F]{6}$/.test(color);
 
 export const useThemeStore = create<ThemeState>((set) => {
   const storedTheme = localStorage.getItem('md_app_theme') as ThemeMode | null;
@@ -52,6 +54,13 @@ export const useThemeStore = create<ThemeState>((set) => {
 
     setFontSize: (size: number) => set({ fontSize: size }),
     setFontFamily: (font: string) => set({ fontFamily: font }),
-    setTextColor: (color: string) => set({ textColor: color }),
+
+    setTextColor: (color: string) => {
+      if (!isSupportedTextColor(color)) return;
+      set({ textColor: color });
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent<string>('md-text-color-selection', { detail: color }));
+      }
+    },
   };
 });

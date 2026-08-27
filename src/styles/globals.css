@@ -15,12 +15,18 @@
   }
 
   .dark {
-    --color-bg: #0f172a;
-    --color-surface: #1e293b;
-    --color-primary: #60a5fa;
-    --color-text-main: #f8fafc;
-    --color-text-muted: #cbd5e1;
-    --color-border: #475569;
+    --color-bg: #0b1020;
+    --color-surface: #121a2a;
+    --color-primary: #7c8cff;
+    --color-text-main: #e6edf7;
+    --color-text-muted: #93a4bd;
+    --color-border: #26334a;
+    --color-surface-elevated: #182338;
+    --color-accent-blue: #60a5fa;
+    --color-accent-purple: #a78bfa;
+    --color-accent-green: #34d399;
+    --color-accent-yellow: #fbbf24;
+    --color-accent-red: #fb7185;
   }
 
   .graphite {
@@ -72,6 +78,35 @@
     outline: 2px solid var(--color-primary);
     outline-offset: 2px;
   }
+}
+
+.dark body {
+  background:
+    radial-gradient(circle at 85% -10%, rgb(124 140 255 / 10%), transparent 32rem),
+    var(--color-bg);
+}
+
+.dark header,
+.dark aside,
+.dark [role='menu'],
+.dark .workspace-panel,
+.dark .modal-panel {
+  border-color: var(--color-border);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 22%);
+}
+
+.dark button:hover {
+  background-color: rgb(124 140 255 / 10%);
+}
+
+.dark input:not([type='color']),
+.dark select,
+.dark textarea {
+  border-color: var(--color-border);
+}
+
+.dark .preview-markdown {
+  color: var(--editor-text-color, var(--color-text-main));
 }
 
 .graphite header,

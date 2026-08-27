@@ -23,11 +23,15 @@ import 'katex/dist/katex.min.css';
 interface PreviewPaneProps { previewRef?: React.RefObject<HTMLDivElement>; }
 
 type MarkdownNode = { position?: { start?: { line?: number } }; properties?: Record<string, unknown> };
+type TextColorSpanProps = ComponentPropsWithoutRef<'span'> & { 'data-text-color'?: string };
 
 const getSourceLine = (node?: MarkdownNode): number | undefined => {
   const line = node?.position?.start?.line;
   return typeof line === 'number' && line > 0 ? line : undefined;
 };
+
+const isSafeTextColor = (value: unknown): value is string =>
+  typeof value === 'string' && /^#[0-9a-fA-F]{6}$/.test(value);
 
 export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
   const markdown = useEditorStore((state) => state.markdown);
@@ -53,6 +57,13 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
       <div ref={previewRef} className="h-full w-full overflow-y-auto bg-bg p-6 custom-scrollbar prose dark:prose-invert max-w-none preview-markdown" style={{ fontSize: `${fontSize}px`, fontFamily }}>
         <ReactMarkdown remarkPlugins={remarkPlugins as PluggableList} rehypePlugins={rehypePlugins as PluggableList} components={{
           a({ children, href, ...props }) { const external = Boolean(href && /^(?:https?:)?\/\//i.test(href)); return <a href={href} {...props} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined} className="text-primary underline underline-offset-2 hover:opacity-80">{children}</a>; },
+          span({ children, node, ...props }: TextColorSpanProps & { node?: MarkdownNode }) {
+            const color = props['data-text-color'];
+            if (isSafeTextColor(color)) {
+              return <span {...props} data-text-color={color} style={{ color }} data-source-line={getSourceLine(node)}>{children}</span>;
+            }
+            return <span {...props}>{children}</span>;
+          },
           p({ children, node }) { return <p dir="auto" data-source-line={getSourceLine(node as MarkdownNode)} className="my-2 leading-relaxed" style={{ unicodeBidi: 'plaintext' }}>{children}</p>; },
           h1({ children, node }) { const text = React.Children.toArray(children).join(''); return <h1 id={getHeadingId(text)} data-preview-heading="true" data-source-line={getSourceLine(node as MarkdownNode)} dir="auto" className="my-5 text-3xl font-extrabold tracking-tight">{children}</h1>; },
           h2({ children, node }) { const text = React.Children.toArray(children).join(''); return <h2 id={getHeadingId(text)} data-preview-heading="true" data-source-line={getSourceLine(node as MarkdownNode)} dir="auto" className="my-4 text-2xl font-bold tracking-tight">{children}</h2>; },
