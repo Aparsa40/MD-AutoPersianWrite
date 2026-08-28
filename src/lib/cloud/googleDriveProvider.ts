@@ -170,16 +170,20 @@ class GoogleDriveWorkspaceProvider implements WorkspaceProvider {
     return all;
   }
 
-  async readFile(id: string): Promise<Uint8Array> {
+  async readFile(id: string, attempt = 0): Promise<Uint8Array> {
     const response = await fetch(`${DRIVE_API_URL}/files/${encodeURIComponent(id)}?alt=media`, { headers: { Authorization: `Bearer ${requireToken()}` } });
-    if (response.status === 401) {
+    if (response.status === 401 && attempt === 0) {
       try {
         await refreshAccessToken();
-        return this.readFile(id);
+        return this.readFile(id, 1);
       } catch {
         expireAuthentication();
         throw new Error('نشست Google Drive منقضی شده است. لطفاً دوباره متصل شوید.');
       }
+    }
+    if (response.status === 401) {
+      expireAuthentication();
+      throw new Error('نشست Google Drive منقضی شده است. لطفاً دوباره متصل شوید.');
     }
     if (!response.ok) throw new Error(`Google Drive read failed: ${response.status}`);
     return new Uint8Array(await response.arrayBuffer());
