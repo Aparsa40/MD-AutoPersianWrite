@@ -1,5 +1,5 @@
 {
-  "installCommand": "npm ci --include=optional",
+  "installCommand": "npm install --include=optional --package-lock=false",
   "headers": [
     {
       "source": "/(.*)",
