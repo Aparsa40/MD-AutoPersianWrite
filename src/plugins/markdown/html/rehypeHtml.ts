@@ -22,9 +22,12 @@ const SAFE_URL_PROTOCOLS = new Set(['http:', 'https:', 'mailto:', 'tel:']);
 
 const isSafeUrl = (value: string): boolean => {
   const trimmed = value.trim();
-  if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('/') || trimmed.startsWith('./') || trimmed.startsWith('../')) return true;
+  if (!trimmed) return true;
+  if (trimmed.startsWith('#')) return true;
+
   try {
-    return SAFE_URL_PROTOCOLS.has(new URL(trimmed, window.location.href).protocol);
+    const resolved = new URL(trimmed, window.location.href);
+    return SAFE_URL_PROTOCOLS.has(resolved.protocol);
   } catch {
     return false;
   }
