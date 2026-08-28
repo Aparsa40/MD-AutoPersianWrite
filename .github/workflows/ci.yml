@@ -22,7 +22,7 @@ jobs:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
     - name: Install dependencies
-      run: npm install --include=optional --package-lock=false
+      run: npm ci --include=optional
     - name: Ensure Linux Rolldown native binding
       run: npm install --no-save --include=optional --package-lock=false @rolldown/binding-linux-x64-gnu@1.2.3
     - run: npm run lint
