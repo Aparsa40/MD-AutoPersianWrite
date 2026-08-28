@@ -48,7 +48,7 @@ const loadGoogleIdentityServices = async () => {
   await scriptPromise;
 };
 
-const authorizeGoogleDrive = async (): Promise<string> => {
+const authorizeGoogleDrive = async (prompt: string): Promise<string> => {
   const clientId = import.meta.env.VITE_GOOGLE_DRIVE_CLIENT_ID;
   if (!clientId) throw new Error('VITE_GOOGLE_DRIVE_CLIENT_ID تنظیم نشده است.');
   await loadGoogleIdentityServices();
@@ -63,7 +63,7 @@ const authorizeGoogleDrive = async (): Promise<string> => {
         : resolve(response.access_token),
       error_callback: () => reject(new Error('پنجره مجوز Google Drive باز نشد یا بسته شد.')),
     });
-    tokenClient.requestAccessToken({ prompt: 'consent' });
+    tokenClient.requestAccessToken({ prompt });
   });
 };
 
@@ -79,6 +79,12 @@ const requireToken = (): string => {
   return accessToken;
 };
 
+const refreshAccessToken = async (): Promise<string> => {
+  const token = await authorizeGoogleDrive('');
+  accessToken = token;
+  return token;
+};
+
 const wait = (ms: number) => new Promise((resolve) => window.setTimeout(resolve, ms));
 
 const driveRequest = async <T>(path: string, init: RequestInit = {}, attempt = 0): Promise<T> => {
@@ -86,6 +92,15 @@ const driveRequest = async <T>(path: string, init: RequestInit = {}, attempt = 0
     ...init,
     headers: { Authorization: `Bearer ${requireToken()}`, ...(init.body && !(init.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}), ...init.headers },
   });
+  if (response.status === 401 && attempt === 0) {
+    try {
+      await refreshAccessToken();
+      return driveRequest<T>(path, init, 1);
+    } catch {
+      expireAuthentication();
+      throw new Error('نشست Google Drive منقضی شده است. لطفاً دوباره متصل شوید.');
+    }
+  }
   if (response.status === 401) {
     expireAuthentication();
     throw new Error('نشست Google Drive منقضی شده است. لطفاً دوباره متصل شوید.');
@@ -102,8 +117,17 @@ const driveRequest = async <T>(path: string, init: RequestInit = {}, attempt = 0
   return response.json() as Promise<T>;
 };
 
-const uploadRequest = async (path: string, init: RequestInit): Promise<DriveFile> => {
+const uploadRequest = async (path: string, init: RequestInit, attempt = 0): Promise<DriveFile> => {
   const response = await fetch(`${DRIVE_UPLOAD_URL}${path}`, { ...init, headers: { Authorization: `Bearer ${requireToken()}`, ...init.headers } });
+  if (response.status === 401 && attempt === 0) {
+    try {
+      await refreshAccessToken();
+      return uploadRequest(path, init, 1);
+    } catch {
+      expireAuthentication();
+      throw new Error('نشست Google Drive منقضی شده است. لطفاً دوباره متصل شوید.');
+    }
+  }
   if (response.status === 401) {
     expireAuthentication();
     throw new Error('نشست Google Drive منقضی شده است. لطفاً دوباره متصل شوید.');
@@ -148,7 +172,15 @@ class GoogleDriveWorkspaceProvider implements WorkspaceProvider {
 
   async readFile(id: string): Promise<Uint8Array> {
     const response = await fetch(`${DRIVE_API_URL}/files/${encodeURIComponent(id)}?alt=media`, { headers: { Authorization: `Bearer ${requireToken()}` } });
-    if (response.status === 401) { expireAuthentication(); throw new Error('نشست Google Drive منقضی شده است. لطفاً دوباره متصل شوید.'); }
+    if (response.status === 401) {
+      try {
+        await refreshAccessToken();
+        return this.readFile(id);
+      } catch {
+        expireAuthentication();
+        throw new Error('نشست Google Drive منقضی شده است. لطفاً دوباره متصل شوید.');
+      }
+    }
     if (!response.ok) throw new Error(`Google Drive read failed: ${response.status}`);
     return new Uint8Array(await response.arrayBuffer());
   }
@@ -202,7 +234,7 @@ class GoogleDriveWorkspaceProvider implements WorkspaceProvider {
 export const googleDriveProvider: CloudStorageProvider = {
   definition: { id: 'google-drive', name: 'Google Drive', description: 'اتصال حساب و مدیریت فایل‌های Workspace در Google Drive', available: true, icon: 'google-drive', webUrl: GOOGLE_DRIVE_URL },
   async connect() {
-    accessToken = await authorizeGoogleDrive();
+    accessToken = await authorizeGoogleDrive('consent');
     workspaceProvider = new GoogleDriveWorkspaceProvider();
     registerWorkspaceProvider(WORKSPACE_PROVIDER_ID, workspaceProvider);
     clearCache();
