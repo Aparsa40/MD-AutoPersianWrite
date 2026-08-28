@@ -1,5 +1,6 @@
 import type { WorkspaceInfo } from '../../types/workspace';
 import type { WorkspaceEntry as ProviderEntry, WorkspaceProvider } from '../../types/workspaceProvider';
+import { registerWorkspaceProvider } from './providerRegistry';
 import {
   copyEntry,
   createFile,
@@ -103,7 +104,6 @@ export class LocalWorkspaceProvider implements WorkspaceProvider {
       await deleteEntry(await resolveDirectory(this.root, parts.join('/')), name, true);
       return copied;
     } catch (cause) {
-      // Roll back the copy so a failed delete never silently turns Move into Copy.
       try {
         const copiedParts = copied.id.split('/').filter(Boolean);
         const copiedName = copiedParts.pop();
@@ -134,5 +134,7 @@ export class LocalWorkspaceProvider implements WorkspaceProvider {
 
 export const createLocalWorkspaceProvider = (workspace: WorkspaceInfo): LocalWorkspaceProvider => {
   if (!workspace.handle) throw new Error('Local workspace directory handle is unavailable.');
-  return new LocalWorkspaceProvider(workspace.handle);
+  const provider = new LocalWorkspaceProvider(workspace.handle);
+  registerWorkspaceProvider('local', provider);
+  return provider;
 };

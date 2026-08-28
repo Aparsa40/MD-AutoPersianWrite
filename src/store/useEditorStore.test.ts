@@ -25,6 +25,7 @@ describe('useEditorStore', () => {
   it('inserts formatted text at the current cursor position', () => {
     vi.useFakeTimers();
     const textarea = {
+      value: 'Hello world',
       selectionStart: 6,
       selectionEnd: 11,
       focus: vi.fn(),

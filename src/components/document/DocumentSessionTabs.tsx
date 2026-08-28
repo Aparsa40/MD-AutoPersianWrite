@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useEditorStore } from '../../store/useEditorStore';
 import { useDocumentSessionStore, type DocumentSession } from '../../store/useDocumentSessionStore';
 import { writeTextFile } from '../../lib/workspace/localWorkspaceFiles';
+import { getWorkspaceProvider } from '../../lib/workspace/providerRegistry';
 
 type FileSystemSavePickerWindow = Window & {
   showSaveFilePicker?: (options?: { suggestedName?: string; startIn?: FileSystemDirectoryHandle }) => Promise<FileSystemFileHandle>;
@@ -12,7 +13,7 @@ const getSaveFilePicker = () => {
   return typeof picker === 'function' ? picker.bind(window) : null;
 };
 
-const saveSession = async (session: DocumentSession) => {
+const saveAsSession = async (session: DocumentSession) => {
   const picker = getSaveFilePicker();
   if (!picker) {
     window.alert('مرورگر فعلی از پنجره ذخیره فایل پشتیبانی نمی‌کند.');
@@ -30,6 +31,29 @@ const saveSession = async (session: DocumentSession) => {
     window.alert(error instanceof Error ? error.message : 'ذخیره فایل انجام نشد.');
     return null;
   }
+};
+
+const persistSession = async (session: DocumentSession) => {
+  if (session.workspaceFile) {
+    const provider = getWorkspaceProvider(session.workspaceFile.providerId);
+    if (!provider) throw new Error('Provider فضای کاری پیدا نشد.');
+    await provider.writeFile(session.workspaceFile.entryId, new TextEncoder().encode(session.markdown));
+    return { kind: 'workspace' as const, reference: session.workspaceFile };
+  }
+
+  if (session.fileHandle) {
+    const writable = await session.fileHandle.createWritable();
+    try {
+      await writable.write(session.markdown);
+    } finally {
+      await writable.close();
+    }
+    return { kind: 'file' as const, reference: session.fileHandle };
+  }
+
+  const handle = await saveAsSession(session);
+  if (!handle) return null;
+  return { kind: 'file' as const, reference: handle };
 };
 
 export const DocumentSessionTabs: React.FC = () => {
@@ -51,20 +75,25 @@ export const DocumentSessionTabs: React.FC = () => {
     try {
       const current = session.id === activeSessionId ? { ...session, markdown, fileName, isDirty } : session;
       if (current.isNewWorkspaceFile || current.isDirty) {
-        const handle = await saveSession(current);
-        if (!handle) return;
+        const persisted = await persistSession(current);
+        if (!persisted) {
+          // The user canceled the Windows Save dialog. They explicitly chose
+          // not to save, so honor the Close action and discard unsaved changes.
+          closeSession(session.id);
+          return;
+        }
         updateSession(current.id, {
-          fileHandle: handle,
-          fileName: handle.name,
+          ...(persisted.kind === 'workspace' ? { workspaceFile: persisted.reference, fileHandle: null, isWorkspaceFile: true } : { fileHandle: persisted.reference, isWorkspaceFile: true, workspaceFile: null }),
           isDirty: false,
           isNewWorkspaceFile: false,
-          isWorkspaceFile: true,
         });
         if (current.id === activeSessionId) {
-          useEditorStore.setState({ fileName: handle.name, isDirty: false });
+          useEditorStore.setState({ isDirty: false });
         }
       }
       closeSession(session.id);
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : 'ذخیره فایل انجام نشد.');
     } finally {
       setClosingId(null);
     }

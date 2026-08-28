@@ -21,7 +21,7 @@ const getSaveFilePicker = () => {
 };
 
 export const TopToolbar: React.FC = () => {
-  const { markdown, fileName, resetEditor, insertTextAtCursor } = useEditorStore();
+  const { markdown, fileName, isDirty, insertTextAtCursor } = useEditorStore();
   const { theme, setTheme, fontSize, setFontSize, fontFamily, setFontFamily, textColor, setTextColor } = useThemeStore();
   const { viewMode, setViewMode, orientation, setOrientation, toggleToc, isTocOpen } = useLayoutStore();
   const activeSession = useDocumentSessionStore((state) => state.sessions.find((session) => session.id === state.activeSessionId));
@@ -36,6 +36,15 @@ export const TopToolbar: React.FC = () => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const closeMenu = () => setActiveMenu(null);
   const toggleMenu = (menu: string) => setActiveMenu((current) => current === menu ? null : menu);
+
+  const handleNewFile = () => {
+    if (isDirty || activeSession?.isDirty) {
+      const confirmed = window.confirm('سند فعلی تغییرات ذخیره‌نشده دارد. ایجاد فایل جدید باعث کنار گذاشتن این سند از ویرایش فعلی می‌شود. ادامه می‌دهید؟');
+      if (!confirmed) return;
+    }
+    createSession({ fileName: 'untitled.md', markdown: '', isDirty: false, workspaceFile: null, isWorkspaceFile: false, isNewWorkspaceFile: false, fileHandle: null, workspaceDirectory: null });
+    closeMenu();
+  };
 
   const handleOpenFile = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -113,8 +122,8 @@ export const TopToolbar: React.FC = () => {
         <div className="ml-auto flex flex-row items-center gap-2 pr-2" dir="rtl">
           <div className="relative">
             <button type="button" onClick={() => toggleMenu('file')} className="rounded px-3 py-1.5 text-sm font-medium hover:bg-bg">فایل</button>
-            {activeMenu === 'file' && <div className="absolute right-0 z-50 mt-2 w-56 rounded border border-border bg-surface py-1 shadow-lg">
-              <button type="button" onClick={() => { resetEditor(); closeMenu(); }} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">فایل جدید</button>
+            {activeMenu === 'file' && <div className="absolute right-0 z-50 mt-2 w-56 rounded border border-border bg-surface py-1">
+              <button type="button" onClick={handleNewFile} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">فایل جدید</button>
               <button type="button" onClick={() => fileInputRef.current?.click()} className="w-full px-4 py-2 text-right text-sm font-medium text-primary hover:bg-bg">درج فایل...</button>
               <button type="button" onClick={() => void handleSaveAs()} className="w-full px-4 py-2 text-right text-sm hover:bg-bg">ذخیره با نام...</button>
               <button type="button" onClick={() => { void handleDeleteCurrentFile(); }} className="w-full px-4 py-2 text-right text-sm text-red-700 hover:bg-bg dark:text-red-300">حذف فایل فعال</button>

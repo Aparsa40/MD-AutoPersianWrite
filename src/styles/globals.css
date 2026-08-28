@@ -15,12 +15,18 @@
   }
 
   .dark {
-    --color-bg: #0f172a;
-    --color-surface: #1e293b;
-    --color-primary: #60a5fa;
-    --color-text-main: #f8fafc;
-    --color-text-muted: #cbd5e1;
-    --color-border: #475569;
+    --color-bg: #0b1020;
+    --color-surface: #121a2a;
+    --color-primary: #7c8cff;
+    --color-text-main: #e6edf7;
+    --color-text-muted: #93a4bd;
+    --color-border: #26334a;
+    --color-surface-elevated: #182338;
+    --color-accent-blue: #60a5fa;
+    --color-accent-purple: #a78bfa;
+    --color-accent-green: #34d399;
+    --color-accent-yellow: #fbbf24;
+    --color-accent-red: #fb7185;
   }
 
   .graphite {
@@ -74,14 +80,46 @@
   }
 }
 
+.dark body {
+  background:
+    radial-gradient(circle at 85% -10%, rgb(124 140 255 / 10%), transparent 32rem),
+    var(--color-bg);
+}
+
+.dark header,
+.dark aside,
+.dark [role='menu'],
+.dark .workspace-panel,
+.dark .modal-panel {
+  border-color: var(--color-border);
+  box-shadow: 0 10px 30px rgb(0 0 0 / 22%);
+}
+
+.dark button:hover {
+  background-color: rgb(124 140 255 / 10%);
+}
+
+.dark input:not([type='color']),
+.dark select,
+.dark textarea {
+  border-color: var(--color-border);
+}
+
+.dark .preview-markdown {
+  color: var(--editor-text-color, var(--color-text-main));
+}
+
 .graphite header,
 .graphite aside,
 .graphite [role='menu'] {
   box-shadow: inset 0 -1px 0 rgb(255 255 255 / 8%), 0 1px 0 rgb(0 0 0 / 28%);
 }
 
-.graphite .preview-markdown {
-  color: #ffffff;
+.graphite .preview-markdown,
+.dark .preview-markdown,
+.black-white .preview-markdown,
+.navy-white .preview-markdown {
+  color: var(--editor-text-color, var(--color-text-main));
 }
 
 .graphite .preview-markdown h1,
@@ -89,8 +127,26 @@
 .graphite .preview-markdown h3,
 .graphite .preview-markdown h4,
 .graphite .preview-markdown h5,
-.graphite .preview-markdown h6 {
-  color: #ffffff;
+.graphite .preview-markdown h6,
+.dark .preview-markdown h1,
+.dark .preview-markdown h2,
+.dark .preview-markdown h3,
+.dark .preview-markdown h4,
+.dark .preview-markdown h5,
+.dark .preview-markdown h6,
+.black-white .preview-markdown h1,
+.black-white .preview-markdown h2,
+.black-white .preview-markdown h3,
+.black-white .preview-markdown h4,
+.black-white .preview-markdown h5,
+.black-white .preview-markdown h6,
+.navy-white .preview-markdown h1,
+.navy-white .preview-markdown h2,
+.navy-white .preview-markdown h3,
+.navy-white .preview-markdown h4,
+.navy-white .preview-markdown h5,
+.navy-white .preview-markdown h6 {
+  color: var(--editor-text-color, var(--color-text-main));
 }
 
 .graphite .preview-markdown table,
@@ -123,6 +179,7 @@ pre code {
 
 .preview-markdown {
   --preview-code-bg: color-mix(in srgb, var(--color-surface) 88%, var(--color-primary));
+  color: var(--editor-text-color, var(--color-text-main));
 }
 
 .preview-markdown pre {
@@ -154,6 +211,7 @@ pre code {
 .preview-markdown th,
 .preview-markdown td {
   border: 1px solid var(--color-border);
+  color: var(--editor-text-color, var(--color-text-main));
 }
 
 .preview-markdown th {
@@ -171,14 +229,7 @@ pre code {
 .preview-markdown h4,
 .preview-markdown h5,
 .preview-markdown h6 {
-  color: var(--color-text-main);
-}
-
-.dark .preview-markdown,
-.graphite .preview-markdown,
-.black-white .preview-markdown,
-.navy-white .preview-markdown {
-  color: var(--color-text-main);
+  color: var(--editor-text-color, var(--color-text-main));
 }
 
 .dark .preview-markdown a,

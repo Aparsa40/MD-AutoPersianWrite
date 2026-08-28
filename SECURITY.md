@@ -4,9 +4,23 @@
 
 MD-AutoPersianWrite is a client-side Markdown editor and PWA built with React, TypeScript, Vite, React-Markdown, Mermaid, KaTeX, and related frontend dependencies.
 
-This policy covers security vulnerabilities affecting the application, its source code, build process, dependencies, and published PWA assets.
+This policy covers security vulnerabilities affecting the application, source code, build process, dependencies, and published PWA assets.
 
-Because the application is designed to run primarily in the user's browser, security reports involving Markdown rendering, unsafe URL or HTML handling, Mermaid/KaTeX rendering, client-side data exposure, dependency vulnerabilities, and supply-chain risks are particularly relevant.
+Security-sensitive areas include Markdown/HTML rendering, URL handling, Mermaid/KaTeX rendering, client-side data exposure, OAuth/cloud integrations, dependency vulnerabilities, CI/CD, and supply-chain risks.
+
+## Recent Security Hardening
+
+The current stabilization work includes the following verified hardening measures:
+
+- HTML rendering uses an explicit tag allowlist and rejects event-handler attributes and inline `style` attributes.
+- `href`, `src`, and `poster` values are validated against an allowlist of `http:`, `https:`, `mailto:`, and `tel:` protocols, with fragment URLs supported.
+- Protocol-relative URLs such as `//example.com` are resolved and validated rather than being accepted merely because they begin with `/`.
+- Google Drive authentication refresh/retry is bounded to avoid repeated retry loops after authentication failures.
+- Internal access-check/debug artifacts are not part of the application runtime or published source.
+- Service Worker cache versioning and update behavior are kept aligned with the application version.
+- Editor/Preview resource cleanup is maintained for listeners, observers, timers, and animation frames where applicable.
+
+These controls are defense-in-depth. They do not guarantee that the application is free of vulnerabilities.
 
 ## Supported Versions
 
@@ -29,7 +43,7 @@ For a vulnerability that could affect users, please use GitHub's private vulnera
 2. Select **Advisories**.
 3. Choose **Report a vulnerability** and provide the details privately.
 
-If private vulnerability reporting is not available, please contact the project maintainer through a private channel rather than publishing the vulnerability publicly. Do not include sensitive exploit details in a public issue.
+If private vulnerability reporting is not available, contact the project maintainer through a private channel rather than publishing the vulnerability publicly. Do not include sensitive exploit details in a public issue.
 
 ### What to Include
 
@@ -51,12 +65,12 @@ Please avoid including real credentials, personal information, private documents
 The project maintainer will make a reasonable effort to:
 
 - Acknowledge a valid private security report within **3 business days**.
-- Assess the severity, affected versions, and practical impact.
+- Assess severity, affected versions, and practical impact.
 - Provide an initial status update within **7 business days** when investigation requires additional time.
 - Coordinate disclosure and remediation with the reporter when appropriate.
-- Credit the reporter in the security advisory when they request attribution and disclosure is appropriate.
+- Credit the reporter in the security advisory when requested and appropriate.
 
-Response and remediation timelines may vary depending on severity, exploitability, affected dependencies, and the complexity of the required fix.
+Response and remediation timelines may vary depending on severity, exploitability, affected dependencies, and complexity of the required fix.
 
 ## Security Fixes and Disclosure
 
@@ -66,7 +80,7 @@ Public disclosure should be coordinated with the maintainer whenever possible so
 
 ## Dependency and Supply-Chain Security
 
-The project relies on third-party frontend and build dependencies. Security reports concerning vulnerable or compromised dependencies are welcome, especially when they can affect the application's runtime behavior, build pipeline, or distributed assets.
+The project relies on third-party frontend and build dependencies. Security reports concerning vulnerable or compromised dependencies are welcome, especially when they can affect runtime behavior, the build pipeline, or distributed assets.
 
 Dependency updates should be evaluated for both security impact and compatibility with the supported release line.
 
@@ -78,7 +92,7 @@ The following are generally not considered security vulnerabilities unless they 
 - Feature requests or usability issues.
 - Vulnerabilities that exist only in unsupported versions.
 - Issues requiring a user to intentionally execute arbitrary code outside the application's normal behavior, unless the application itself makes that execution possible.
-- Reports based solely on theoretical concerns without a practical security impact or reproducible evidence.
+- Reports based solely on theoretical concerns without practical security impact or reproducible evidence.
 
 Out-of-scope reports may still be reviewed as normal bug reports or hardening suggestions.
 
