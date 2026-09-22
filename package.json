@@ -55,11 +55,41 @@
   "build": {
   "appId": "com.autopersianwrite.app",
   "productName": "MD-AutoPersianWrite",
+
   "icon": "build/icon.ico",
+
   "files": [
     "dist/**/*",
     "electron/**/*",
     "package.json"
-     ]
+    ],
+
+  "win": {
+    "target": [
+      {
+        "target": "nsis",
+        "arch": [
+          "x64"
+        ]
+      }
+    ]
+  },
+
+  "nsis": {
+  "oneClick": false,
+  "perMachine": false,
+  "allowToChangeInstallationDirectory": true,
+
+  "createDesktopShortcut": true,
+  "createStartMenuShortcut": true,
+
+  "shortcutName": "MD-AutoPersianWrite",
+
+  "installerLanguages": [
+    "en_US"
+   ],
+
+  "allowElevation": true
+    }
   }
 }
