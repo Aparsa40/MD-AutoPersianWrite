@@ -17,7 +17,9 @@ function createWindow() {
     },
   });
 
+  if (!app.isPackaged) {
   win.webContents.openDevTools();
+}
 
   if (!app.isPackaged) {
     win.loadURL("http://localhost:5173");
