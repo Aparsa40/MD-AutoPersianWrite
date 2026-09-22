@@ -3,12 +3,13 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
+  base: process.env.ELECTRON_BUILD === "1" ? "./" : "/",
   build: {
     // Mermaid is intentionally lazy-loaded because its renderer is a large,
     // optional feature. Keep the normal application chunks on the default
     // 500 kB budget while allowing the isolated Mermaid async chunk.
     chunkSizeWarningLimit: 1500,
-   /* rolldownOptions: {
+    /* rolldownOptions: {
       output: {
         codeSplitting: {
           groups: [
