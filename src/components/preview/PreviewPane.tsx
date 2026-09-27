@@ -17,8 +17,29 @@ import { PluginManager } from '../../plugins/PluginManager';
 import { remarkCallouts } from '../../plugins/markdown/callouts/remarkCallouts';
 import { rehypeHtml } from '../../plugins/markdown/html/rehypeHtml';
 import { DocumentCloseButton } from '../document/DocumentCloseButton';
+import { resolveWorkspaceImage } from '../../services/image/imageResolver';
 
 import 'katex/dist/katex.min.css';
+
+const MarkdownImage = ({ src, alt }: { src?: string; alt?: string }) => {
+  const [imageSrc, setImageSrc] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (!src) return;
+
+    resolveWorkspaceImage(src).then(setImageSrc);
+  }, [src]);
+
+  if (!imageSrc) return null;
+
+  return (
+    <img
+      src={imageSrc}
+      alt={alt ?? ''}
+      className="max-w-full rounded-lg shadow"
+    />
+  );
+};
 
 interface PreviewPaneProps { previewRef?: React.RefObject<HTMLDivElement>; }
 
@@ -57,6 +78,9 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
       <div ref={previewRef} className="h-full w-full overflow-y-auto bg-bg p-6 custom-scrollbar prose dark:prose-invert max-w-none preview-markdown" style={{ fontSize: `${fontSize}px`, fontFamily }}>
         <ReactMarkdown remarkPlugins={remarkPlugins as PluggableList} rehypePlugins={rehypePlugins as PluggableList} components={{
           a({ children, href, ...props }) { const external = Boolean(href && /^(?:https?:)?\/\//i.test(href)); return <a href={href} {...props} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined} className="text-primary underline underline-offset-2 hover:opacity-80">{children}</a>; },
+          img({ src, alt }) {
+        return <MarkdownImage src={src} alt={alt} />;
+  },
           span({ children, node, ...props }: TextColorSpanProps & { node?: MarkdownNode }) {
             const color = props['data-text-color'];
             if (isSafeTextColor(color)) {
