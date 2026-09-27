@@ -16,6 +16,35 @@
 
 ---
 
+## [2.7.0] - 2026-09-27
+
+### Added
+
+#### Markdown Media Support
+
+- اضافه شدن قابلیت درج تصاویر در Markdown Editor.
+- نمایش صحیح تصاویر در Live Preview.
+- حفظ ساختار Markdown هنگام Insert Media.
+- هماهنگی رسانه‌های Markdown با سند ذخیره‌شده.
+
+### Improved
+
+- بهبود تجربه کاربر هنگام کار با محتوای رسانه‌ای در Editor و Preview.
+
+### Documentation
+
+- به‌روزرسانی README برای قابلیت Media Support.
+- اضافه شدن Release Notes نسخه 2.7.0.
+
+### Validation
+
+- TypeScript validation
+- Lint
+- Tests
+- Production Build
+
+---
+
 ## [2.6.0] - 2026-08-25
 
 ### Added
