@@ -1,4 +1,4 @@
-# MD-AutoPersianWrite V2.6.0
+# MD-AutoPersianWrite V2.7.0
 
 ویرایشگر مدرن، ماژولار و راست‌چین (RTL) Markdown با پشتیبانی از متن ترکیبی فارسی/انگلیسی، KaTeX، Mermaid، Syntax Highlighting، Live Preview، PWA و Workspace محلی/ابری.
 
@@ -14,6 +14,7 @@
 - **Paste هوشمند:** تبدیل HTML و Rich Text موجود در Clipboard به Markdown در صورت امکان.
 - **Insert File:** وارد کردن فایل‌های متنی مانند `.md`، `.markdown` و `.txt`.
 - **Text Color:** اعمال رنگ روی بخش انتخاب‌شده متن Markdown بدون تغییر رنگ کل سند.
+- **Media Support:** پشتیبانی از درج تصاویر Markdown و نمایش صحیح آن‌ها در Live Preview با حفظ ساختار سند Markdown.
 
 ### 🧮 Rendering
 - **KaTeX:** رندر فرمول‌های LaTeX درون‌خطی و بلوکی.
@@ -21,10 +22,10 @@
 - **Syntax Highlighting:** نمایش Code Blockها با حفظ منبع خام Mermaid.
 - **Markdown extensions:** پشتیبانی از GFM، Table، Task List و قابلیت‌های مرتبط.
 - **HTML safety:** پردازش HTML با allowlist برای tagها و attributeها و کنترل protocolهای URL.
+- **Image Rendering:** رندر صحیح تصاویر Markdown در Preview و هماهنگی خروجی با فایل Markdown ذخیره‌شده.
 
 ### 📁 Workspace
-نسخه 2.6.0 معماری Workspace مبتنی بر Provider دارد که UI را از Storage جدا می‌کند.
-
+نسخه 2.7.0 بر پایه معماری Workspace مبتنی بر Provider توسعه یافته و UI را از Storage جدا می‌کند.
 - **Workspace Manager:** پنل سمت راست با قابلیت باز/بسته شدن و Resize.
 - **Workspace Explorer:** نمایش مرتب درخت فایل‌ها و پوشه‌ها.
 - **Local Workspace:** اتصال به پوشه محلی از طریق File System Access API.
@@ -66,9 +67,16 @@
 
 > برخی موارد معماری و optimization مانند conflict resolution مبتنی بر ETag برای Google Drive، refactor بزرگ WorkspaceExplorer و بهینه‌سازی‌های پیشرفته rendering به‌عنوان Technical Debt/Backlog نگهداری می‌شوند و برای این Release blocker محسوب نمی‌شوند.
 
-## 🆕 نسخه 2.6.0
+## 🆕 نسخه 2.7.0
 
-نسخه 2.6.0 نسخه تثبیت Workspace و تجربه کاربری برنامه است.
+نسخه 2.7.0 بر پایه نسخه تثبیت‌شده Workspace در 2.6.0 توسعه یافته و قابلیت‌های رسانه در Markdown و تجربه کاربری Editor و Preview را بهبود می‌دهد.
+
+### Markdown Media Support
+
+- پشتیبانی از درج تصویر در Markdown Editor.
+- نمایش صحیح تصاویر در Live Preview.
+- حفظ مسیر و ساختار Markdown هنگام Insert Media.
+- هماهنگی فایل Markdown ذخیره‌شده با Preview.
 
 ### Workspace و File Management
 - معماری `WorkspaceProvider` برای جداسازی UI از Storage.
@@ -90,7 +98,7 @@
 - بهبود نصب dependencyهای optional برای محیط Linux/Vercel.
 - اعتبارسنجی CI با Node.js 20 و Node.js 22.
 - اعتبارسنجی TypeScript، ESLint، Vitest و Production Build.
-- هماهنگی نسخه `package.json` و `package-lock.json` روی `2.6.0`.
+- هماهنگی نسخه `package.json` و `package-lock.json` روی `2.7.0`.
 - بهبود Service Worker update strategy و هماهنگی نسخه cache.
 
 ## 🛠️ تکنولوژی‌ها
@@ -144,6 +152,7 @@ npm run build
 ## 📋 مستندات
 - `CHANGELOG.md` — تاریخچه نسخه‌ها و تغییرات
 - `docs/RELEASE_NOTES_v2.6.0.md` — خلاصه Release نسخه 2.6.0
+- `docs/RELEASE_NOTES_v2.7.0.md` — خلاصه Release نسخه 2.7.0
 - `docs/WORKSPACE_ARCHITECTURE.md` — معماری Workspace و Providerها
 - `SECURITY.md` — سیاست امنیتی
 - `CONTRIBUTING.md` — راهنمای مشارکت
