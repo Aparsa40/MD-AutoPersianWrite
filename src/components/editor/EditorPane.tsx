@@ -10,14 +10,29 @@ const isSupportedTextColor = (color: unknown): color is string =>
 
 export const EditorPane: React.FC<EditorPaneProps> = ({ editorRef }) => {
   const localRef = useRef<HTMLTextAreaElement>(null);
-  const textareaRef = editorRef ?? localRef;
-  const { markdown, setMarkdown, setTextareaRef } = useEditorStore();
+const textareaRef = editorRef ?? localRef;
+const pendingScrollTopRef = useRef<number | null>(null);
+
+const { markdown, setMarkdown, setTextareaRef } = useEditorStore();
   const { fontSize, fontFamily } = useThemeStore();
 
   useEffect(() => {
     setTextareaRef(textareaRef.current);
     return () => { setTextareaRef(null); };
   }, [setTextareaRef, textareaRef]);
+  useEffect(() => {
+  if (pendingScrollTopRef.current === null) return;
+
+  const scrollTop = pendingScrollTopRef.current;
+  pendingScrollTopRef.current = null;
+
+  requestAnimationFrame(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    textarea.scrollTop = scrollTop;
+  });
+}, [markdown, textareaRef]);
 
   useEffect(() => {
     const handleTextColorSelection = (event: Event) => {
@@ -66,7 +81,26 @@ export const EditorPane: React.FC<EditorPaneProps> = ({ editorRef }) => {
 
   return (
     <div className="relative h-full w-full overflow-hidden">
-      <textarea ref={textareaRef} data-editor="markdown" value={markdown} onChange={(event) => setMarkdown(event.target.value)} onPaste={handlePaste} dir="auto" placeholder="متن مارک‌داون خود را اینجا بنویسید..." className="h-full w-full resize-none overflow-y-auto bg-transparent p-6 leading-relaxed outline-none custom-scrollbar" style={{ fontSize: `${fontSize}px`, fontFamily, color: 'var(--color-text-main)', unicodeBidi: 'plaintext', textAlign: 'initial' }} />
+      <textarea
+  ref={textareaRef}
+  data-editor="markdown"
+  value={markdown}
+  onChange={(event) => {
+    pendingScrollTopRef.current = event.currentTarget.scrollTop;
+    setMarkdown(event.target.value);
+  }}
+  onPaste={handlePaste}
+  dir="auto"
+  placeholder="متن مارک‌داون خود را اینجا بنویسید..."
+  className="h-full w-full resize-none overflow-y-auto bg-transparent p-6 leading-relaxed outline-none custom-scrollbar"
+  style={{
+    fontSize: `${fontSize}px`,
+    fontFamily,
+    color: 'var(--color-text-main)',
+    unicodeBidi: 'plaintext',
+    textAlign: 'initial',
+  }}
+/>
     </div>
   );
 };
