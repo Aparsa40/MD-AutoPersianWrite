@@ -110,12 +110,10 @@ export function useScrollSync(activeSessionId: string | null) {
       releaseSource();
     };
 
-    editor.addEventListener('scroll', syncEditorToPreview, { passive: true });
-    preview.addEventListener('scroll', syncPreviewToEditor, { passive: true });
+    editor.addEventListener('scroll', syncEditorToPreview);
     editor.addEventListener('click', syncCursorToPreview);
-    editor.addEventListener('keyup', syncCursorToPreview);
-    editor.addEventListener('select', syncCursorToPreview);
-    editor.addEventListener('mouseup', syncCursorToPreview);
+
+    preview.addEventListener('scroll', syncPreviewToEditor);
 
     const resizeObserver = new ResizeObserver(() => {
       if (source === null) syncCursorToPreview();
