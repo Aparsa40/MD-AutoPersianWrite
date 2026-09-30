@@ -260,73 +260,56 @@ export function useScrollSync(
 
 
 
-    const syncPreviewToEditor = () => {
+const syncPreviewToEditor = () => {
+  if (source === 'editor') {
+    return;
+  }
 
-      if (source === 'editor') {
-        return;
-      }
+  window.cancelAnimationFrame(
+    rafId ?? 0
+  );
 
+  rafId =
+    window.requestAnimationFrame(() => {
+      source = 'preview';
 
-      window.cancelAnimationFrame(
-        rafId ?? 0
-      );
+      const elements =
+        getPreviewLineElements(
+          preview
+        );
 
+      if (elements.length > 0) {
+        const targetTop =
+          preview.scrollTop +
+          preview.clientHeight * 0.2;
 
-      rafId =
-        window.requestAnimationFrame(() => {
+        let candidate =
+          elements[0];
 
-          source = 'preview';
-
-
-          const elements =
-            getPreviewLineElements(
-              preview
-            );
-
-
-          if (elements.length > 0) {
-
-            const targetTop =
-              preview.scrollTop +
-              preview.clientHeight * 0.2;
-
-
-            let candidate =
-              elements[0];
-
-
-            for (const element of elements) {
-
-              if (element.top > targetTop) {
-                break;
-              }
-
-              candidate = element;
-            }
-
-
-            editor.scrollTop =
-              getEditorTopForLine(
-                editor,
-                candidate.line
-              );
-
-
-          } else {
-
-            editor.scrollTop =
-              getScrollTopForRatio(
-                editor,
-                getScrollRatio(preview)
-              );
-
+        for (const element of elements) {
+          if (element.top > targetTop) {
+            break;
           }
 
+          candidate = element;
+        }
 
-          releaseSource();
+        editor.scrollTop =
+          getEditorTopForLine(
+            editor,
+            candidate.line
+          );
+      } else {
+        editor.scrollTop =
+          getScrollTopForRatio(
+            editor,
+            getScrollRatio(preview)
+          );
+      }
 
-        });
-    };
+      releaseSource();
+    });
+};
 
 
 
@@ -377,22 +360,6 @@ export function useScrollSync(
       syncCursorToPreview
     );
 
-    editor.addEventListener(
-      'keyup',
-      syncCursorToPreview
-    );
-
-    editor.addEventListener(
-      'select',
-      syncCursorToPreview
-    );
-
-    editor.addEventListener(
-      'mouseup',
-      syncCursorToPreview
-    );
-
-
     preview.addEventListener(
       'scroll',
       syncPreviewToEditor
@@ -402,12 +369,12 @@ export function useScrollSync(
 
     const resizeObserver =
   new ResizeObserver(() => {
-    // جلوگیری از پرش هنگام تغییر ارتفاع محتوا
-    // مخصوصاً بعد از Insert Image
+    // Intentionally do not synchronize scroll on layout changes.
+    // Content/image height changes must not move the editor viewport.
   });
 
-    resizeObserver.observe(editor);
-    resizeObserver.observe(preview);
+resizeObserver.observe(editor);
+resizeObserver.observe(preview);
 
 
 
@@ -425,21 +392,6 @@ export function useScrollSync(
 
       editor.removeEventListener(
         'click',
-        syncCursorToPreview
-      );
-
-      editor.removeEventListener(
-        'keyup',
-        syncCursorToPreview
-      );
-
-      editor.removeEventListener(
-        'select',
-        syncCursorToPreview
-      );
-
-      editor.removeEventListener(
-        'mouseup',
         syncCursorToPreview
       );
 
