@@ -19,6 +19,10 @@ export function scrollPreviewToLine(
   container: HTMLElement | null,
   line: number
 ): boolean {
+  if (!container) {
+    return false;
+  }
+
   const target = findPreviewBlockByLine(container, line);
 
   if (!target) {
