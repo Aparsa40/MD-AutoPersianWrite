@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useLayoutEffect, useRef } from 'react';
 import { useEditorStore } from '../../store/useEditorStore';
 import { useThemeStore } from '../../store/useThemeStore';
 import { convertHtmlToMarkdown } from '../../lib/markdown/htmlToMarkdown';
@@ -20,18 +20,16 @@ const { markdown, setMarkdown, setTextareaRef } = useEditorStore();
     setTextareaRef(textareaRef.current);
     return () => { setTextareaRef(null); };
   }, [setTextareaRef, textareaRef]);
-  useEffect(() => {
+  useLayoutEffect(() => {
   if (pendingScrollTopRef.current === null) return;
 
   const scrollTop = pendingScrollTopRef.current;
   pendingScrollTopRef.current = null;
 
-  requestAnimationFrame(() => {
-    const textarea = textareaRef.current;
-    if (!textarea) return;
+  const textarea = textareaRef.current;
+  if (!textarea) return;
 
-    textarea.scrollTop = scrollTop;
-  });
+  textarea.scrollTop = scrollTop;
 }, [markdown, textareaRef]);
 
   useEffect(() => {
