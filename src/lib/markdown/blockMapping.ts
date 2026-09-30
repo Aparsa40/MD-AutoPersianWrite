@@ -25,10 +25,11 @@ export function scrollPreviewToLine(
     return false;
   }
 
-  target.scrollIntoView({
-    behavior: "smooth",
-    block: "center",
-  });
+  const top =
+    target.offsetTop -
+    container.clientHeight * 0.18;
+
+  container.scrollTop = Math.max(top, 0);
 
   return true;
 }
