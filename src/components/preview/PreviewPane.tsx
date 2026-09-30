@@ -21,7 +21,15 @@ import { resolveWorkspaceImage } from '../../services/image/imageResolver';
 
 import 'katex/dist/katex.min.css';
 
-const MarkdownImage = ({ src, alt }: { src?: string; alt?: string }) => {
+const MarkdownImage = ({
+  src,
+  alt,
+  node,
+}: {
+  src?: string;
+  alt?: string;
+  node?: MarkdownNode;
+}) => {
   const [imageSrc, setImageSrc] = React.useState<string | null>(null);
 
   React.useEffect(() => {
@@ -30,18 +38,30 @@ const MarkdownImage = ({ src, alt }: { src?: string; alt?: string }) => {
     resolveWorkspaceImage(src).then(setImageSrc);
   }, [src]);
 
-  if (!imageSrc) return null;
+  const sourceLine = getSourceLine(node);
+
+  if (!imageSrc) {
+    return (
+      <div
+        data-source-line={sourceLine}
+        className="min-h-[120px]"
+      />
+    );
+  }
 
   return (
     <img
       src={imageSrc}
       alt={alt ?? ''}
+      data-source-line={sourceLine}
       className="max-w-full rounded-lg shadow"
     />
   );
 };
 
-interface PreviewPaneProps { previewRef?: React.RefObject<HTMLDivElement>; }
+interface PreviewPaneProps {
+  previewRef?: React.RefObject<HTMLDivElement>;
+}
 
 type MarkdownNode = { position?: { start?: { line?: number } }; properties?: Record<string, unknown> };
 type TextColorSpanProps = ComponentPropsWithoutRef<'span'> & { 'data-text-color'?: string };
@@ -78,9 +98,15 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
       <div ref={previewRef} className="h-full w-full overflow-y-auto bg-bg p-6 custom-scrollbar prose dark:prose-invert max-w-none preview-markdown" style={{ fontSize: `${fontSize}px`, fontFamily }}>
         <ReactMarkdown remarkPlugins={remarkPlugins as PluggableList} rehypePlugins={rehypePlugins as PluggableList} components={{
           a({ children, href, ...props }) { const external = Boolean(href && /^(?:https?:)?\/\//i.test(href)); return <a href={href} {...props} target={external ? '_blank' : undefined} rel={external ? 'noopener noreferrer' : undefined} className="text-primary underline underline-offset-2 hover:opacity-80">{children}</a>; },
-          img({ src, alt }) {
-        return <MarkdownImage src={src} alt={alt} />;
-  },
+          img({ src, alt, node }) {
+  return (
+    <MarkdownImage
+      src={src}
+      alt={alt}
+      node={node as MarkdownNode}
+    />
+  );
+},
           span({ children, node, ...props }: TextColorSpanProps & { node?: MarkdownNode }) {
             const color = props['data-text-color'];
             if (isSafeTextColor(color)) {
@@ -100,7 +126,18 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
           ol({ children, node, ...props }) { return <ol dir="auto" data-source-line={getSourceLine(node as MarkdownNode)} className="my-2 list-decimal space-y-1 ps-6 pe-0" {...props}>{children}</ol>; },
           li({ children, className, node, ...props }) { const isTaskItem = className?.split(/\s+/).includes('task-list-item'); return <li dir="auto" data-source-line={getSourceLine(node as MarkdownNode)} className={`${isTaskItem ? 'list-none' : ''} my-1`} {...props}>{children}</li>; },
           blockquote({ children, node }) { const calloutType = String((node as MarkdownNode).properties?.['data-callout-type'] ?? ''); if (calloutType) return <blockquote dir="auto" data-source-line={getSourceLine(node as MarkdownNode)} data-callout-type={calloutType} className={`markdown-callout markdown-callout-${calloutType}`}>{children}</blockquote>; return <blockquote dir="auto" data-source-line={getSourceLine(node as MarkdownNode)} className="my-3 border-s-4 border-primary bg-surface/60 py-2 pe-4 italic shadow-sm">{children}</blockquote>; },
-          table({ children, node }) { return <div className="my-5 overflow-x-auto rounded-lg border border-border shadow-sm"><table data-source-line={getSourceLine(node as MarkdownNode)} className="w-full min-w-[520px] border-collapse">{children}</table></div>; },
+          table({ children, node }) {
+  return (
+    <div
+      data-source-line={getSourceLine(node as MarkdownNode)}
+      className="my-5 overflow-x-auto rounded-lg border border-border shadow-sm"
+    >
+      <table className="w-full min-w-[520px] border-collapse">
+        {children}
+      </table>
+    </div>
+  );
+},
           thead({ children }) { return <thead className="bg-surface font-bold">{children}</thead>; },
           tbody({ children }) { return <tbody className="divide-y divide-border">{children}</tbody>; },
           tr({ children }) { return <tr className="border-b border-border last:border-b-0">{children}</tr>; },
@@ -113,8 +150,20 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
             const rawSource = node?.properties?.['data-mermaid-source'];
             const chart = typeof rawSource === 'string' ? rawSource.replace(/\n$/, '') : String(children).replace(/\n$/, '');
             const sourceLine = getSourceLine(node);
-            if (language === 'mermaid' || language === 'mermaid-raw' || isMermaidDiagram(chart)) return <MermaidBlock chart={chart} sourceLine={sourceLine} />;
-            return <code className={className} dir="ltr" {...props}>{children}</code>;
+if (
+  language === 'mermaid' ||
+  language === 'mermaid-raw' ||
+  isMermaidDiagram(chart)
+) {
+  return (
+    <div data-source-line={sourceLine}>
+      <MermaidBlock
+        chart={chart}
+        sourceLine={sourceLine}
+      />
+    </div>
+  );
+}            return <code className={className} dir="ltr" {...props}>{children}</code>;
           },
         }}>
           {debouncedMarkdown}
@@ -123,3 +172,4 @@ export const PreviewPane: React.FC<PreviewPaneProps> = ({ previewRef }) => {
     </div>
   );
 };
+
