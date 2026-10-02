@@ -14,6 +14,7 @@ import { WorkspaceMenu } from './WorkspaceMenu';
 import { DocumentStyleMenu } from './DocumentStyleMenu';
 import { AgentMenu } from './AgentMenu';
 import { InsertImageButton } from '../editor/InsertImageButton';
+import { InsertVideoButton } from '../editor/InsertVideoButton';
 
 type FileSystemSavePickerWindow = Window & { showSaveFilePicker?: (options?: { suggestedName?: string }) => Promise<FileSystemFileHandle> };
 const getSaveFilePicker = () => {
@@ -176,6 +177,7 @@ export const TopToolbar: React.FC = () => {
 
           <WorkspaceMenu activeTopMenu={activeMenu} onOpen={() => setActiveMenu('workspace')} />
           <InsertImageButton />
+          <InsertVideoButton />
           <div className="relative">
             <button type="button" onClick={() => toggleMenu('tools')} className="rounded px-3 py-1.5 text-sm font-medium hover:bg-bg">Tools</button>
             {activeMenu === 'tools' && <div className="absolute right-0 z-50 w-64 rounded border border-border bg-surface py-1 shadow-lg" role="menu">
