@@ -1,162 +1,163 @@
-# MD-AutoPersianWrite V2.7.0
+MD-AutoPersianWrite V2.7.1
 
 ویرایشگر مدرن، ماژولار و راست‌چین (RTL) Markdown با پشتیبانی از متن ترکیبی فارسی/انگلیسی، KaTeX، Mermaid، Syntax Highlighting، Live Preview، PWA و Workspace محلی/ابری.
 
-## 🚀 ویژگی‌های اصلی
+معرفی
 
-### ✍️ Editor و Markdown
-- **ویرایشگر Markdown با RTL/LTR هوشمند:** متن فارسی RTL و متن انگلیسی LTR نمایش داده می‌شود و ساختار متن ترکیبی حفظ می‌شود.
-- **Live Preview:** نمایش همزمان خروجی رندرشده Markdown.
-- **همگام‌سازی Editor و Preview:** پیمایش دوطرفه و انتقال Preview به بخش متناظر هنگام حرکت Cursor یا انتخاب بخش‌های سند.
-- **حالت‌های نمایش:** Editor، Preview و Split.
-- **چیدمان قابل تنظیم:** افقی/عمودی و پنل‌های قابل تغییر اندازه.
-- **Outline / Headings:** ناوبری سریع در Headingهای سند.
-- **Paste هوشمند:** تبدیل HTML و Rich Text موجود در Clipboard به Markdown در صورت امکان.
-- **Insert File:** وارد کردن فایل‌های متنی مانند `.md`، `.markdown` و `.txt`.
-- **Text Color:** اعمال رنگ روی بخش انتخاب‌شده متن Markdown بدون تغییر رنگ کل سند.
-- **Media Support:** پشتیبانی از درج تصاویر Markdown و نمایش صحیح آن‌ها در Live Preview با حفظ ساختار سند Markdown.
+MD-AutoPersianWrite یک ویرایشگر Markdown برای ایجاد و مدیریت اسناد فارسی و انگلیسی است که با تمرکز بر تجربه کاربری RTL، رندر دقیق Markdown، مدیریت Workspace و معماری قابل توسعه ساخته شده است.
 
-### 🧮 Rendering
-- **KaTeX:** رندر فرمول‌های LaTeX درون‌خطی و بلوکی.
-- **Mermaid:** رندر زنده Flowchart، Gantt، Class Diagram و سایر نمودارهای Mermaid.
-- **Syntax Highlighting:** نمایش Code Blockها با حفظ منبع خام Mermaid.
-- **Markdown extensions:** پشتیبانی از GFM، Table، Task List و قابلیت‌های مرتبط.
-- **HTML safety:** پردازش HTML با allowlist برای tagها و attributeها و کنترل protocolهای URL.
-- **Image Rendering:** رندر صحیح تصاویر Markdown در Preview و هماهنگی خروجی با فایل Markdown ذخیره‌شده.
+نسخه 2.7.1 یک Patch Release است که پس از نسخه 2.7.0 منتشر شده و شامل اصلاحات پایداری، بهبود هماهنگی Scroll بین Editor و Preview و رفع مشکلات تجربه کاربری در اسناد طولانی است.
 
-### 📁 Workspace
-نسخه 2.7.0 بر پایه معماری Workspace مبتنی بر Provider توسعه یافته و UI را از Storage جدا می‌کند.
-- **Workspace Manager:** پنل سمت راست با قابلیت باز/بسته شدن و Resize.
-- **Workspace Explorer:** نمایش مرتب درخت فایل‌ها و پوشه‌ها.
-- **Local Workspace:** اتصال به پوشه محلی از طریق File System Access API.
-- **Cloud Workspace:** Provider مربوط به Google Drive و زیرساخت توسعه Providerهای آینده.
-- **File operations:** ایجاد فایل و پوشه، Rename، Delete، Copy، Move و Refresh.
-- **Contextual actions:** عملیات Workspace از طریق Toolbar و Hover actions.
-- **Session synchronization:** هماهنگ‌سازی sessionهای باز Editor با عملیات فایل‌ها.
-- **Permission handling:** مدیریت دسترسی و خطاهای Permission.
-- **Provider abstraction:** Workspace UI به روش ذخیره‌سازی خاص وابسته نیست.
+🚀 قابلیت‌های اصلی
+✍️ Editor و Markdown
+ویرایشگر Markdown با پشتیبانی از RTL/LTR هوشمند.
+حفظ ساختار متن ترکیبی فارسی و انگلیسی.
+Live Preview با نمایش همزمان خروجی Markdown.
+هماهنگ‌سازی Editor و Preview هنگام پیمایش و حرکت Cursor.
+حالت‌های نمایش:
+Editor
+Preview
+Split View
+چیدمان افقی و عمودی پنل‌ها.
+Resize کردن بخش‌های مختلف رابط کاربری.
+Outline برای پیمایش سریع Headingها.
+Paste هوشمند از HTML و Rich Text.
+Insert فایل‌های Markdown و Text.
+اعمال رنگ روی بخش انتخاب‌شده متن.
+پشتیبانی از درج تصاویر در Markdown و نمایش صحیح در Preview.
+🧮 Rendering Engine
+Markdown Rendering
+پشتیبانی از GitHub Flavored Markdown (GFM).
+Table و Task List.
+Syntax Highlighting برای Code Blockها.
+حفظ ساختار خام Mermaid برای رندر نمودارها.
+Mathematical Rendering
+پشتیبانی از KaTeX.
+رندر فرمول‌های LaTeX در حالت Inline و Block.
+Diagram Rendering
 
-جزئیات معماری Workspace در [`docs/WORKSPACE_ARCHITECTURE.md`](docs/WORKSPACE_ARCHITECTURE.md) مستند شده است.
+پشتیبانی از Mermaid.js برای:
 
-### 🎨 رابط کاربری و Theme
-- **تم‌های برنامه:** Light، Dark، Sepia، Black & White، Navy & White و Graphite.
-- **ذخیره تم:** انتخاب Theme در LocalStorage نگهداری می‌شود.
-- **تنظیمات Typography:** تغییر Font Family، اندازه فونت و رنگ متن.
-- **رابط RTL:** چیدمان برنامه و Toolbar متناسب با ساختار RTL برنامه تنظیم شده‌اند.
+Flowchart
+Sequence Diagram
+Class Diagram
+Gantt Chart
+سایر نمودارهای Mermaid
+HTML Processing
+پردازش HTML با کنترل tag و attributeهای مجاز.
+مدیریت URL protocolها برای افزایش امنیت.
+📁 Workspace
 
-### ⚙️ قابلیت‌های برنامه
-- **Refresh:** تازه‌سازی برنامه و محتوای اسناد Workspace باز از منوی File.
-- **PWA:** نصب و اجرای برنامه به صورت Web App روی سیستم‌های سازگار.
-- **Service Worker:** مدیریت Cache و lifecycle نسخه‌های PWA.
-- **Plugin Manager:** زیرساخت توسعه قابلیت‌های افزونه‌ای.
-- **Help / Guide:** راهنمای داخلی قابلیت‌های Editor و Preview.
+MD-AutoPersianWrite از معماری Workspace مبتنی بر Provider استفاده می‌کند که رابط کاربری را از روش ذخیره‌سازی جدا می‌کند.
 
-## 🔒 Reliability & Security
+قابلیت‌ها:
 
-در فرآیند پایدارسازی نسخه 2.6.0 چند مورد واقعی امنیتی و پایداری بررسی و اصلاح شده‌اند:
+Workspace Manager
+Workspace Explorer
+Local Workspace بر پایه File System Access API
+Cloud Workspace Architecture
+Google Drive Provider
+Create File / Folder
+Rename
+Delete
+Copy
+Move
+Refresh
+Drag & Drop
+Multi-selection
+Keyboard Shortcuts
+مدیریت Permission
+هماهنگی Workspace و Editor Session
 
-- اصلاح URL sanitizer برای جلوگیری از عبور URLهای protocol-relative مانند `//example.com` از allowlist.
-- حذف artifact داخلی و غیرضروری مربوط به access-check از repository.
-- بهبود رفتار احراز هویت Google Drive در برابر پاسخ `401` با refresh/retry محدود و جلوگیری از retry بی‌نهایت.
-- بهبود cleanup منابع در مسیرهای Editor/Preview برای کاهش ریسک listener، timer و observerهای باقی‌مانده.
-- هماهنگ‌سازی نسخه Service Worker با نسخه برنامه و بهبود به‌روزرسانی منابع cache شده.
-- اصلاح جهت‌دهی RTL/LTR در بخش‌هایی از Preview با استفاده از logical layout properties.
-- اصلاح insertion در Editor برای جلوگیری از اختلاف بین مقدار واقعی textarea و Editor store.
-- محافظت از سند دارای تغییرات ذخیره‌نشده هنگام New File و Close.
-- اصلاح ذخیره سند Workspace/Cloud هنگام بستن سند dirty تا در صورت وجود مقصد ذخیره، به‌جای Save As غیرضروری از provider یا file handle استفاده شود.
+جزئیات معماری:
 
-> برخی موارد معماری و optimization مانند conflict resolution مبتنی بر ETag برای Google Drive، refactor بزرگ WorkspaceExplorer و بهینه‌سازی‌های پیشرفته rendering به‌عنوان Technical Debt/Backlog نگهداری می‌شوند و برای این Release blocker محسوب نمی‌شوند.
+docs/WORKSPACE_ARCHITECTURE.md
 
-## 🆕 نسخه 2.7.0
+🎨 رابط کاربری
+طراحی کامل RTL.
+پشتیبانی از Themeهای مختلف:
+Light
+Dark
+Sepia
+Black & White
+Navy & White
+Graphite
+ذخیره تنظیمات Theme.
+تنظیم Font Family.
+تنظیم اندازه و رنگ متن.
+رابط کاربری سازگار با اسناد فارسی و انگلیسی.
+🔧 تغییرات نسخه 2.7.1
+Fixed
+Editor & Preview Scroll Synchronization
+رفع مشکل هماهنگ نبودن Scroll بین Editor و Preview.
+بهبود رفتار Split View در اسناد طولانی.
+بهبود مدیریت viewport هنگام پیمایش.
+افزایش پایداری تعامل Editor و Preview.
+Improved
+بهبود تجربه کار با اسناد Markdown طولانی.
+اصلاح Metadata نسخه Release.
+🛡️ Reliability & Security
 
-نسخه 2.7.0 بر پایه نسخه تثبیت‌شده Workspace در 2.6.0 توسعه یافته و قابلیت‌های رسانه در Markdown و تجربه کاربری Editor و Preview را بهبود می‌دهد.
+موارد زیر در نسخه‌های اخیر بررسی و بهبود یافته‌اند:
 
-### Markdown Media Support
-
-- پشتیبانی از درج تصویر در Markdown Editor.
-- نمایش صحیح تصاویر در Live Preview.
-- حفظ مسیر و ساختار Markdown هنگام Insert Media.
-- هماهنگی فایل Markdown ذخیره‌شده با Preview.
-
-### Workspace و File Management
-- معماری `WorkspaceProvider` برای جداسازی UI از Storage.
-- Workspace Manager و Workspace Explorer.
-- Workspace محلی و Google Drive.
-- Create File / Folder، Rename، Delete، Copy، Move و Refresh.
-- Drag/Drop، Multi-selection، Keyboard shortcuts و Contextual actions.
-- همگام‌سازی Workspace file operations با Editor sessions.
-- مدیریت Permission و خطاهای Local File System.
-- Pagination، Cache، Retry و Authentication در مسیر Google Drive.
-
-### Layout و RTL
-- تثبیت جایگاه Workspace در سمت راست رابط RTL.
-- اصلاح ترتیب Editor و Preview در Split View.
-- اصلاح ترتیب بصری Toolbar و منوها.
-- حفظ منطق مستقل تشخیص جهت متن فارسی و انگلیسی.
-
-### Reliability و Deployment
-- بهبود نصب dependencyهای optional برای محیط Linux/Vercel.
-- اعتبارسنجی CI با Node.js 20 و Node.js 22.
-- اعتبارسنجی TypeScript، ESLint، Vitest و Production Build.
-- هماهنگی نسخه `package.json` و `package-lock.json` روی `2.7.0`.
-- بهبود Service Worker update strategy و هماهنگی نسخه cache.
-
-## 🛠️ تکنولوژی‌ها
-- **Core:** React 18 + TypeScript + Vite
-- **Styling:** TailwindCSS + CSS Variables
-- **State Management:** Zustand
-- **Markdown Engine:** React-Markdown
-- **Markdown Plugins:** Remark-GFM + Remark-Math
-- **HTML Processing:** Rehype-KaTeX + Rehype-Prism-Plus
-- **Diagrams:** Mermaid.js
-- **Testing:** Vitest
-- **Linting:** ESLint
-- **Formatting:** Prettier
-- **Deployment:** Vercel
-
-## 📦 نصب و اجرا
-
-```bash
+بهبود URL sanitization.
+مدیریت بهتر خطاهای Google Drive authentication.
+جلوگیری از retry نامحدود در درخواست‌ها.
+بهبود cleanup منابع در Editor و Preview.
+بهبود مدیریت Service Worker و Cache Update.
+اصلاح رفتار RTL/LTR در بخش‌های مختلف رابط کاربری.
+محافظت از تغییرات ذخیره‌نشده هنگام بستن یا ایجاد فایل جدید.
+🛠️ تکنولوژی‌ها
+Core: React + TypeScript + Vite
+Styling: TailwindCSS + CSS Variables
+State Management: Zustand
+Markdown Engine: React-Markdown
+Plugins:
+Remark-GFM
+Remark-Math
+Rehype-KaTeX
+Rehype-Prism-Plus
+Diagrams: Mermaid.js
+Testing: Vitest
+Linting: ESLint
+Formatting: Prettier
+Deployment: Vercel
+📦 نصب و اجرا
 npm install
+
 npm run dev
+
 npm run typecheck
+
 npm run lint
+
 npm run test
+
 npm run build
+
 npm run format
-```
-
-## 🐳 اجرا با Docker
-
-```bash
+🐳 Docker
 docker-compose up -d --build
-```
+🤝 مشارکت
 
-## 🔐 امنیت
+قبل از ارسال Pull Request اجرای موارد زیر پیشنهاد می‌شود:
 
-برای سیاست امنیتی و نحوه گزارش آسیب‌پذیری‌ها به `SECURITY.md` مراجعه کنید.
-
-## 🤝 مشارکت
-
-پیش از ارسال Pull Request اجرای موارد زیر توصیه می‌شود:
-
-```bash
 npm run lint
 npm run typecheck
 npm run test
 npm run build
-```
 
-تمام تغییرات باید در Branch مستقل انجام و از طریق Pull Request بررسی شوند؛ تغییرات بدون بررسی نباید مستقیماً روی `main` اعمال شوند.
+تمام تغییرات باید در Branch مستقل انجام شده و از طریق Pull Request بررسی شوند.
 
-## 📋 مستندات
-- `CHANGELOG.md` — تاریخچه نسخه‌ها و تغییرات
-- `docs/RELEASE_NOTES_v2.6.0.md` — خلاصه Release نسخه 2.6.0
-- `docs/RELEASE_NOTES_v2.7.0.md` — خلاصه Release نسخه 2.7.0
-- `docs/WORKSPACE_ARCHITECTURE.md` — معماری Workspace و Providerها
-- `SECURITY.md` — سیاست امنیتی
-- `CONTRIBUTING.md` — راهنمای مشارکت
+📋 مستندات
+CHANGELOG.md — تاریخچه تغییرات
+docs/RELEASE_NOTES_v2.7.0.md — Release Notes نسخه 2.7.0
+docs/RELEASE_NOTES_v2.7.1.md — Release Notes نسخه 2.7.1
+docs/WORKSPACE_ARCHITECTURE.md — معماری Workspace
+SECURITY.md — سیاست امنیتی
+CONTRIBUTING.md — راهنمای مشارکت
+📄 License
 
-## 📄 لایسنس
+این پروژه تحت MIT License منتشر می‌شود.
 
-این پروژه تحت **MIT License** منتشر می‌شود. برای شرایط کامل استفاده، کپی، تغییر و توزیع مجدد به فایل `LICENSE` مراجعه کنید.
+برای جزئیات کامل به فایل LICENSE مراجعه کنید.

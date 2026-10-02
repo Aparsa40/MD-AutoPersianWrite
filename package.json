@@ -3,7 +3,7 @@
   "description": "Persian Markdown Editor",
   "author": "Aparsa40",
   "private": true,
-  "version": "2.7.0",
+  "version": "2.7.1",
   "main": "electron/main.mjs",
   "license": "SEE LICENSE IN LICENSE",
   "type": "module",
