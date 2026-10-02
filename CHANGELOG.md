@@ -16,6 +16,32 @@
 
 ---
 
+## [2.7.1] - 2026-10-02
+
+### Fixed
+
+#### Editor & Preview Scroll Synchronization
+
+- Fixed synchronization issues between Editor and Live Preview scrolling.
+- Improved split-view viewport coordination.
+- Improved scrolling reliability in long Markdown documents.
+
+### Improved
+
+- Improved stability of editor and preview interaction.
+
+### Documentation
+
+- Updated version metadata for the patch release.
+
+### Validation
+
+- TypeScript validation
+- Lint
+- Tests
+- Production Build
+
+---
 ## [2.7.0] - 2026-09-27
 
 ### Added
